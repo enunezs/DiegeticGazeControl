@@ -1,0 +1,642 @@
+[0.000000] (-) TimerEvent: {}
+[0.000147] (diegetic_button_pkg) JobQueued: {'identifier': 'diegetic_button_pkg', 'dependencies': OrderedDict()}
+[0.000206] (fiducials) JobQueued: {'identifier': 'fiducials', 'dependencies': OrderedDict()}
+[0.000259] (pupil_neon_pkg) JobQueued: {'identifier': 'pupil_neon_pkg', 'dependencies': OrderedDict()}
+[0.000355] (diegetic_button_pkg) JobStarted: {'identifier': 'diegetic_button_pkg'}
+[0.042393] (fiducials) JobStarted: {'identifier': 'fiducials'}
+[0.080918] (pupil_neon_pkg) JobStarted: {'identifier': 'pupil_neon_pkg'}
+[0.099906] (-) TimerEvent: {}
+[0.121656] (diegetic_button_pkg) JobProgress: {'identifier': 'diegetic_button_pkg', 'progress': 'cmake'}
+[0.122851] (diegetic_button_pkg) JobProgress: {'identifier': 'diegetic_button_pkg', 'progress': 'build'}
+[0.122893] (diegetic_button_pkg) Command: {'cmd': ['/usr/bin/cmake', '--build', '/root/ws/origami/build/diegetic_button_pkg', '--', '-j12', '-l12'], 'cwd': '/root/ws/origami/build/diegetic_button_pkg', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/ws/origami/install/fiducials/lib:/root/ws/origami/install/diegetic_button_pkg/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/ws/origami/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble'), ('PWD', '/root/ws/origami/build/diegetic_button_pkg'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages:/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages:/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/origami:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble')]), 'shell': False}
+[0.124845] (fiducials) JobProgress: {'identifier': 'fiducials', 'progress': 'cmake'}
+[0.126031] (fiducials) JobProgress: {'identifier': 'fiducials', 'progress': 'build'}
+[0.126142] (fiducials) Command: {'cmd': ['/usr/bin/cmake', '--build', '/root/ws/origami/build/fiducials', '--', '-j12', '-l12'], 'cwd': '/root/ws/origami/build/fiducials', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/ws/origami/install/fiducials/lib:/root/ws/origami/install/diegetic_button_pkg/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/ws/origami/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble'), ('PWD', '/root/ws/origami/build/fiducials'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages:/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages:/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/origami:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble')]), 'shell': False}
+[0.128093] (pupil_neon_pkg) JobProgress: {'identifier': 'pupil_neon_pkg', 'progress': 'cmake'}
+[0.128541] (pupil_neon_pkg) JobProgress: {'identifier': 'pupil_neon_pkg', 'progress': 'build'}
+[0.129350] (pupil_neon_pkg) Command: {'cmd': ['/usr/bin/cmake', '--build', '/root/ws/origami/build/pupil_neon_pkg', '--', '-j12', '-l12'], 'cwd': '/root/ws/origami/build/pupil_neon_pkg', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/ws/origami/install/fiducials/lib:/root/ws/origami/install/diegetic_button_pkg/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/ws/origami/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble'), ('PWD', '/root/ws/origami/build/pupil_neon_pkg'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages:/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages:/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/origami:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble')]), 'shell': False}
+[0.175633] (diegetic_button_pkg) StdoutLine: {'line': b'[  1%] Built target diegetic_button_pkg__cpp\n'}
+[0.175881] (diegetic_button_pkg) StdoutLine: {'line': b'[ 12%] Built target diegetic_button_pkg__rosidl_generator_c\n'}
+[0.176650] (fiducials) StdoutLine: {'line': b'[  1%] Built target fiducials__cpp\n'}
+[0.179630] (diegetic_button_pkg) StdoutLine: {'line': b'[ 12%] Built target ament_cmake_python_copy_scripts\n'}
+[0.179847] (diegetic_button_pkg) StdoutLine: {'line': b'[ 12%] Built target ament_cmake_python_copy_diegetic_button_pkg\n'}
+[0.181122] (pupil_neon_pkg) StdoutLine: {'line': b'Built target ament_cmake_python_copy_pupil_neon_pkg\n'}
+[0.184206] (fiducials) StdoutLine: {'line': b'[ 12%] Built target fiducials__rosidl_generator_c\n'}
+[0.185569] (fiducials) StdoutLine: {'line': b'[ 12%] Built target ament_cmake_python_copy_fiducials\n'}
+[0.200033] (-) TimerEvent: {}
+[0.210409] (diegetic_button_pkg) StdoutLine: {'line': b'[ 23%] Built target diegetic_button_pkg__rosidl_typesupport_fastrtps_cpp\n'}
+[0.213301] (fiducials) StdoutLine: {'line': b'[ 23%] Built target fiducials__rosidl_typesupport_cpp\n'}
+[0.214963] (diegetic_button_pkg) StdoutLine: {'line': b'[ 34%] Built target diegetic_button_pkg__rosidl_typesupport_introspection_cpp\n'}
+[0.219598] (diegetic_button_pkg) StdoutLine: {'line': b'[ 56%] Built target diegetic_button_pkg__rosidl_typesupport_cpp\n'}
+[0.219780] (diegetic_button_pkg) StdoutLine: {'line': b'[ 56%] Built target diegetic_button_pkg__rosidl_typesupport_fastrtps_c\n'}
+[0.220920] (diegetic_button_pkg) StdoutLine: {'line': b'[ 67%] Built target diegetic_button_pkg__rosidl_typesupport_c\n'}
+[0.221294] (diegetic_button_pkg) StdoutLine: {'line': b'[ 78%] Built target diegetic_button_pkg__rosidl_typesupport_introspection_c\n'}
+[0.221588] (fiducials) StdoutLine: {'line': b'[ 35%] Built target fiducials__rosidl_typesupport_introspection_cpp\n'}
+[0.230042] (fiducials) StdoutLine: {'line': b'[ 46%] Built target fiducials__rosidl_typesupport_fastrtps_c\n'}
+[0.230975] (fiducials) StdoutLine: {'line': b'[ 57%] Built target fiducials__rosidl_typesupport_c\n'}
+[0.231959] (fiducials) StdoutLine: {'line': b'[ 69%] Built target fiducials__rosidl_typesupport_fastrtps_cpp\n'}
+[0.238508] (fiducials) StdoutLine: {'line': b'[ 80%] Built target fiducials__rosidl_typesupport_introspection_c\n'}
+[0.242196] (diegetic_button_pkg) StdoutLine: {'line': b'[ 78%] Built target diegetic_button_pkg\n'}
+[0.256360] (fiducials) StdoutLine: {'line': b'[ 80%] Built target fiducials\n'}
+[0.259101] (diegetic_button_pkg) StdoutLine: {'line': b'[ 80%] Built target diegetic_button_pkg__py\n'}
+[0.274320] (fiducials) StdoutLine: {'line': b'[ 81%] Built target fiducials__py\n'}
+[0.279254] (diegetic_button_pkg) StdoutLine: {'line': b'[ 89%] Built target diegetic_button_pkg__rosidl_generator_py\n'}
+[0.281168] (fiducials) StdoutLine: {'line': b'[ 81%] Built target ament_cmake_python_copy_scripts\n'}
+[0.299864] (fiducials) StdoutLine: {'line': b'[ 91%] Built target fiducials__rosidl_generator_py\n'}
+[0.300098] (-) TimerEvent: {}
+[0.301293] (diegetic_button_pkg) StdoutLine: {'line': b'[ 92%] Built target diegetic_button_pkg__rosidl_typesupport_fastrtps_c__pyext\n'}
+[0.301525] (diegetic_button_pkg) StdoutLine: {'line': b'[ 96%] Built target diegetic_button_pkg__rosidl_typesupport_c__pyext\n'}
+[0.303175] (diegetic_button_pkg) StdoutLine: {'line': b'[100%] Built target diegetic_button_pkg__rosidl_typesupport_introspection_c__pyext\n'}
+[0.321587] (fiducials) StdoutLine: {'line': b'[ 97%] Built target fiducials__rosidl_typesupport_fastrtps_c__pyext\n'}
+[0.321794] (fiducials) StdoutLine: {'line': b'[ 97%] Built target fiducials__rosidl_typesupport_introspection_c__pyext\n'}
+[0.322849] (fiducials) StdoutLine: {'line': b'[100%] Built target fiducials__rosidl_typesupport_c__pyext\n'}
+[0.394229] (diegetic_button_pkg) StdoutLine: {'line': b'running egg_info\n'}
+[0.394777] (diegetic_button_pkg) StdoutLine: {'line': b'writing scripts.egg-info/PKG-INFO\n'}
+[0.394953] (diegetic_button_pkg) StdoutLine: {'line': b'writing dependency_links to scripts.egg-info/dependency_links.txt\n'}
+[0.395066] (diegetic_button_pkg) StdoutLine: {'line': b'writing top-level names to scripts.egg-info/top_level.txt\n'}
+[0.396593] (diegetic_button_pkg) StdoutLine: {'line': b"reading manifest file 'scripts.egg-info/SOURCES.txt'\n"}
+[0.397070] (diegetic_button_pkg) StdoutLine: {'line': b"writing manifest file 'scripts.egg-info/SOURCES.txt'\n"}
+[0.398383] (fiducials) StdoutLine: {'line': b'running egg_info\n'}
+[0.399099] (fiducials) StdoutLine: {'line': b'writing fiducials.egg-info/PKG-INFO\n'}
+[0.399272] (fiducials) StdoutLine: {'line': b'writing dependency_links to fiducials.egg-info/dependency_links.txt\n'}
+[0.399479] (fiducials) StdoutLine: {'line': b'writing top-level names to fiducials.egg-info/top_level.txt\n'}
+[0.401595] (fiducials) StdoutLine: {'line': b"reading manifest file 'fiducials.egg-info/SOURCES.txt'\n"}
+[0.401719] (-) TimerEvent: {}
+[0.402198] (fiducials) StdoutLine: {'line': b"writing manifest file 'fiducials.egg-info/SOURCES.txt'\n"}
+[0.420258] (diegetic_button_pkg) StdoutLine: {'line': b'[100%] Built target ament_cmake_python_build_scripts_egg\n'}
+[0.424319] (fiducials) StdoutLine: {'line': b'[100%] Built target ament_cmake_python_build_fiducials_egg\n'}
+[0.463819] (fiducials) StdoutLine: {'line': b'running egg_info\n'}
+[0.464462] (fiducials) StdoutLine: {'line': b'writing scripts.egg-info/PKG-INFO\n'}
+[0.464579] (fiducials) StdoutLine: {'line': b'writing dependency_links to scripts.egg-info/dependency_links.txt\n'}
+[0.464728] (fiducials) StdoutLine: {'line': b'writing top-level names to scripts.egg-info/top_level.txt\n'}
+[0.465581] (pupil_neon_pkg) StdoutLine: {'line': b'running egg_info\n'}
+[0.466509] (fiducials) StdoutLine: {'line': b"reading manifest file 'scripts.egg-info/SOURCES.txt'\n"}
+[0.466720] (pupil_neon_pkg) StdoutLine: {'line': b'writing pupil_neon_pkg.egg-info/PKG-INFO\n'}
+[0.466911] (pupil_neon_pkg) StdoutLine: {'line': b'writing dependency_links to pupil_neon_pkg.egg-info/dependency_links.txt\n'}
+[0.467111] (fiducials) StdoutLine: {'line': b"writing manifest file 'scripts.egg-info/SOURCES.txt'\n"}
+[0.467210] (pupil_neon_pkg) StdoutLine: {'line': b'writing top-level names to pupil_neon_pkg.egg-info/top_level.txt\n'}
+[0.469751] (pupil_neon_pkg) StdoutLine: {'line': b"reading manifest file 'pupil_neon_pkg.egg-info/SOURCES.txt'\n"}
+[0.470487] (pupil_neon_pkg) StdoutLine: {'line': b"writing manifest file 'pupil_neon_pkg.egg-info/SOURCES.txt'\n"}
+[0.484061] (diegetic_button_pkg) StdoutLine: {'line': b'running egg_info\n'}
+[0.485225] (diegetic_button_pkg) StdoutLine: {'line': b'writing diegetic_button_pkg.egg-info/PKG-INFO\n'}
+[0.485440] (diegetic_button_pkg) StdoutLine: {'line': b'writing dependency_links to diegetic_button_pkg.egg-info/dependency_links.txt\n'}
+[0.485651] (diegetic_button_pkg) StdoutLine: {'line': b'writing top-level names to diegetic_button_pkg.egg-info/top_level.txt\n'}
+[0.488943] (diegetic_button_pkg) StdoutLine: {'line': b"reading manifest file 'diegetic_button_pkg.egg-info/SOURCES.txt'\n"}
+[0.489729] (diegetic_button_pkg) StdoutLine: {'line': b"writing manifest file 'diegetic_button_pkg.egg-info/SOURCES.txt'\n"}
+[0.493060] (fiducials) StdoutLine: {'line': b'[100%] Built target ament_cmake_python_build_scripts_egg\n'}
+[0.501860] (-) TimerEvent: {}
+[0.503877] (fiducials) CommandEnded: {'returncode': 0}
+[0.504481] (pupil_neon_pkg) StdoutLine: {'line': b'Built target ament_cmake_python_build_pupil_neon_pkg_egg\n'}
+[0.512733] (pupil_neon_pkg) CommandEnded: {'returncode': 0}
+[0.517826] (diegetic_button_pkg) StdoutLine: {'line': b'[100%] Built target ament_cmake_python_build_diegetic_button_pkg_egg\n'}
+[0.528925] (diegetic_button_pkg) CommandEnded: {'returncode': 0}
+[0.531489] (pupil_neon_pkg) JobProgress: {'identifier': 'pupil_neon_pkg', 'progress': 'install'}
+[0.538498] (pupil_neon_pkg) Command: {'cmd': ['/usr/bin/cmake', '--install', '/root/ws/origami/build/pupil_neon_pkg'], 'cwd': '/root/ws/origami/build/pupil_neon_pkg', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/ws/origami/install/fiducials/lib:/root/ws/origami/install/diegetic_button_pkg/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/ws/origami/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble'), ('PWD', '/root/ws/origami/build/pupil_neon_pkg'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages:/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages:/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/origami:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble')]), 'shell': False}
+[0.543716] (pupil_neon_pkg) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[0.544085] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg//launch\n'}
+[0.544229] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg//launch/emulator_pupil.launch.py\n'}
+[0.544569] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg//launch/pupil.launch.py\n'}
+[0.544653] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/config\n'}
+[0.544720] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/config/params.yaml\n'}
+[0.544782] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/environment/pythonpath.sh\n'}
+[0.544865] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/environment/pythonpath.dsv\n'}
+[0.545072] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages/pupil_neon_pkg-1.0.0-py3.10.egg-info\n'}
+[0.545135] (pupil_neon_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages/pupil_neon_pkg-1.0.0-py3.10.egg-info/top_level.txt\n'}
+[0.545195] (pupil_neon_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages/pupil_neon_pkg-1.0.0-py3.10.egg-info/SOURCES.txt\n'}
+[0.545255] (pupil_neon_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages/pupil_neon_pkg-1.0.0-py3.10.egg-info/dependency_links.txt\n'}
+[0.545311] (pupil_neon_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages/pupil_neon_pkg-1.0.0-py3.10.egg-info/PKG-INFO\n'}
+[0.545366] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages/pupil_neon_pkg\n'}
+[0.545455] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages/pupil_neon_pkg/ehhpupil_publisher.py\n'}
+[0.545747] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages/pupil_neon_pkg/__init__.py\n'}
+[0.573922] (pupil_neon_pkg) StdoutLine: {'line': b"Listing '/root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages/pupil_neon_pkg'...\n"}
+[0.577490] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/lib/pupil_neon_pkg/pupil_publisher.py\n'}
+[0.577845] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/lib/pupil_neon_pkg/frame_publisher.py\n'}
+[0.578257] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/lib/pupil_neon_pkg/emulator_publisher.py\n'}
+[0.578380] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/ament_index/resource_index/package_run_dependencies/pupil_neon_pkg\n'}
+[0.578479] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/ament_index/resource_index/parent_prefix_path/pupil_neon_pkg\n'}
+[0.578855] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/environment/ament_prefix_path.sh\n'}
+[0.579012] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/environment/ament_prefix_path.dsv\n'}
+[0.579124] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/environment/path.sh\n'}
+[0.579216] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/environment/path.dsv\n'}
+[0.579401] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/local_setup.bash\n'}
+[0.579588] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/local_setup.sh\n'}
+[0.579680] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/local_setup.zsh\n'}
+[0.579767] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/local_setup.dsv\n'}
+[0.579943] (pupil_neon_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.dsv\n'}
+[0.580044] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/ament_index/resource_index/packages/pupil_neon_pkg\n'}
+[0.580227] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/cmake/pupil_neon_pkgConfig.cmake\n'}
+[0.580719] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/cmake/pupil_neon_pkgConfig-version.cmake\n'}
+[0.581078] (pupil_neon_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.xml\n'}
+[0.581327] (pupil_neon_pkg) CommandEnded: {'returncode': 0}
+[0.601939] (-) TimerEvent: {}
+[0.621536] (fiducials) JobProgress: {'identifier': 'fiducials', 'progress': 'install'}
+[0.621587] (fiducials) Command: {'cmd': ['/usr/bin/cmake', '--install', '/root/ws/origami/build/fiducials'], 'cwd': '/root/ws/origami/build/fiducials', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/ws/origami/install/fiducials/lib:/root/ws/origami/install/diegetic_button_pkg/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/ws/origami/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble'), ('PWD', '/root/ws/origami/build/fiducials'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages:/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages:/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/origami:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble')]), 'shell': False}
+[0.622322] (diegetic_button_pkg) JobProgress: {'identifier': 'diegetic_button_pkg', 'progress': 'install'}
+[0.622381] (diegetic_button_pkg) Command: {'cmd': ['/usr/bin/cmake', '--install', '/root/ws/origami/build/diegetic_button_pkg'], 'cwd': '/root/ws/origami/build/diegetic_button_pkg', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/ws/origami/install/fiducials/lib:/root/ws/origami/install/diegetic_button_pkg/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/ws/origami/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble'), ('PWD', '/root/ws/origami/build/diegetic_button_pkg'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/root/ws/origami/install/pupil_neon_pkg/local/lib/python3.10/dist-packages:/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages:/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/ws/origami/install/pupil_neon_pkg:/root/ws/origami/install/origami:/root/ws/origami/install/fiducials:/root/ws/origami/install/diegetic_button_pkg:/opt/ros/humble')]), 'shell': False}
+[0.626756] (fiducials) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[0.627056] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/ament_index/resource_index/rosidl_interfaces/fiducials\n'}
+[0.627213] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials\n'}
+[0.627343] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg\n'}
+[0.627454] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform_array.h\n'}
+[0.627557] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform.h\n'}
+[0.627628] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry.h\n'}
+[0.627739] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/rosidl_generator_c__visibility_control.h\n'}
+[0.627892] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry_array.h\n'}
+[0.628019] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_array.h\n'}
+[0.628155] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[0.628264] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__functions.c\n'}
+[0.628499] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__functions.h\n'}
+[0.628707] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__functions.c\n'}
+[0.629039] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__type_support.h\n'}
+[0.629164] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__type_support.h\n'}
+[0.629265] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__functions.c\n'}
+[0.629454] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__type_support.h\n'}
+[0.629544] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__struct.h\n'}
+[0.629603] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__functions.c\n'}
+[0.629665] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__struct.h\n'}
+[0.629750] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__functions.h\n'}
+[0.629807] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__struct.h\n'}
+[0.629900] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__struct.h\n'}
+[0.630102] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__functions.h\n'}
+[0.630235] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__functions.c\n'}
+[0.630297] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__struct.h\n'}
+[0.630353] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__type_support.h\n'}
+[0.630417] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__functions.h\n'}
+[0.630551] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__type_support.h\n'}
+[0.630609] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__struct.h\n'}
+[0.630665] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__type_support.h\n'}
+[0.630721] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__functions.h\n'}
+[0.630799] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__functions.h\n'}
+[0.630854] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__functions.c\n'}
+[0.630908] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial.h\n'}
+[0.631071] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/library_path.sh\n'}
+[0.631205] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/library_path.dsv\n'}
+[0.631337] (diegetic_button_pkg) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[0.631530] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg//launch\n'}
+[0.631610] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_generator_c.so\n'}
+[0.631693] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg//launch/devel.launch.py\n'}
+[0.631750] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg//launch/joy_glasses.launch.py\n'}
+[0.631805] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/environment/pythonpath.sh\n'}
+[0.631860] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/environment/pythonpath.dsv\n'}
+[0.631928] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info\n'}
+[0.631987] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials\n'}
+[0.632197] (diegetic_button_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/top_level.txt\n'}
+[0.632357] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg\n'}
+[0.632495] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/rosidl_typesupport_fastrtps_c__visibility_control.h\n'}
+[0.632624] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[0.632858] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_fastrtps_c.h\n'}
+[0.632936] (diegetic_button_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/SOURCES.txt\n'}
+[0.632998] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_fastrtps_c.h\n'}
+[0.633139] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_fastrtps_c.h\n'}
+[0.633300] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_fastrtps_c.h\n'}
+[0.633415] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_fastrtps_c.h\n'}
+[0.633554] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_fastrtps_c.h\n'}
+[0.633846] (diegetic_button_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/dependency_links.txt\n'}
+[0.633976] (diegetic_button_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/PKG-INFO\n'}
+[0.634084] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_fastrtps_c.so\n'}
+[0.634184] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts\n'}
+[0.634288] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/ros2bag.py\n'}
+[0.634386] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/TestButtonMap.csv\n'}
+[0.634485] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/bagToCSV.py\n'}
+[0.634650] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/devices\n'}
+[0.634711] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/devices/piano_demo.py\n'}
+[0.634767] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials\n'}
+[0.634823] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg\n'}
+[0.634886] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/devices/joy.py\n'}
+[0.634941] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/devices/sound.py\n'}
+[0.634994] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/devices/sound2.py\n'}
+[0.635049] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform_array.hpp\n'}
+[0.635224] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_array.hpp\n'}
+[0.635296] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial.hpp\n'}
+[0.635357] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry_array.hpp\n'}
+[0.635414] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[0.635469] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/diegetic_button.py\n'}
+[0.635565] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__builder.hpp\n'}
+[0.635791] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__struct.hpp\n'}
+[0.635862] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__struct.hpp\n'}
+[0.635933] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__builder.hpp\n'}
+[0.635991] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/input_check.py\n'}
+[0.636047] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/__init__.py\n'}
+[0.636198] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__builder.hpp\n'}
+[0.636268] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__builder.hpp\n'}
+[0.636327] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__traits.hpp\n'}
+[0.636382] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__struct.hpp\n'}
+[0.636436] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__builder.hpp\n'}
+[0.636492] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__traits.hpp\n'}
+[0.636570] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__traits.hpp\n'}
+[0.636691] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__traits.hpp\n'}
+[0.636746] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__struct.hpp\n'}
+[0.636809] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__builder.hpp\n'}
+[0.636864] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__traits.hpp\n'}
+[0.636919] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__struct.hpp\n'}
+[0.636972] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__traits.hpp\n'}
+[0.637027] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__struct.hpp\n'}
+[0.637080] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry.hpp\n'}
+[0.637134] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform.hpp\n'}
+[0.637187] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials\n'}
+[0.637241] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg\n'}
+[0.637293] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h\n'}
+[0.637347] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[0.637400] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.637459] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.637512] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.637564] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.637615] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.637666] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/dds_fastrtps\n'}
+[0.637717] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.637769] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_fastrtps_cpp.so\n'}
+[0.637821] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials\n'}
+[0.637871] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg\n'}
+[0.637922] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/rosidl_typesupport_introspection_c__visibility_control.h\n'}
+[0.638067] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[0.638235] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_introspection_c.h\n'}
+[0.638572] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_introspection_c.h\n'}
+[0.638818] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_introspection_c.h\n'}
+[0.639042] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__type_support.c\n'}
+[0.639188] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__type_support.c\n'}
+[0.639356] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_introspection_c.h\n'}
+[0.639559] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_introspection_c.h\n'}
+[0.639701] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_introspection_c.h\n'}
+[0.639895] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__type_support.c\n'}
+[0.639977] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__type_support.c\n'}
+[0.640169] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__type_support.c\n'}
+[0.640249] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__type_support.c\n'}
+[0.640456] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_introspection_c.so\n'}
+[0.640597] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_c.so\n'}
+[0.640690] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials\n'}
+[0.640841] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg\n'}
+[0.641099] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[0.641268] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__type_support.cpp\n'}
+[0.641409] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.641508] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__type_support.cpp\n'}
+[0.641712] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.642002] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__type_support.cpp\n'}
+[0.642163] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.642265] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__type_support.cpp\n'}
+[0.642442] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.642610] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__type_support.cpp\n'}
+[0.642703] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__type_support.cpp\n'}
+[0.642900] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.643132] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.643299] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_introspection_cpp.so\n'}
+[0.643444] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_cpp.so\n'}
+[0.643618] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/pythonpath.sh\n'}
+[0.643706] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/pythonpath.dsv\n'}
+[0.643935] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info\n'}
+[0.644031] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/top_level.txt\n'}
+[0.644198] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/SOURCES.txt\n'}
+[0.644351] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/dependency_links.txt\n'}
+[0.644449] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/PKG-INFO\n'}
+[0.644659] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials\n'}
+[0.645165] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/_fiducials_s.ep.rosidl_typesupport_introspection_c.c\n'}
+[0.645259] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.645477] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/_fiducials_s.ep.rosidl_typesupport_fastrtps_c.c\n'}
+[0.645671] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.645946] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/libfiducials__rosidl_generator_py.so\n'}
+[0.646243] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/_fiducials_s.ep.rosidl_typesupport_c.c\n'}
+[0.646507] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/__init__.py\n'}
+[0.646782] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.646936] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg\n'}
+[0.647282] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial.py\n'}
+[0.647618] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_array_s.c\n'}
+[0.648076] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform.py\n'}
+[0.648436] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_s.c\n'}
+[0.648673] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_array_s.c\n'}
+[0.648838] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_array.py\n'}
+[0.648946] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/__init__.py\n'}
+[0.649208] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_array.py\n'}
+[0.649474] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_s.c\n'}
+[0.649720] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_s.c\n'}
+[0.649824] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_array.py\n'}
+[0.649990] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry.py\n'}
+[0.650286] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_array_s.c\n'}
+[0.656628] (diegetic_button_pkg) StdoutLine: {'line': b"Listing '/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts'...\n"}
+[0.657209] (diegetic_button_pkg) StdoutLine: {'line': b"Listing '/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/scripts/devices'...\n"}
+[0.661193] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials'...\n"}
+[0.661690] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg'...\n"}
+[0.662030] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/ament_index/resource_index/rosidl_interfaces/diegetic_button_pkg\n'}
+[0.662267] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg\n'}
+[0.662415] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg\n'}
+[0.662605] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/input_status_array.h\n'}
+[0.662886] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/rosidl_generator_c__visibility_control.h\n'}
+[0.663073] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail\n'}
+[0.663302] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__functions.c\n'}
+[0.663564] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__functions.h\n'}
+[0.663786] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__type_support.h\n'}
+[0.663922] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__functions.h\n'}
+[0.664103] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__type_support.h\n'}
+[0.664309] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__functions.h\n'}
+[0.664553] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__struct.h\n'}
+[0.664840] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__type_support.h\n'}
+[0.665039] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__functions.c\n'}
+[0.665187] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__type_support.h\n'}
+[0.665284] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__functions.h\n'}
+[0.665503] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__struct.h\n'}
+[0.665658] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__struct.h\n'}
+[0.665856] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__functions.c\n'}
+[0.665948] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__struct.h\n'}
+[0.666183] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__functions.c\n'}
+[0.666318] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/diegetic_button_array.h\n'}
+[0.666570] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/input_status.h\n'}
+[0.666717] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/diegetic_button.h\n'}
+[0.666893] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/environment/library_path.sh\n'}
+[0.667056] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/environment/library_path.dsv\n'}
+[0.667209] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/libdiegetic_button_pkg__rosidl_generator_c.so\n'}
+[0.667355] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg\n'}
+[0.667461] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg\n'}
+[0.667701] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/rosidl_typesupport_fastrtps_c__visibility_control.h\n'}
+[0.667830] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail\n'}
+[0.668036] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__rosidl_typesupport_fastrtps_c.h\n'}
+[0.668231] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__rosidl_typesupport_fastrtps_c.h\n'}
+[0.668520] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__rosidl_typesupport_fastrtps_c.h\n'}
+[0.668760] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__rosidl_typesupport_fastrtps_c.h\n'}
+[0.668950] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/libdiegetic_button_pkg__rosidl_typesupport_fastrtps_c.so\n'}
+[0.669170] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg\n'}
+[0.669453] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg\n'}
+[0.669635] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/diegetic_button.hpp\n'}
+[0.669787] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/input_status_array.hpp\n'}
+[0.669964] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/diegetic_button_array.hpp\n'}
+[0.670156] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail\n'}
+[0.670332] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__traits.hpp\n'}
+[0.670558] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__struct.hpp\n'}
+[0.670696] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__builder.hpp\n'}
+[0.670887] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__traits.hpp\n'}
+[0.671024] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__builder.hpp\n'}
+[0.671198] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__traits.hpp\n'}
+[0.671371] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__builder.hpp\n'}
+[0.671558] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__struct.hpp\n'}
+[0.671696] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__struct.hpp\n'}
+[0.671870] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__builder.hpp\n'}
+[0.672040] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__struct.hpp\n'}
+[0.672116] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__traits.hpp\n'}
+[0.672274] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/input_status.hpp\n'}
+[0.672368] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg\n'}
+[0.672512] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg\n'}
+[0.672642] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h\n'}
+[0.672772] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail\n'}
+[0.672965] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.673134] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.673268] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.673392] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[0.673562] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/dds_fastrtps\n'}
+[0.673649] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/libdiegetic_button_pkg__rosidl_typesupport_fastrtps_cpp.so\n'}
+[0.673834] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg\n'}
+[0.673964] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg\n'}
+[0.674136] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/rosidl_typesupport_introspection_c__visibility_control.h\n'}
+[0.674258] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail\n'}
+[0.674556] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__type_support.c\n'}
+[0.674878] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__rosidl_typesupport_introspection_c.h\n'}
+[0.675132] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__rosidl_typesupport_introspection_c.h\n'}
+[0.675387] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__type_support.c\n'}
+[0.675550] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__type_support.c\n'}
+[0.675836] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__rosidl_typesupport_introspection_c.h\n'}
+[0.676069] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__rosidl_typesupport_introspection_c.h\n'}
+[0.676208] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__type_support.c\n'}
+[0.676481] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/libdiegetic_button_pkg__rosidl_typesupport_introspection_c.so\n'}
+[0.676732] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/libdiegetic_button_pkg__rosidl_typesupport_c.so\n'}
+[0.676949] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg\n'}
+[0.677047] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg\n'}
+[0.677472] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail\n'}
+[0.677735] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.678009] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__type_support.cpp\n'}
+[0.678229] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.678546] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button_array__type_support.cpp\n'}
+[0.679231] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.679673] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status__type_support.cpp\n'}
+[0.680003] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/input_status_array__rosidl_typesupport_introspection_cpp.hpp\n'}
+[0.680251] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/include/diegetic_button_pkg/diegetic_button_pkg/msg/detail/diegetic_button__type_support.cpp\n'}
+[0.680408] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/libdiegetic_button_pkg__rosidl_typesupport_introspection_cpp.so\n'}
+[0.680539] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/libdiegetic_button_pkg__rosidl_typesupport_cpp.so\n'}
+[0.680854] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg-0.0.0-py3.10.egg-info\n'}
+[0.681108] (diegetic_button_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg-0.0.0-py3.10.egg-info/top_level.txt\n'}
+[0.681231] (diegetic_button_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg-0.0.0-py3.10.egg-info/SOURCES.txt\n'}
+[0.681520] (diegetic_button_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg-0.0.0-py3.10.egg-info/dependency_links.txt\n'}
+[0.681696] (diegetic_button_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg-0.0.0-py3.10.egg-info/PKG-INFO\n'}
+[0.682131] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg\n'}
+[0.682291] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/diegetic_button_pkg_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.682569] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/_diegetic_button_pkg_s.ep.rosidl_typesupport_c.c\n'}
+[0.682825] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/diegetic_button_pkg_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.683038] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/_diegetic_button_pkg_s.ep.rosidl_typesupport_introspection_c.c\n'}
+[0.683204] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/diegetic_button_pkg_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.683376] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/__init__.py\n'}
+[0.683466] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/_diegetic_button_pkg_s.ep.rosidl_typesupport_fastrtps_c.c\n'}
+[0.683655] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg\n'}
+[0.683806] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg/_diegetic_button.py\n'}
+[0.683962] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg/_input_status_array_s.c\n'}
+[0.684055] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg/_diegetic_button_array_s.c\n'}
+[0.684212] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg/_input_status_s.c\n'}
+[0.684365] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.684451] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg/_diegetic_button_array.py\n'}
+[0.684610] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg/__init__.py\n'}
+[0.684776] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg/_input_status.py\n'}
+[0.684869] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg/_input_status_array.py\n'}
+[0.685259] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg/_diegetic_button_s.c\n'}
+[0.685451] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/libdiegetic_button_pkg__rosidl_generator_py.so\n'}
+[0.685650] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.685814] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.685956] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_generator_py.so\n'}
+[0.686217] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/Fiducial.idl\n'}
+[0.686627] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialArray.idl\n'}
+[0.686777] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialTransform.idl\n'}
+[0.686884] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialTransformArray.idl\n'}
+[0.687102] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialMapEntry.idl\n'}
+[0.687242] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialMapEntryArray.idl\n'}
+[0.687326] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/Fiducial.msg\n'}
+[0.687469] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialArray.msg\n'}
+[0.687657] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialTransform.msg\n'}
+[0.687829] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialTransformArray.msg\n'}
+[0.687991] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialMapEntry.msg\n'}
+[0.689177] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialMapEntryArray.msg\n'}
+[0.689294] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info\n'}
+[0.689384] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/top_level.txt\n'}
+[0.689482] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/SOURCES.txt\n'}
+[0.689575] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/dependency_links.txt\n'}
+[0.689667] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/PKG-INFO\n'}
+[0.689797] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts\n'}
+[0.689879] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/create_markers.py\n'}
+[0.690013] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibrate.py\n'}
+[0.690109] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/aruco_detect.py\n'}
+[0.690187] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/PupilGlassesCalibration.pckl\n'}
+[0.690269] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/__init__.py\n'}
+[0.690334] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/aruco_mapper.py\n'}
+[0.690405] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration\n'}
+[0.690476] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images\n'}
+[0.690547] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100708.jpg\n'}
+[0.690615] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100736.jpg\n'}
+[0.690687] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100504.jpg\n'}
+[0.690753] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100601.jpg\n'}
+[0.690827] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100614.jpg\n'}
+[0.690896] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100643.jpg\n'}
+[0.690964] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100453.jpg\n'}
+[0.691038] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100626.jpg\n'}
+[0.691314] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100719.jpg\n'}
+[0.691474] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100654.jpg\n'}
+[0.691654] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100514.jpg\n'}
+[0.691826] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100635.jpg\n'}
+[0.691948] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100550.jpg\n'}
+[0.692061] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100447.jpg\n'}
+[0.692205] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100542.jpg\n'}
+[0.692351] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/calibration.pckl\n'}
+[0.692433] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration\n'}
+[0.692531] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m42s700.png\n'}
+[0.692657] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m21s263.png\n'}
+[0.692819] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m59s845.png\n'}
+[0.692935] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h14m37s506.png\n'}
+[0.693049] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h13m51s644.png\n'}
+[0.693181] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m33s305.png\n'}
+[0.693286] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m16s913.png\n'}
+[0.693424] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/calibration.pckl\n'}
+[0.693531] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m21s435.png\n'}
+[0.693653] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m12s225.png\n'}
+[0.693796] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m51s539.png\n'}
+[0.693873] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m56s584.png\n'}
+[0.694019] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h15m08s507.png\n'}
+[0.694148] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m53s558.png\n'}
+[0.694265] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m39s908.png\n'}
+[0.694383] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m03s920.png\n'}
+[0.694501] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m45s787.png\n'}
+[0.694692] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m01s390.png\n'}
+[0.694816] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h22m00s263.png\n'}
+[0.694963] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m04s522.png\n'}
+[0.695102] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m56s920.png\n'}
+[0.695275] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m24s207.png\n'}
+[0.695347] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m12s268.png\n'}
+[0.695552] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m57s011.png\n'}
+[0.695731] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m08s214.png\n'}
+[0.695808] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m10s240.png\n'}
+[0.695916] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m25s886.png\n'}
+[0.696063] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m49s540.png\n'}
+[0.696195] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h14m26s085.png\n'}
+[0.696327] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam.pckl\n'}
+[0.696481] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images\n'}
+[0.696626] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage02.png\n'}
+[0.696772] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage07.png\n'}
+[0.696898] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage09.png\n'}
+[0.697042] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage13.png\n'}
+[0.697212] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage05.png\n'}
+[0.697381] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage12.png\n'}
+[0.697463] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage06.png\n'}
+[0.697562] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage04.png\n'}
+[0.697734] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage10.png\n'}
+[0.697902] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage11.png\n'}
+[0.698013] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage08.png\n'}
+[0.698130] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage01.png\n'}
+[0.698236] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage14.png\n'}
+[0.698425] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage03.png\n'}
+[0.698544] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage16.png\n'}
+[0.698776] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage15.png\n'}
+[0.698986] (diegetic_button_pkg) StdoutLine: {'line': b"Listing '/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg'...\n"}
+[0.699189] (diegetic_button_pkg) StdoutLine: {'line': b"Listing '/root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/msg'...\n"}
+[0.699364] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts'...\n"}
+[0.699663] (fiducials) StdoutLine: {'line': b"Compiling '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/aruco_mapper.py'...\n"}
+[0.699869] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration'...\n"}
+[0.700013] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration'...\n"}
+[0.700268] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images'...\n"}
+[0.700366] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images'...\n"}
+[0.700574] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/diegetic_button_pkg_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.700859] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/diegetic_button_pkg_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.701057] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/local/lib/python3.10/dist-packages/diegetic_button_pkg/diegetic_button_pkg_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[0.701491] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/libdiegetic_button_pkg__rosidl_generator_py.so\n'}
+[0.701778] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/msg/DiegeticButton.idl\n'}
+[0.701982] (-) TimerEvent: {}
+[0.702203] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/msg/DiegeticButtonArray.idl\n'}
+[0.702341] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/msg/InputStatus.idl\n'}
+[0.702637] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/msg/InputStatusArray.idl\n'}
+[0.702922] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/msg/DiegeticButton.msg\n'}
+[0.703047] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/msg/DiegeticButtonArray.msg\n'}
+[0.703224] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/msg/InputStatus.msg\n'}
+[0.703590] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/msg/InputStatusArray.msg\n'}
+[0.703893] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/diegetic_button_pkg/diegetic_button.py\n'}
+[0.704127] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/diegetic_button_pkg/input_check.py\n'}
+[0.704266] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/diegetic_button_pkg/bagToCSV.py\n'}
+[0.704462] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/diegetic_button_pkg/joy.py\n'}
+[0.704579] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/lib/diegetic_button_pkg/piano_demo.py\n'}
+[0.704862] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/ament_index/resource_index/package_run_dependencies/diegetic_button_pkg\n'}
+[0.705004] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/ament_index/resource_index/parent_prefix_path/diegetic_button_pkg\n'}
+[0.705251] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/environment/ament_prefix_path.sh\n'}
+[0.705473] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/environment/ament_prefix_path.dsv\n'}
+[0.705671] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/environment/path.sh\n'}
+[0.705745] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/environment/path.dsv\n'}
+[0.706007] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/local_setup.bash\n'}
+[0.706127] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/local_setup.sh\n'}
+[0.706278] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/local_setup.zsh\n'}
+[0.706397] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/local_setup.dsv\n'}
+[0.706516] (diegetic_button_pkg) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.dsv\n'}
+[0.706624] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/ament_index/resource_index/packages/diegetic_button_pkg\n'}
+[0.706795] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/export_diegetic_button_pkg__rosidl_generator_cExport.cmake\n'}
+[0.706908] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/export_diegetic_button_pkg__rosidl_generator_cExport-noconfig.cmake\n'}
+[0.706999] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/export_diegetic_button_pkg__rosidl_typesupport_fastrtps_cExport.cmake\n'}
+[0.707179] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/export_diegetic_button_pkg__rosidl_typesupport_fastrtps_cExport-noconfig.cmake\n'}
+[0.707253] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/export_diegetic_button_pkg__rosidl_generator_cppExport.cmake\n'}
+[0.707528] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/export_diegetic_button_pkg__rosidl_typesupport_fastrtps_cppExport.cmake\n'}
+[0.707691] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/lib/fiducials/aruco_detect.py\n'}
+[0.707865] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/export_diegetic_button_pkg__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake\n'}
+[0.708056] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/lib/fiducials/aruco_mapper.py\n'}
+[0.708238] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkg__rosidl_typesupport_introspection_cExport.cmake\n'}
+[0.708398] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkg__rosidl_typesupport_introspection_cExport-noconfig.cmake\n'}
+[0.708561] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/ament_index/resource_index/package_run_dependencies/fiducials\n'}
+[0.708732] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkg__rosidl_typesupport_cExport.cmake\n'}
+[0.708892] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkg__rosidl_typesupport_cExport-noconfig.cmake\n'}
+[0.709075] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/ament_index/resource_index/parent_prefix_path/fiducials\n'}
+[0.709272] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/ament_prefix_path.sh\n'}
+[0.709474] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkg__rosidl_typesupport_introspection_cppExport.cmake\n'}
+[0.709923] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkg__rosidl_typesupport_introspection_cppExport-noconfig.cmake\n'}
+[0.710199] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/ament_prefix_path.dsv\n'}
+[0.710385] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/path.sh\n'}
+[0.710640] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkg__rosidl_typesupport_cppExport.cmake\n'}
+[0.710783] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/path.dsv\n'}
+[0.711061] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkg__rosidl_typesupport_cppExport-noconfig.cmake\n'}
+[0.711314] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/local_setup.bash\n'}
+[0.711625] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/local_setup.sh\n'}
+[0.711773] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/export_diegetic_button_pkg__rosidl_generator_pyExport.cmake\n'}
+[0.711962] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/export_diegetic_button_pkg__rosidl_generator_pyExport-noconfig.cmake\n'}
+[0.712099] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/local_setup.zsh\n'}
+[0.712185] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/local_setup.dsv\n'}
+[0.712382] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/fiducials/share/fiducials/package.dsv\n'}
+[0.712551] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/rosidl_cmake-extras.cmake\n'}
+[0.712676] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[0.713527] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[0.713719] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/ament_cmake_export_libraries-extras.cmake\n'}
+[0.713809] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[0.713877] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/ament_index/resource_index/packages/fiducials\n'}
+[0.713955] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake\n'}
+[0.714135] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake\n'}
+[0.714266] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_cExport.cmake\n'}
+[0.714346] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_cExport-noconfig.cmake\n'}
+[0.714446] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkgConfig.cmake\n'}
+[0.714621] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/cmake/diegetic_button_pkgConfig-version.cmake\n'}
+[0.714791] (diegetic_button_pkg) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.xml\n'}
+[0.714879] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cExport.cmake\n'}
+[0.714966] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cExport-noconfig.cmake\n'}
+[0.715161] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_cppExport.cmake\n'}
+[0.715303] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cppExport.cmake\n'}
+[0.715410] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake\n'}
+[0.715929] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cExport.cmake\n'}
+[0.716209] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cExport-noconfig.cmake\n'}
+[0.716478] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cExport.cmake\n'}
+[0.716569] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cExport-noconfig.cmake\n'}
+[0.716745] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cppExport.cmake\n'}
+[0.716885] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cppExport-noconfig.cmake\n'}
+[0.717086] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cppExport.cmake\n'}
+[0.717182] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cppExport-noconfig.cmake\n'}
+[0.717839] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_pyExport.cmake\n'}
+[0.718008] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_pyExport-noconfig.cmake\n'}
+[0.718197] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/rosidl_cmake-extras.cmake\n'}
+[0.718374] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[0.718538] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[0.718645] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/ament_cmake_export_libraries-extras.cmake\n'}
+[0.718799] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[0.718965] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake\n'}
+[0.719072] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake\n'}
+[0.719231] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducialsConfig.cmake\n'}
+[0.719526] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducialsConfig-version.cmake\n'}
+[0.719654] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/package.xml\n'}
+[0.755890] (pupil_neon_pkg) JobEnded: {'identifier': 'pupil_neon_pkg', 'rc': 0}
+[0.771773] (diegetic_button_pkg) CommandEnded: {'returncode': 0}
+[0.802074] (-) TimerEvent: {}
+[0.830391] (fiducials) CommandEnded: {'returncode': 0}
+[0.902175] (-) TimerEvent: {}
+[0.964831] (diegetic_button_pkg) JobEnded: {'identifier': 'diegetic_button_pkg', 'rc': 0}
+[1.002257] (-) TimerEvent: {}
+[1.035317] (fiducials) JobEnded: {'identifier': 'fiducials', 'rc': 0}
+[1.036118] (-) EventReactorShutdown: {}

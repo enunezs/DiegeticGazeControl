@@ -1,0 +1,481 @@
+-- The C compiler identification is GNU 11.4.0
+-- The CXX compiler identification is GNU 11.4.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 1.3.5 (/opt/ros/humble/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3.10 (found version "3.10.12") found components: Interpreter 
+-- Found rclpy: 3.3.10 (/opt/ros/humble/share/rclpy/cmake)
+-- Found builtin_interfaces: 1.2.1 (/opt/ros/humble/share/builtin_interfaces/cmake)
+-- Found rosidl_generator_c: 3.1.5 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+-- Found rosidl_adapter: 3.1.5 (/opt/ros/humble/share/rosidl_adapter/cmake)
+-- Found rosidl_generator_cpp: 3.1.5 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found geometry_msgs: 4.2.3 (/opt/ros/humble/share/geometry_msgs/cmake)
+-- Found sensor_msgs: 4.2.3 (/opt/ros/humble/share/sensor_msgs/cmake)
+-- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+-- Found tf2_ros: 0.25.4 (/opt/ros/humble/share/tf2_ros/cmake)
+-- Found rmw_implementation_cmake: 6.1.1 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 6.2.4 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  
+-- Found FastRTPS: /opt/ros/humble/include  
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") 
+-- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+-- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") 
+-- Using PYTHON_EXECUTABLE: /usr/bin/python3
+-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+-- Found PythonExtra: .so  
+-- Found ament_lint_auto: 0.12.8 (/opt/ros/humble/share/ament_lint_auto/cmake)
+-- Added test 'copyright' to check source files copyright and LICENSE
+-- Added test 'cppcheck' to perform static code analysis on C / C++ code
+-- Configured cppcheck include dirs: 
+-- Configured cppcheck exclude dirs and/or files: 
+-- Added test 'cpplint' to check C / C++ code against the Google style
+-- Configured cpplint exclude dirs and/or files: 
+-- Added test 'flake8' to check Python code syntax and style conventions
+-- Added test 'lint_cmake' to check CMake code style
+-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+-- Added test 'uncrustify' to check C / C++ code style
+-- Configured uncrustify additional arguments: 
+-- Added test 'xmllint' to check XML markup files
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /root/ws/origami/build/fiducials
+[  1%] [34m[1mGenerating C code for ROS interfaces[0m
+[  2%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[  2%] Built target ament_cmake_python_copy_fiducials
+[  2%] Built target ament_cmake_python_copy_scripts
+running egg_info
+creating fiducials.egg-info
+writing fiducials.egg-info/PKG-INFO
+writing dependency_links to fiducials.egg-info/dependency_links.txt
+writing top-level names to fiducials.egg-info/top_level.txt
+writing manifest file 'fiducials.egg-info/SOURCES.txt'
+reading manifest file 'fiducials.egg-info/SOURCES.txt'
+writing manifest file 'fiducials.egg-info/SOURCES.txt'
+[  2%] Built target ament_cmake_python_build_fiducials_egg
+running egg_info
+creating scripts.egg-info
+writing scripts.egg-info/PKG-INFO
+writing dependency_links to scripts.egg-info/dependency_links.txt
+writing top-level names to scripts.egg-info/top_level.txt
+writing manifest file 'scripts.egg-info/SOURCES.txt'
+reading manifest file 'scripts.egg-info/SOURCES.txt'
+writing manifest file 'scripts.egg-info/SOURCES.txt'
+[  2%] Built target ament_cmake_python_build_scripts_egg
+[  2%] Built target fiducials__cpp
+[  4%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[  5%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[  7%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[  8%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_c.dir/rosidl_generator_c/fiducials/msg/detail/fiducial_transform__functions.c.o[0m
+[ 11%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_c.dir/rosidl_generator_c/fiducials/msg/detail/fiducial_array__functions.c.o[0m
+[ 11%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_c.dir/rosidl_generator_c/fiducials/msg/detail/fiducial__functions.c.o[0m
+[ 12%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_c.dir/rosidl_generator_c/fiducials/msg/detail/fiducial_map_entry_array__functions.c.o[0m
+[ 14%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_c.dir/rosidl_generator_c/fiducials/msg/detail/fiducial_transform_array__functions.c.o[0m
+[ 15%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_c.dir/rosidl_generator_c/fiducials/msg/detail/fiducial_map_entry__functions.c.o[0m
+[ 16%] [32m[1mLinking C shared library libfiducials__rosidl_generator_c.so[0m
+[ 16%] Built target fiducials__rosidl_generator_c
+[ 18%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[ 21%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[ 21%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[ 22%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/fiducials/msg/detail/fiducial__type_support.cpp.o[0m
+[ 23%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/fiducials/msg/detail/fiducial_transform_array__type_support.cpp.o[0m
+[ 25%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/fiducials/msg/detail/fiducial_array__type_support.cpp.o[0m
+[ 26%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/fiducials/msg/detail/fiducial_transform__type_support.cpp.o[0m
+[ 28%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/fiducials/msg/detail/fiducial_map_entry__type_support.cpp.o[0m
+[ 29%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/fiducials/msg/detail/fiducial_map_entry_array__type_support.cpp.o[0m
+[ 30%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/fiducials/msg/fiducial__type_support.cpp.o[0m
+[ 32%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/fiducials/msg/fiducial_array__type_support.cpp.o[0m
+[ 33%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_c.dir/rosidl_typesupport_c/fiducials/msg/fiducial__type_support.cpp.o[0m
+[ 35%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/fiducials/msg/detail/dds_fastrtps/fiducial__type_support.cpp.o[0m
+[ 36%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_c.dir/rosidl_typesupport_c/fiducials/msg/fiducial_array__type_support.cpp.o[0m
+[ 38%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/fiducials/msg/fiducial_transform__type_support.cpp.o[0m
+[ 39%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/fiducials/msg/fiducial_transform_array__type_support.cpp.o[0m
+[ 40%] [32mBuilding C object CMakeFiles/fiducials__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/fiducials/msg/detail/fiducial__type_support.c.o[0m
+[ 42%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_c.dir/rosidl_typesupport_c/fiducials/msg/fiducial_transform__type_support.cpp.o[0m
+[ 43%] [32mBuilding C object CMakeFiles/fiducials__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/fiducials/msg/detail/fiducial_array__type_support.c.o[0m
+[ 45%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_c.dir/rosidl_typesupport_c/fiducials/msg/fiducial_transform_array__type_support.cpp.o[0m
+[ 46%] [32mBuilding C object CMakeFiles/fiducials__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/fiducials/msg/detail/fiducial_transform__type_support.c.o[0m
+[ 47%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_c.dir/rosidl_typesupport_c/fiducials/msg/fiducial_map_entry__type_support.cpp.o[0m
+[ 49%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/fiducials/msg/detail/dds_fastrtps/fiducial_array__type_support.cpp.o[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/fiducials/msg/detail/dds_fastrtps/fiducial_transform_array__type_support.cpp.o[0m
+[ 52%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/fiducials/msg/detail/dds_fastrtps/fiducial_transform__type_support.cpp.o[0m
+[ 53%] [32m[1mLinking CXX shared library libfiducials__rosidl_typesupport_introspection_cpp.so[0m
+[ 54%] [32mBuilding C object CMakeFiles/fiducials__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/fiducials/msg/detail/fiducial_transform_array__type_support.c.o[0m
+[ 56%] [32mBuilding C object CMakeFiles/fiducials__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/fiducials/msg/detail/fiducial_map_entry__type_support.c.o[0m
+[ 57%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/fiducials/msg/detail/dds_fastrtps/fiducial_map_entry__type_support.cpp.o[0m
+[ 59%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_c.dir/rosidl_typesupport_c/fiducials/msg/fiducial_map_entry_array__type_support.cpp.o[0m
+[ 60%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/fiducials/msg/detail/dds_fastrtps/fiducial_map_entry_array__type_support.cpp.o[0m
+[ 61%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/fiducials/msg/detail/fiducial__type_support_c.cpp.o[0m
+[ 63%] [32mBuilding C object CMakeFiles/fiducials__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/fiducials/msg/detail/fiducial_map_entry_array__type_support.c.o[0m
+[ 64%] [32m[1mLinking CXX shared library libfiducials__rosidl_typesupport_c.so[0m
+[ 64%] Built target fiducials__rosidl_typesupport_introspection_cpp
+[ 66%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/fiducials/msg/detail/fiducial_array__type_support_c.cpp.o[0m
+[ 67%] [32m[1mLinking C shared library libfiducials__rosidl_typesupport_introspection_c.so[0m
+[ 67%] Built target fiducials__rosidl_typesupport_c
+[ 67%] Built target fiducials__rosidl_typesupport_introspection_c
+[ 69%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/fiducials/msg/detail/fiducial_transform__type_support_c.cpp.o[0m
+[ 70%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/fiducials/msg/detail/fiducial_transform_array__type_support_c.cpp.o[0m
+[ 71%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/fiducials/msg/detail/fiducial_map_entry__type_support_c.cpp.o[0m
+[ 73%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/fiducials/msg/fiducial_map_entry__type_support.cpp.o[0m
+[ 74%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/fiducials/msg/detail/fiducial_map_entry_array__type_support_c.cpp.o[0m
+[ 76%] [32mBuilding CXX object CMakeFiles/fiducials__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/fiducials/msg/fiducial_map_entry_array__type_support.cpp.o[0m
+[ 77%] [32m[1mLinking CXX shared library libfiducials__rosidl_typesupport_fastrtps_cpp.so[0m
+[ 77%] Built target fiducials__rosidl_typesupport_fastrtps_cpp
+[ 78%] [32m[1mLinking CXX shared library libfiducials__rosidl_typesupport_fastrtps_c.so[0m
+[ 80%] [32m[1mLinking CXX shared library libfiducials__rosidl_typesupport_cpp.so[0m
+[ 80%] Built target fiducials__rosidl_typesupport_fastrtps_c
+[ 80%] Built target fiducials__rosidl_typesupport_cpp
+[ 80%] Built target fiducials
+[ 81%] [34m[1mGenerating Python code for ROS interfaces[0m
+[ 81%] Built target fiducials__py
+[ 84%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_py.dir/rosidl_generator_py/fiducials/msg/_fiducial_transform_array_s.c.o[0m
+[ 84%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_py.dir/rosidl_generator_py/fiducials/msg/_fiducial_array_s.c.o[0m
+[ 85%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_py.dir/rosidl_generator_py/fiducials/msg/_fiducial_s.c.o[0m
+[ 87%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_py.dir/rosidl_generator_py/fiducials/msg/_fiducial_transform_s.c.o[0m
+[ 88%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_py.dir/rosidl_generator_py/fiducials/msg/_fiducial_map_entry_s.c.o[0m
+[ 90%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_py.dir/rosidl_generator_py/fiducials/msg/_fiducial_map_entry_array_s.c.o[0m
+[ 91%] [32m[1mLinking C shared library rosidl_generator_py/fiducials/libfiducials__rosidl_generator_py.so[0m
+[ 91%] Built target fiducials__rosidl_generator_py
+[ 92%] [32mBuilding C object CMakeFiles/fiducials__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/fiducials/_fiducials_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[ 94%] [32mBuilding C object CMakeFiles/fiducials__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/fiducials/_fiducials_s.ep.rosidl_typesupport_c.c.o[0m
+[ 95%] [32mBuilding C object CMakeFiles/fiducials__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/fiducials/_fiducials_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[ 98%] [32m[1mLinking C shared library rosidl_generator_py/fiducials/fiducials_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so[0m
+[ 98%] [32m[1mLinking C shared library rosidl_generator_py/fiducials/fiducials_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so[0m
+[100%] [32m[1mLinking C shared library rosidl_generator_py/fiducials/fiducials_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so[0m
+[100%] Built target fiducials__rosidl_typesupport_introspection_c__pyext
+[100%] Built target fiducials__rosidl_typesupport_c__pyext
+[100%] Built target fiducials__rosidl_typesupport_fastrtps_c__pyext
+-- Install configuration: ""
+-- Installing: /root/ws/origami/install/fiducials/share/ament_index/resource_index/rosidl_interfaces/fiducials
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform_array.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/rosidl_generator_c__visibility_control.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry_array.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_array.h
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__functions.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__functions.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__functions.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__type_support.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__type_support.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__functions.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__type_support.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__struct.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__functions.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__struct.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__functions.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__struct.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__struct.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__functions.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__functions.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__struct.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__type_support.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__functions.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__type_support.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__struct.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__type_support.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__functions.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__functions.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__functions.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial.h
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/library_path.sh
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/environment/library_path.dsv
+-- Installing: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_generator_c.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/lib/libfiducials__rosidl_generator_c.so" to ""
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_fastrtps_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_fastrtps_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_fastrtps_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_fastrtps_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_fastrtps_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_fastrtps_c.h
+-- Installing: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_fastrtps_c.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_fastrtps_c.so" to ""
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform_array.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_array.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry_array.hpp
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__builder.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__struct.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__struct.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__builder.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__builder.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__builder.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__traits.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__struct.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__builder.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__traits.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__traits.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__traits.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__struct.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__builder.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__traits.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__struct.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__traits.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__struct.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform.hpp
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/dds_fastrtps
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_fastrtps_cpp.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_fastrtps_cpp.so" to ""
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/rosidl_typesupport_introspection_c__visibility_control.h
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_introspection_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_introspection_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_introspection_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__type_support.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__type_support.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_introspection_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_introspection_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_introspection_c.h
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__type_support.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__type_support.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__type_support.c
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__type_support.c
+-- Installing: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_introspection_c.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_introspection_c.so" to ""
+-- Installing: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_c.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_c.so" to ""
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg
+-- Up-to-date: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__type_support.cpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__type_support.cpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__type_support.cpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__type_support.cpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__type_support.cpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__type_support.cpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_introspection_cpp.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_introspection_cpp.so" to ""
+-- Installing: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_cpp.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/lib/libfiducials__rosidl_typesupport_cpp.so" to ""
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/environment/pythonpath.sh
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/environment/pythonpath.dsv
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/top_level.txt
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/SOURCES.txt
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/dependency_links.txt
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/PKG-INFO
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/_fiducials_s.ep.rosidl_typesupport_introspection_c.c
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/_fiducials_s.ep.rosidl_typesupport_fastrtps_c.c
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/libfiducials__rosidl_generator_py.so
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/_fiducials_s.ep.rosidl_typesupport_c.c
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/__init__.py
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial.py
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_array_s.c
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform.py
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_s.c
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_array_s.c
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_array.py
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/__init__.py
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_array.py
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_s.c
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_s.c
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_array.py
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry.py
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_array_s.c
+Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials'...
+Compiling '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/__init__.py'...
+Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg'...
+Compiling '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/__init__.py'...
+Compiling '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial.py'...
+Compiling '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_array.py'...
+Compiling '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry.py'...
+Compiling '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_array.py'...
+Compiling '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform.py'...
+Compiling '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_array.py'...
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so" to ""
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so" to ""
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so" to ""
+-- Installing: /root/ws/origami/install/fiducials/lib/libfiducials__rosidl_generator_py.so
+-- Set runtime path of "/root/ws/origami/install/fiducials/lib/libfiducials__rosidl_generator_py.so" to ""
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/msg/Fiducial.idl
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialArray.idl
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialTransform.idl
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialTransformArray.idl
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialMapEntry.idl
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialMapEntryArray.idl
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/Fiducial.msg
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialArray.msg
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialTransform.msg
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialTransformArray.msg
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialMapEntry.msg
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/msg/FiducialMapEntryArray.msg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/top_level.txt
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/SOURCES.txt
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/dependency_links.txt
+-- Installing: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/PKG-INFO
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/create_markers.py
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibrate.py
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/aruco_detect.py
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/PupilGlassesCalibration.pckl
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/__init__.py
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/aruco_mapper.py
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100708.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100736.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100504.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100601.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100614.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100643.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100453.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100626.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100719.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100654.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100514.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100635.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100550.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100447.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100542.jpg
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/calibration.pckl
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m42s700.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m21s263.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m59s845.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h14m37s506.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h13m51s644.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m33s305.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m16s913.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/calibration.pckl
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m21s435.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m12s225.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m51s539.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m56s584.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h15m08s507.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m53s558.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m39s908.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m03s920.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m45s787.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m01s390.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h22m00s263.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m04s522.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m56s920.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m24s207.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m12s268.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m57s011.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m08s214.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m10s240.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m25s886.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m49s540.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h14m26s085.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam.pckl
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage02.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage07.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage09.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage13.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage05.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage12.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage06.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage04.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage10.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage11.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage08.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage01.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage14.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage03.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage16.png
+-- Up-to-date: /root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage15.png
+Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts'...
+Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration'...
+Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration'...
+Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images'...
+Listing '/root/ws/origami/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images'...
+-- Up-to-date: /root/ws/origami/install/fiducials/lib/fiducials/aruco_detect.py
+-- Up-to-date: /root/ws/origami/install/fiducials/lib/fiducials/aruco_mapper.py
+-- Installing: /root/ws/origami/install/fiducials/share/ament_index/resource_index/package_run_dependencies/fiducials
+-- Installing: /root/ws/origami/install/fiducials/share/ament_index/resource_index/parent_prefix_path/fiducials
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/ament_prefix_path.sh
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/environment/ament_prefix_path.dsv
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/environment/path.sh
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/environment/path.dsv
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/local_setup.bash
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/local_setup.sh
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/local_setup.zsh
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/local_setup.dsv
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/package.dsv
+-- Installing: /root/ws/origami/install/fiducials/share/ament_index/resource_index/packages/fiducials
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_cExport.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_cExport-noconfig.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cExport.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_cppExport.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cppExport.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cExport.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cExport-noconfig.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cExport.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cExport-noconfig.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cppExport.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cppExport.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cppExport-noconfig.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_pyExport.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_pyExport-noconfig.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/rosidl_cmake-extras.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/ament_cmake_export_libraries-extras.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/ament_cmake_export_targets-extras.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducialsConfig.cmake
+-- Installing: /root/ws/origami/install/fiducials/share/fiducials/cmake/fiducialsConfig-version.cmake
+-- Up-to-date: /root/ws/origami/install/fiducials/share/fiducials/package.xml

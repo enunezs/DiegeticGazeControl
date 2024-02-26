@@ -5,7 +5,15 @@ ENV HOME /root
 WORKDIR $HOME
 SHELL ["/bin/bash", "-c"]
 
-# general utilities
+# Install ros2 packages
+RUN apt-get update && apt-get install -y \ 
+	ros-$ROS_DISTRO-cv-bridge \
+	ros-$ROS_DISTRO-vision-opencv \
+	ros-$ROS_DISTRO-compressed-image-transport\
+	ros-$ROS_DISTRO-image-transport \
+    ros-$ROS_DISTRO-tf-transformations
+
+# General utilities
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
@@ -13,45 +21,78 @@ RUN apt-get update && apt-get install -y \
     gdb \
     vim \
     nano \
-    python3-pip \
-    unzip
+	apt-utils \
+	dialog \
+	unzip \
+	python3-vcstool
 
+# Other tools
+RUN apt-get update && apt-get install -y \
+	scrot \
+	python3-tk\
+	python3-dev
 
-# install ros2 packages
+# Install pip 
 RUN apt-get update && apt-get install -y \ 
-	python3-numpy \
-	python3-pip
+	python3-pip 
+RUN pip3 install --upgrade pip
 
+# Transformation packages
 RUN apt-get update && apt-get install -y \ 
-	python3-vcstool \
-    	apt-utils \
-    	dialog
-    	
+	python3-numpy
 
-# install ros2 packages
+RUN pip3 install \
+	transforms3d \
+	scipy \
+	matplotlib 
+
+# Opencv from pip
+RUN pip3 install argcomplete
+# Last with backwards compatibility
+RUN pip3 install --upgrade pip
+
+# ARuco
+RUN pip3 install CairoSVG
 RUN apt-get update && apt-get install -y \ 
-	ros-$ROS_DISTRO-cv-bridge \
-	ros-$ROS_DISTRO-vision-opencv \
-	ros-$ROS_DISTRO-compressed-image-transport\
-	ros-$ROS_DISTRO-image-transport
+	poppler-utils
 
+#RUN pip3 install opencv-contrib-python==4.3.0.38 
 
-#pip3 install --no-cache-dir pyautogui 
-#RUN pip3 install --upgrade pip
+#	opencv-python-headless	\
+# opencv-contrib-python==4.3.0.38 # Last with backwards compatibility
 
-
-
-RUN pip3 install -U \
-  	argcomplete \
-	pupil-labs-realtime-api \
-	matplotlib \
-	'opencv-python<=4.8.0.74'
+# Opencv from Ubuntu 
+RUN apt-get update && apt-get install -y \
+	libopencv-dev \
+	python3-opencv 
+	
 
 #'stevedore>=1.3.0,<1.4.0'
+RUN apt-get update && apt-get install -y \
+	ffmpeg \
+	libsm6 \
+	libxext6  
 
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+# --- PUPIL GLASSES
+RUN pip3 install pupil-labs-realtime-api
+
+# Glasses emulation (Via Mouse)
+RUN pip3 install python-xlib pyautogui
+
+# --- Digetic Buttons
+RUN pip3 install matplotlib \
+	pynput 
+
+# --- Piano
+RUN pip3 install pysinewave
+RUN apt-get update && apt-get install -y \
+     libportaudio2
 
 # SET ENVIRONMENT
 WORKDIR $HOME/ws/origami
+
+RUN echo 'alias python="python3"' >> $HOME/.bashrc
+RUN echo 'source /opt/ros/humble/setup.sh && colcon build' >> $HOME/.bashrc
+RUN echo 'source install/setup.bash' >> $HOME/.bashrc
 
 

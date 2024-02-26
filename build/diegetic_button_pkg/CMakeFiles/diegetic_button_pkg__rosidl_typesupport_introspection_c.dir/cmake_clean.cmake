@@ -1,0 +1,25 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/diegetic_button__type_support.c.o"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/diegetic_button__type_support.c.o.d"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/diegetic_button_array__type_support.c.o"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/diegetic_button_array__type_support.c.o.d"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/input_status__type_support.c.o"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/input_status__type_support.c.o.d"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/input_status_array__type_support.c.o"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/input_status_array__type_support.c.o.d"
+  "libdiegetic_button_pkg__rosidl_typesupport_introspection_c.pdb"
+  "libdiegetic_button_pkg__rosidl_typesupport_introspection_c.so"
+  "rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/diegetic_button__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/diegetic_button__type_support.c"
+  "rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/diegetic_button_array__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/diegetic_button_array__type_support.c"
+  "rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/input_status__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/input_status__type_support.c"
+  "rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/input_status_array__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/diegetic_button_pkg/msg/detail/input_status_array__type_support.c"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/diegetic_button_pkg__rosidl_typesupport_introspection_c.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

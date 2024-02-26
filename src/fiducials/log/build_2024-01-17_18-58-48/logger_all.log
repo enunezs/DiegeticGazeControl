@@ -1,0 +1,111 @@
+[0.805s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.805s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=12, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x7ff4999d6f50>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7ff499a1fac0>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7ff499a1fac0>>, mixin_verb=('build',))
+[0.839s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.839s] INFO:colcon.colcon_metadata.package_discovery.colcon_meta:Using configuration from '/root/.colcon/metadata/default/Gazebo.meta'
+[0.840s] INFO:colcon.colcon_metadata.package_discovery.colcon_meta:Using configuration from '/root/.colcon/metadata/default/fastrtps.meta'
+[0.840s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.840s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.840s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.840s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.840s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.840s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/root/ws/origami/src/fiducials'
+[0.840s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.840s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.840s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.840s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.840s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.840s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.840s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.840s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.840s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.852s] DEBUG:colcon.colcon_core.package_identification:Package '.' with type 'ros.ament_cmake' and name 'fiducials'
+[0.853s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.853s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.853s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.853s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.853s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.904s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_args' from command line to 'None'
+[0.904s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_target' from command line to 'None'
+[0.905s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.905s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_clean_cache' from command line to 'False'
+[0.905s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_clean_first' from command line to 'False'
+[0.905s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_force_configure' from command line to 'False'
+[0.905s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'ament_cmake_args' from command line to 'None'
+[0.905s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'catkin_cmake_args' from command line to 'None'
+[0.905s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.905s] DEBUG:colcon.colcon_core.verb:Building package 'fiducials' with the following arguments: {'ament_cmake_args': None, 'build_base': '/root/ws/origami/src/fiducials/build/fiducials', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/root/ws/origami/src/fiducials/install/fiducials', 'merge_install': False, 'path': '/root/ws/origami/src/fiducials', 'symlink_install': False, 'test_result_base': None}
+[0.913s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.923s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.923s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/root/ws/origami/src/fiducials' with build type 'ament_cmake'
+[0.924s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/root/ws/origami/src/fiducials'
+[0.934s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.934s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.934s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.977s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/root/ws/origami/src/fiducials/build/fiducials': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/src/fiducials/build/fiducials -- -j12 -l12
+[1.350s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/root/ws/origami/src/fiducials/build/fiducials' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/src/fiducials/build/fiducials -- -j12 -l12
+[1.468s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/root/ws/origami/src/fiducials/build/fiducials': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /root/ws/origami/src/fiducials/build/fiducials
+[1.546s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(fiducials)
+[1.547s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/root/ws/origami/src/fiducials/build/fiducials' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /root/ws/origami/src/fiducials/build/fiducials
+[1.558s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials' for CMake module files
+[1.558s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials' for CMake config files
+[1.559s] Level 1:colcon.colcon_core.shell:create_environment_hook('fiducials', 'cmake_prefix_path')
+[1.567s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/cmake_prefix_path.ps1'
+[1.568s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/cmake_prefix_path.dsv'
+[1.568s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/cmake_prefix_path.sh'
+[1.569s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/lib'
+[1.569s] Level 1:colcon.colcon_core.shell:create_environment_hook('fiducials', 'ld_library_path_lib')
+[1.578s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/ld_library_path_lib.ps1'
+[1.578s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/ld_library_path_lib.dsv'
+[1.578s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/ld_library_path_lib.sh'
+[1.579s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/bin'
+[1.579s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/lib/pkgconfig/fiducials.pc'
+[1.580s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/lib/python3.10/site-packages'
+[1.581s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/bin'
+[1.590s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.ps1'
+[1.591s] INFO:colcon.colcon_core.shell:Creating package descriptor '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.dsv'
+[1.591s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.sh'
+[1.592s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.bash'
+[1.592s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.zsh'
+[1.593s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/root/ws/origami/src/fiducials/install/fiducials/share/colcon-core/packages/fiducials)
+[1.713s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(fiducials)
+[1.724s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials' for CMake module files
+[1.724s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials' for CMake config files
+[1.725s] Level 1:colcon.colcon_core.shell:create_environment_hook('fiducials', 'cmake_prefix_path')
+[1.733s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/cmake_prefix_path.ps1'
+[1.734s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/cmake_prefix_path.dsv'
+[1.734s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/cmake_prefix_path.sh'
+[1.734s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/lib'
+[1.734s] Level 1:colcon.colcon_core.shell:create_environment_hook('fiducials', 'ld_library_path_lib')
+[1.745s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/ld_library_path_lib.ps1'
+[1.745s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/ld_library_path_lib.dsv'
+[1.746s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/hook/ld_library_path_lib.sh'
+[1.746s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/bin'
+[1.746s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/lib/pkgconfig/fiducials.pc'
+[1.747s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/lib/python3.10/site-packages'
+[1.747s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/src/fiducials/install/fiducials/bin'
+[1.757s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.ps1'
+[1.758s] INFO:colcon.colcon_core.shell:Creating package descriptor '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.dsv'
+[1.758s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.sh'
+[1.758s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.bash'
+[1.759s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.zsh'
+[1.759s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/root/ws/origami/src/fiducials/install/fiducials/share/colcon-core/packages/fiducials)
+[1.759s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[1.759s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[1.759s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[1.759s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[1.775s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[1.775s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[1.775s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[1.776s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[1.778s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.Spawn.ExecFailed: /usr/bin/dbus-launch terminated abnormally without any error message
+[1.778s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[1.789s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/src/fiducials/install/local_setup.ps1'
+[1.790s] INFO:colcon.colcon_core.shell:Creating prefix util module '/root/ws/origami/src/fiducials/install/_local_setup_util_ps1.py'
+[1.791s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/src/fiducials/install/setup.ps1'
+[1.800s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/src/fiducials/install/local_setup.sh'
+[1.801s] INFO:colcon.colcon_core.shell:Creating prefix util module '/root/ws/origami/src/fiducials/install/_local_setup_util_sh.py'
+[1.801s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/src/fiducials/install/setup.sh'
+[1.814s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/src/fiducials/install/local_setup.bash'
+[1.814s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/src/fiducials/install/setup.bash'
+[1.824s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/src/fiducials/install/local_setup.zsh'
+[1.825s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/src/fiducials/install/setup.zsh'

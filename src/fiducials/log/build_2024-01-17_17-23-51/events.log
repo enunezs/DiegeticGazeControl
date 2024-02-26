@@ -1,0 +1,422 @@
+[0.000000] (-) TimerEvent: {}
+[0.000176] (fiducials) JobQueued: {'identifier': 'fiducials', 'dependencies': OrderedDict()}
+[0.000264] (fiducials) JobStarted: {'identifier': 'fiducials'}
+[0.042187] (fiducials) JobProgress: {'identifier': 'fiducials', 'progress': 'cmake'}
+[0.042725] (fiducials) JobProgress: {'identifier': 'fiducials', 'progress': 'build'}
+[0.043317] (fiducials) Command: {'cmd': ['/usr/bin/cmake', '--build', '/root/ws/origami/src/fiducials/build/fiducials', '--', '-j12', '-l12'], 'cwd': '/root/ws/origami/src/fiducials/build/fiducials', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('OLDPWD', '/root/ws/origami'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/ws/origami/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':1'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('PWD', '/root/ws/origami/src/fiducials/build/fiducials'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/ws/origami/install/origami:/opt/ros/humble')]), 'shell': False}
+[0.064348] (fiducials) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.5 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[0.099470] (-) TimerEvent: {}
+[0.182453] (fiducials) StdoutLine: {'line': b'-- Found rclpy: 3.3.10 (/opt/ros/humble/share/rclpy/cmake)\n'}
+[0.182630] (fiducials) StdoutLine: {'line': b'-- Found builtin_interfaces: 1.2.1 (/opt/ros/humble/share/builtin_interfaces/cmake)\n'}
+[0.199582] (-) TimerEvent: {}
+[0.200895] (fiducials) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.5 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[0.203119] (fiducials) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.5 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[0.208203] (fiducials) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.5 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[0.219756] (fiducials) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.233768] (fiducials) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.246155] (fiducials) StdoutLine: {'line': b'-- Found geometry_msgs: 4.2.3 (/opt/ros/humble/share/geometry_msgs/cmake)\n'}
+[0.299696] (-) TimerEvent: {}
+[0.338131] (fiducials) StdoutLine: {'line': b'-- Found sensor_msgs: 4.2.3 (/opt/ros/humble/share/sensor_msgs/cmake)\n'}
+[0.399809] (-) TimerEvent: {}
+[0.419875] (fiducials) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)\n'}
+[0.428627] (fiducials) StdoutLine: {'line': b'-- Found tf2_ros: 0.25.4 (/opt/ros/humble/share/tf2_ros/cmake)\n'}
+[0.499934] (-) TimerEvent: {}
+[0.550280] (fiducials) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 6.1.1 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)\n'}
+[0.552310] (fiducials) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 6.2.4 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)\n'}
+[0.600042] (-) TimerEvent: {}
+[0.628611] (fiducials) StdoutLine: {'line': b'-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  \n'}
+[0.647787] (fiducials) StdoutLine: {'line': b'-- Found FastRTPS: /opt/ros/humble/include  \n'}
+[0.683697] (fiducials) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[0.691819] (fiducials) StdoutLine: {'line': b'-- Looking for pthread.h\n'}
+[0.700190] (-) TimerEvent: {}
+[0.750127] (fiducials) StdoutLine: {'line': b'-- Looking for pthread.h - found\n'}
+[0.750314] (fiducials) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n'}
+[0.800299] (-) TimerEvent: {}
+[0.808077] (fiducials) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n'}
+[0.809023] (fiducials) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[0.900411] (-) TimerEvent: {}
+[1.000623] (-) TimerEvent: {}
+[1.100848] (-) TimerEvent: {}
+[1.201075] (-) TimerEvent: {}
+[1.301297] (-) TimerEvent: {}
+[1.401532] (-) TimerEvent: {}
+[1.445947] (fiducials) StdoutLine: {'line': b'-- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)\n'}
+[1.501639] (-) TimerEvent: {}
+[1.601875] (-) TimerEvent: {}
+[1.702094] (-) TimerEvent: {}
+[1.789785] (fiducials) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[1.802171] (-) TimerEvent: {}
+[1.902373] (-) TimerEvent: {}
+[1.933890] (fiducials) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[1.953486] (fiducials) StdoutLine: {'line': b'-- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)\n'}
+[1.970913] (fiducials) StdoutLine: {'line': b'-- Using PYTHON_EXECUTABLE: /usr/bin/python3\n'}
+[1.971042] (fiducials) StdoutLine: {'line': b'-- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10\n'}
+[1.971104] (fiducials) StdoutLine: {'line': b'-- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so\n'}
+[2.002486] (-) TimerEvent: {}
+[2.004340] (fiducials) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.12.8 (/opt/ros/humble/share/ament_lint_auto/cmake)\n'}
+[2.012348] (fiducials) StdoutLine: {'line': b"-- Added test 'copyright' to check source files copyright and LICENSE\n"}
+[2.052226] (fiducials) StdoutLine: {'line': b"-- Added test 'cppcheck' to perform static code analysis on C / C++ code\n"}
+[2.053017] (fiducials) StdoutLine: {'line': b'-- Configured cppcheck include dirs: $<BUILD_INTERFACE:/root/ws/origami/src/fiducials/build/fiducials/rosidl_generator_c>;$<BUILD_INTERFACE:/root/ws/origami/src/fiducials/build/fiducials/rosidl_typesupport_fastrtps_c>;$<BUILD_INTERFACE:/root/ws/origami/src/fiducials/build/fiducials/rosidl_generator_cpp>;$<BUILD_INTERFACE:/root/ws/origami/src/fiducials/build/fiducials/rosidl_typesupport_fastrtps_cpp>;$<BUILD_INTERFACE:/root/ws/origami/src/fiducials/build/fiducials/rosidl_typesupport_introspection_c>;$<BUILD_INTERFACE:/root/ws/origami/src/fiducials/build/fiducials/rosidl_typesupport_introspection_cpp>;/root/ws/origami/src/fiducials/build/fiducials/rosidl_generator_c;/root/ws/origami/src/fiducials/build/fiducials/rosidl_generator_py\n'}
+[2.053125] (fiducials) StdoutLine: {'line': b'-- Configured cppcheck exclude dirs and/or files: \n'}
+[2.092005] (fiducials) StdoutLine: {'line': b"-- Added test 'cpplint' to check C / C++ code against the Google style\n"}
+[2.092143] (fiducials) StdoutLine: {'line': b'-- Configured cpplint exclude dirs and/or files: \n'}
+[2.096916] (fiducials) StdoutLine: {'line': b"-- Added test 'flake8' to check Python code syntax and style conventions\n"}
+[2.102603] (-) TimerEvent: {}
+[2.106477] (fiducials) StdoutLine: {'line': b"-- Added test 'lint_cmake' to check CMake code style\n"}
+[2.112117] (fiducials) StdoutLine: {'line': b"-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257\n"}
+[2.151839] (fiducials) StdoutLine: {'line': b"-- Added test 'uncrustify' to check C / C++ code style\n"}
+[2.151977] (fiducials) StdoutLine: {'line': b'-- Configured uncrustify additional arguments: \n'}
+[2.156900] (fiducials) StdoutLine: {'line': b"-- Added test 'xmllint' to check XML markup files\n"}
+[2.158277] (fiducials) StdoutLine: {'line': b'-- Configuring done\n'}
+[2.199230] (fiducials) StdoutLine: {'line': b'-- Generating done\n'}
+[2.202681] (-) TimerEvent: {}
+[2.202880] (fiducials) StdoutLine: {'line': b'-- Build files have been written to: /root/ws/origami/src/fiducials/build/fiducials\n'}
+[2.224897] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_generator_c\x1b[0m\n'}
+[2.232203] (fiducials) StdoutLine: {'line': b'[  1%] Built target fiducials__cpp\n'}
+[2.235937] (fiducials) StdoutLine: {'line': b'[ 12%] Built target fiducials__rosidl_generator_c\n'}
+[2.242452] (fiducials) StdoutLine: {'line': b'[ 12%] Built target ament_cmake_python_copy_fiducials\n'}
+[2.243742] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_typesupport_cpp\x1b[0m\n'}
+[2.245076] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_typesupport_fastrtps_cpp\x1b[0m\n'}
+[2.245314] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_typesupport_introspection_cpp\x1b[0m\n'}
+[2.247182] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_typesupport_c\x1b[0m\n'}
+[2.247399] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_typesupport_introspection_c\x1b[0m\n'}
+[2.248878] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_typesupport_fastrtps_c\x1b[0m\n'}
+[2.261984] (fiducials) StdoutLine: {'line': b'[ 35%] Built target fiducials__rosidl_typesupport_cpp\n'}
+[2.262207] (fiducials) StdoutLine: {'line': b'[ 35%] Built target fiducials__rosidl_typesupport_c\n'}
+[2.262601] (fiducials) StdoutLine: {'line': b'[ 46%] Built target fiducials__rosidl_typesupport_introspection_c\n'}
+[2.265772] (fiducials) StdoutLine: {'line': b'[ 57%] Built target fiducials__rosidl_typesupport_introspection_cpp\n'}
+[2.268391] (fiducials) StdoutLine: {'line': b'[ 69%] Built target fiducials__rosidl_typesupport_fastrtps_cpp\n'}
+[2.271307] (fiducials) StdoutLine: {'line': b'[ 80%] Built target fiducials__rosidl_typesupport_fastrtps_c\n'}
+[2.286882] (fiducials) StdoutLine: {'line': b'[ 80%] Built target fiducials\n'}
+[2.302789] (-) TimerEvent: {}
+[2.304487] (fiducials) StdoutLine: {'line': b'[ 81%] Built target fiducials__py\n'}
+[2.313405] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_generator_py\x1b[0m\n'}
+[2.329415] (fiducials) StdoutLine: {'line': b'[ 91%] Built target fiducials__rosidl_generator_py\n'}
+[2.339444] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_typesupport_fastrtps_c__pyext\x1b[0m\n'}
+[2.340536] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_typesupport_c__pyext\x1b[0m\n'}
+[2.340714] (fiducials) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fiducials__rosidl_typesupport_introspection_c__pyext\x1b[0m\n'}
+[2.351149] (fiducials) StdoutLine: {'line': b'[ 94%] Built target fiducials__rosidl_typesupport_fastrtps_c__pyext\n'}
+[2.355261] (fiducials) StdoutLine: {'line': b'[ 97%] Built target fiducials__rosidl_typesupport_introspection_c__pyext\n'}
+[2.355656] (fiducials) StdoutLine: {'line': b'[100%] Built target fiducials__rosidl_typesupport_c__pyext\n'}
+[2.381820] (fiducials) StdoutLine: {'line': b'[100%] Built target ament_cmake_python_copy_scripts\n'}
+[2.402881] (-) TimerEvent: {}
+[2.447789] (fiducials) StdoutLine: {'line': b'running egg_info\n'}
+[2.448468] (fiducials) StdoutLine: {'line': b'writing fiducials.egg-info/PKG-INFO\n'}
+[2.448714] (fiducials) StdoutLine: {'line': b'writing dependency_links to fiducials.egg-info/dependency_links.txt\n'}
+[2.448902] (fiducials) StdoutLine: {'line': b'writing top-level names to fiducials.egg-info/top_level.txt\n'}
+[2.450569] (fiducials) StdoutLine: {'line': b"reading manifest file 'fiducials.egg-info/SOURCES.txt'\n"}
+[2.451089] (fiducials) StdoutLine: {'line': b"writing manifest file 'fiducials.egg-info/SOURCES.txt'\n"}
+[2.473624] (fiducials) StdoutLine: {'line': b'[100%] Built target ament_cmake_python_build_fiducials_egg\n'}
+[2.502985] (-) TimerEvent: {}
+[2.546365] (fiducials) StdoutLine: {'line': b'running egg_info\n'}
+[2.546849] (fiducials) StdoutLine: {'line': b'writing scripts.egg-info/PKG-INFO\n'}
+[2.547027] (fiducials) StdoutLine: {'line': b'writing dependency_links to scripts.egg-info/dependency_links.txt\n'}
+[2.547208] (fiducials) StdoutLine: {'line': b'writing top-level names to scripts.egg-info/top_level.txt\n'}
+[2.548566] (fiducials) StdoutLine: {'line': b"reading manifest file 'scripts.egg-info/SOURCES.txt'\n"}
+[2.549049] (fiducials) StdoutLine: {'line': b"writing manifest file 'scripts.egg-info/SOURCES.txt'\n"}
+[2.572161] (fiducials) StdoutLine: {'line': b'[100%] Built target ament_cmake_python_build_scripts_egg\n'}
+[2.583162] (fiducials) CommandEnded: {'returncode': 0}
+[2.603064] (-) TimerEvent: {}
+[2.688219] (fiducials) JobProgress: {'identifier': 'fiducials', 'progress': 'install'}
+[2.695367] (fiducials) Command: {'cmd': ['/usr/bin/cmake', '--install', '/root/ws/origami/src/fiducials/build/fiducials'], 'cwd': '/root/ws/origami/src/fiducials/build/fiducials', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('OLDPWD', '/root/ws/origami'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/ws/origami/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':1'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('PWD', '/root/ws/origami/src/fiducials/build/fiducials'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/ws/origami/install/origami:/opt/ros/humble')]), 'shell': False}
+[2.701046] (fiducials) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[2.701167] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/ament_index/resource_index/rosidl_interfaces/fiducials\n'}
+[2.701324] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials\n'}
+[2.701511] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg\n'}
+[2.701680] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform_array.h\n'}
+[2.701773] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform.h\n'}
+[2.701833] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry.h\n'}
+[2.701889] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/rosidl_generator_c__visibility_control.h\n'}
+[2.701944] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry_array.h\n'}
+[2.701996] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_array.h\n'}
+[2.702061] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[2.702112] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__functions.c\n'}
+[2.702176] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__functions.h\n'}
+[2.702255] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__functions.c\n'}
+[2.702358] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__type_support.h\n'}
+[2.702423] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__type_support.h\n'}
+[2.702476] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__functions.c\n'}
+[2.702541] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__type_support.h\n'}
+[2.702593] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__struct.h\n'}
+[2.702651] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__functions.c\n'}
+[2.702739] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__struct.h\n'}
+[2.702831] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__functions.h\n'}
+[2.702930] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__struct.h\n'}
+[2.703035] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__struct.h\n'}
+[2.703123] (-) TimerEvent: {}
+[2.703219] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__functions.h\n'}
+[2.703297] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__functions.c\n'}
+[2.703462] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__struct.h\n'}
+[2.703548] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__type_support.h\n'}
+[2.703620] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__functions.h\n'}
+[2.703691] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__type_support.h\n'}
+[2.703800] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__struct.h\n'}
+[2.703942] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__type_support.h\n'}
+[2.704007] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__functions.h\n'}
+[2.704065] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__functions.h\n'}
+[2.704133] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__functions.c\n'}
+[2.704184] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial.h\n'}
+[2.704234] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/environment/library_path.sh\n'}
+[2.704283] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/environment/library_path.dsv\n'}
+[2.704349] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/lib/libfiducials__rosidl_generator_c.so\n'}
+[2.704400] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials\n'}
+[2.704468] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg\n'}
+[2.704588] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/rosidl_typesupport_fastrtps_c__visibility_control.h\n'}
+[2.704704] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[2.704791] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_fastrtps_c.h\n'}
+[2.704846] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_fastrtps_c.h\n'}
+[2.704912] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_fastrtps_c.h\n'}
+[2.704968] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_fastrtps_c.h\n'}
+[2.705036] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_fastrtps_c.h\n'}
+[2.705090] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_fastrtps_c.h\n'}
+[2.705143] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/lib/libfiducials__rosidl_typesupport_fastrtps_c.so\n'}
+[2.705208] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials\n'}
+[2.705259] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg\n'}
+[2.705325] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform_array.hpp\n'}
+[2.705391] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_array.hpp\n'}
+[2.705443] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial.hpp\n'}
+[2.705519] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry_array.hpp\n'}
+[2.705571] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[2.705637] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__builder.hpp\n'}
+[2.705701] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__struct.hpp\n'}
+[2.705754] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__struct.hpp\n'}
+[2.705816] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__builder.hpp\n'}
+[2.705869] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__builder.hpp\n'}
+[2.705946] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__builder.hpp\n'}
+[2.706056] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__traits.hpp\n'}
+[2.706132] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__struct.hpp\n'}
+[2.706258] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__builder.hpp\n'}
+[2.706377] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__traits.hpp\n'}
+[2.706436] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__traits.hpp\n'}
+[2.706507] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__traits.hpp\n'}
+[2.706563] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__struct.hpp\n'}
+[2.706618] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__builder.hpp\n'}
+[2.706672] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__traits.hpp\n'}
+[2.706725] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__struct.hpp\n'}
+[2.706779] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__traits.hpp\n'}
+[2.706832] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__struct.hpp\n'}
+[2.706885] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_map_entry.hpp\n'}
+[2.706938] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/fiducial_transform.hpp\n'}
+[2.706990] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials\n'}
+[2.707040] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg\n'}
+[2.707106] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h\n'}
+[2.707160] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[2.707214] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[2.707267] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[2.707321] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[2.707374] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[2.707428] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[2.707481] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/dds_fastrtps\n'}
+[2.707539] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[2.707591] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/lib/libfiducials__rosidl_typesupport_fastrtps_cpp.so\n'}
+[2.707644] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials\n'}
+[2.707696] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg\n'}
+[2.707748] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/rosidl_typesupport_introspection_c__visibility_control.h\n'}
+[2.707799] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[2.707855] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_introspection_c.h\n'}
+[2.707910] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_introspection_c.h\n'}
+[2.707965] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_introspection_c.h\n'}
+[2.708017] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__type_support.c\n'}
+[2.708070] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__type_support.c\n'}
+[2.708122] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_introspection_c.h\n'}
+[2.708174] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_introspection_c.h\n'}
+[2.708226] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_introspection_c.h\n'}
+[2.708278] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__type_support.c\n'}
+[2.708330] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__type_support.c\n'}
+[2.708382] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__type_support.c\n'}
+[2.708434] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__type_support.c\n'}
+[2.708513] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/lib/libfiducials__rosidl_typesupport_introspection_c.so\n'}
+[2.708567] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/lib/libfiducials__rosidl_typesupport_c.so\n'}
+[2.708620] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials\n'}
+[2.708671] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg\n'}
+[2.708728] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail\n'}
+[2.708789] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__type_support.cpp\n'}
+[2.708841] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__rosidl_typesupport_introspection_cpp.hpp\n'}
+[2.708893] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__type_support.cpp\n'}
+[2.708945] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__rosidl_typesupport_introspection_cpp.hpp\n'}
+[2.708997] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry__type_support.cpp\n'}
+[2.709049] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__rosidl_typesupport_introspection_cpp.hpp\n'}
+[2.709102] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial__type_support.cpp\n'}
+[2.709155] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__rosidl_typesupport_introspection_cpp.hpp\n'}
+[2.709208] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_array__type_support.cpp\n'}
+[2.709262] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_map_entry_array__type_support.cpp\n'}
+[2.709314] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform__rosidl_typesupport_introspection_cpp.hpp\n'}
+[2.709370] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/include/fiducials/fiducials/msg/detail/fiducial_transform_array__rosidl_typesupport_introspection_cpp.hpp\n'}
+[2.709423] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/lib/libfiducials__rosidl_typesupport_introspection_cpp.so\n'}
+[2.709472] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/lib/libfiducials__rosidl_typesupport_cpp.so\n'}
+[2.709521] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/environment/pythonpath.sh\n'}
+[2.709570] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/environment/pythonpath.dsv\n'}
+[2.709619] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info\n'}
+[2.709669] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/top_level.txt\n'}
+[2.709724] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/SOURCES.txt\n'}
+[2.709782] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/dependency_links.txt\n'}
+[2.709832] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials-0.0.0-py3.10.egg-info/PKG-INFO\n'}
+[2.709898] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials\n'}
+[2.709952] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/_fiducials_s.ep.rosidl_typesupport_introspection_c.c\n'}
+[2.710005] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[2.710059] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/_fiducials_s.ep.rosidl_typesupport_fastrtps_c.c\n'}
+[2.710114] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[2.710167] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/libfiducials__rosidl_generator_py.so\n'}
+[2.710218] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/_fiducials_s.ep.rosidl_typesupport_c.c\n'}
+[2.710281] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/__init__.py\n'}
+[2.710334] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[2.710386] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg\n'}
+[2.710441] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial.py\n'}
+[2.710503] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_array_s.c\n'}
+[2.710556] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform.py\n'}
+[2.710609] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_s.c\n'}
+[2.710661] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_array_s.c\n'}
+[2.710713] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_array.py\n'}
+[2.710766] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/__init__.py\n'}
+[2.710824] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_array.py\n'}
+[2.710877] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_s.c\n'}
+[2.710927] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_s.c\n'}
+[2.710978] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_transform_array.py\n'}
+[2.711050] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry.py\n'}
+[2.711106] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg/_fiducial_map_entry_array_s.c\n'}
+[2.732611] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials'...\n"}
+[2.732744] (fiducials) StdoutLine: {'line': b"Compiling '/root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/__init__.py'...\n"}
+[2.732814] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/msg'...\n"}
+[2.736240] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so\n'}
+[2.736426] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so\n'}
+[2.736726] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/fiducials/fiducials_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so\n'}
+[2.736966] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/lib/libfiducials__rosidl_generator_py.so\n'}
+[2.737124] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/Fiducial.idl\n'}
+[2.737294] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialArray.idl\n'}
+[2.737483] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialTransform.idl\n'}
+[2.737573] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialTransformArray.idl\n'}
+[2.737628] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialMapEntry.idl\n'}
+[2.737698] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialMapEntryArray.idl\n'}
+[2.737772] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/Fiducial.msg\n'}
+[2.737823] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialArray.msg\n'}
+[2.737882] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialTransform.msg\n'}
+[2.737981] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialTransformArray.msg\n'}
+[2.738117] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialMapEntry.msg\n'}
+[2.738273] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/msg/FiducialMapEntryArray.msg\n'}
+[2.738403] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info\n'}
+[2.738534] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/top_level.txt\n'}
+[2.738669] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/SOURCES.txt\n'}
+[2.738836] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/dependency_links.txt\n'}
+[2.738959] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts-0.0.0-py3.10.egg-info/PKG-INFO\n'}
+[2.739097] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts\n'}
+[2.739207] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/create_markers.py\n'}
+[2.739261] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibrate.py\n'}
+[2.739319] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/aruco_detect.py\n'}
+[2.739376] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/PupilGlassesCalibration.pckl\n'}
+[2.739430] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/__init__.py\n'}
+[2.739483] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration\n'}
+[2.739539] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images\n'}
+[2.739593] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100708.jpg\n'}
+[2.739648] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100736.jpg\n'}
+[2.739699] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100504.jpg\n'}
+[2.739750] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100601.jpg\n'}
+[2.739800] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100614.jpg\n'}
+[2.739851] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100643.jpg\n'}
+[2.739901] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100453.jpg\n'}
+[2.739952] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100626.jpg\n'}
+[2.740003] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100719.jpg\n'}
+[2.740054] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100654.jpg\n'}
+[2.740113] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100514.jpg\n'}
+[2.740166] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100635.jpg\n'}
+[2.740229] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100550.jpg\n'}
+[2.740282] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100447.jpg\n'}
+[2.740335] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images/2022-04-25-100542.jpg\n'}
+[2.740387] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/calibration.pckl\n'}
+[2.740438] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration\n'}
+[2.740519] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m42s700.png\n'}
+[2.740575] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m21s263.png\n'}
+[2.740628] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m59s845.png\n'}
+[2.740682] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h14m37s506.png\n'}
+[2.740735] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h13m51s644.png\n'}
+[2.740789] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m33s305.png\n'}
+[2.740841] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m16s913.png\n'}
+[2.740894] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/calibration.pckl\n'}
+[2.740947] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m21s435.png\n'}
+[2.740999] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m12s225.png\n'}
+[2.741052] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m51s539.png\n'}
+[2.741123] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m56s584.png\n'}
+[2.741180] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h15m08s507.png\n'}
+[2.741263] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m53s558.png\n'}
+[2.741349] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m39s908.png\n'}
+[2.741432] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m03s920.png\n'}
+[2.741518] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m45s787.png\n'}
+[2.741602] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m01s390.png\n'}
+[2.741702] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h22m00s263.png\n'}
+[2.741793] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m04s522.png\n'}
+[2.741884] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m56s920.png\n'}
+[2.741975] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h18m24s207.png\n'}
+[2.742078] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m12s268.png\n'}
+[2.742171] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m57s011.png\n'}
+[2.742268] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h21m08s214.png\n'}
+[2.742363] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m10s240.png\n'}
+[2.742456] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h19m25s886.png\n'}
+[2.742546] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h20m49s540.png\n'}
+[2.742633] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration/vlcsnap-2022-04-28-16h14m26s085.png\n'}
+[2.742732] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam.pckl\n'}
+[2.742830] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images\n'}
+[2.742926] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage02.png\n'}
+[2.743022] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage07.png\n'}
+[2.743123] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage09.png\n'}
+[2.743225] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage13.png\n'}
+[2.743323] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage05.png\n'}
+[2.743414] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage12.png\n'}
+[2.743503] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage06.png\n'}
+[2.743591] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage04.png\n'}
+[2.743681] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage10.png\n'}
+[2.743770] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage11.png\n'}
+[2.743880] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage08.png\n'}
+[2.743982] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage01.png\n'}
+[2.744091] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage14.png\n'}
+[2.744189] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage03.png\n'}
+[2.744283] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage16.png\n'}
+[2.744377] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images/PupilCalibrationImage15.png\n'}
+[2.764327] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts'...\n"}
+[2.764478] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration'...\n"}
+[2.764562] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/TobiiCalibration'...\n"}
+[2.764621] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/old_webcam_calibration_images'...\n"}
+[2.764675] (fiducials) StdoutLine: {'line': b"Listing '/root/ws/origami/src/fiducials/install/fiducials/local/lib/python3.10/dist-packages/scripts/camera_calibration/pupil_glasses_calibration_images'...\n"}
+[2.767493] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/lib/fiducials/aruco_detect.py\n'}
+[2.767723] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/ament_index/resource_index/package_run_dependencies/fiducials\n'}
+[2.767801] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/ament_index/resource_index/parent_prefix_path/fiducials\n'}
+[2.767940] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/environment/ament_prefix_path.sh\n'}
+[2.768057] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/environment/ament_prefix_path.dsv\n'}
+[2.768165] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/environment/path.sh\n'}
+[2.768218] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/environment/path.dsv\n'}
+[2.768295] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/local_setup.bash\n'}
+[2.768348] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/local_setup.sh\n'}
+[2.768432] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/local_setup.zsh\n'}
+[2.768518] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/local_setup.dsv\n'}
+[2.768605] (fiducials) StdoutLine: {'line': b'-- Installing: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.dsv\n'}
+[2.768672] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/ament_index/resource_index/packages/fiducials\n'}
+[2.768737] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_cExport.cmake\n'}
+[2.768800] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_cExport-noconfig.cmake\n'}
+[2.768873] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cExport.cmake\n'}
+[2.768925] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cExport-noconfig.cmake\n'}
+[2.768996] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_cppExport.cmake\n'}
+[2.769070] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cppExport.cmake\n'}
+[2.769143] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake\n'}
+[2.769222] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cExport.cmake\n'}
+[2.769286] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cExport-noconfig.cmake\n'}
+[2.769358] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cExport.cmake\n'}
+[2.769431] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cExport-noconfig.cmake\n'}
+[2.769503] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cppExport.cmake\n'}
+[2.769582] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_introspection_cppExport-noconfig.cmake\n'}
+[2.769655] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cppExport.cmake\n'}
+[2.769708] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducials__rosidl_typesupport_cppExport-noconfig.cmake\n'}
+[2.769759] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_pyExport.cmake\n'}
+[2.769809] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/export_fiducials__rosidl_generator_pyExport-noconfig.cmake\n'}
+[2.769859] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/rosidl_cmake-extras.cmake\n'}
+[2.769908] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[2.769958] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[2.770007] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/ament_cmake_export_libraries-extras.cmake\n'}
+[2.770057] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[2.770106] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake\n'}
+[2.770155] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake\n'}
+[2.770204] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducialsConfig.cmake\n'}
+[2.770253] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/cmake/fiducialsConfig-version.cmake\n'}
+[2.770302] (fiducials) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/src/fiducials/install/fiducials/share/fiducials/package.xml\n'}
+[2.771568] (fiducials) CommandEnded: {'returncode': 0}
+[2.803239] (-) TimerEvent: {}
+[2.903543] (-) TimerEvent: {}
+[2.980239] (fiducials) JobEnded: {'identifier': 'fiducials', 'rc': 0}
+[2.980793] (-) EventReactorShutdown: {}

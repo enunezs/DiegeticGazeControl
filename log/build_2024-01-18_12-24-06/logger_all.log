@@ -1,0 +1,326 @@
+[0.966s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.966s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=12, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x7f3b49415cf0>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7f3b498c1d80>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7f3b498c1d80>>, mixin_verb=('build',))
+[1.005s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[1.005s] INFO:colcon.colcon_metadata.package_discovery.colcon_meta:Using configuration from '/root/.colcon/metadata/default/Gazebo.meta'
+[1.006s] INFO:colcon.colcon_metadata.package_discovery.colcon_meta:Using configuration from '/root/.colcon/metadata/default/fastrtps.meta'
+[1.006s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[1.006s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[1.006s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[1.006s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[1.006s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[1.006s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/root/ws/origami'
+[1.006s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[1.006s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[1.006s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[1.006s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[1.006s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[1.006s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[1.006s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[1.006s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[1.006s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[1.017s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[1.017s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[1.017s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[1.017s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[1.017s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extensions ['ignore', 'ignore_ament_install']
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extension 'ignore'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extension 'ignore_ament_install'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extensions ['colcon_pkg']
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extension 'colcon_pkg'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extensions ['colcon_meta']
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extension 'colcon_meta'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extensions ['ros']
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extension 'ros'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extensions ['cmake', 'python']
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extension 'cmake'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extension 'python'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extensions ['python_setup_py']
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include) by extension 'python_setup_py'
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extensions ['ignore', 'ignore_ament_install']
+[1.018s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extension 'ignore'
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extension 'ignore_ament_install'
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extensions ['colcon_pkg']
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extension 'colcon_pkg'
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extensions ['colcon_meta']
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extension 'colcon_meta'
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extensions ['ros']
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extension 'ros'
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extensions ['cmake', 'python']
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extension 'cmake'
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extension 'python'
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extensions ['python_setup_py']
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(include/origami) by extension 'python_setup_py'
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[1.019s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[1.020s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src/diegetic_button_pkg) by extensions ['ignore', 'ignore_ament_install']
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src/diegetic_button_pkg) by extension 'ignore'
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src/diegetic_button_pkg) by extension 'ignore_ament_install'
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src/diegetic_button_pkg) by extensions ['colcon_pkg']
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src/diegetic_button_pkg) by extension 'colcon_pkg'
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src/diegetic_button_pkg) by extensions ['colcon_meta']
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src/diegetic_button_pkg) by extension 'colcon_meta'
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src/diegetic_button_pkg) by extensions ['ros']
+[1.021s] Level 1:colcon.colcon_core.package_identification:_identify(src/diegetic_button_pkg) by extension 'ros'
+[1.024s] DEBUG:colcon.colcon_core.package_identification:Package 'src/diegetic_button_pkg' with type 'ros.ament_cmake' and name 'diegetic_button_pkg'
+[1.024s] Level 1:colcon.colcon_core.package_identification:_identify(src/fiducials) by extensions ['ignore', 'ignore_ament_install']
+[1.024s] Level 1:colcon.colcon_core.package_identification:_identify(src/fiducials) by extension 'ignore'
+[1.024s] Level 1:colcon.colcon_core.package_identification:_identify(src/fiducials) by extension 'ignore_ament_install'
+[1.024s] Level 1:colcon.colcon_core.package_identification:_identify(src/fiducials) by extensions ['colcon_pkg']
+[1.024s] Level 1:colcon.colcon_core.package_identification:_identify(src/fiducials) by extension 'colcon_pkg'
+[1.024s] Level 1:colcon.colcon_core.package_identification:_identify(src/fiducials) by extensions ['colcon_meta']
+[1.024s] Level 1:colcon.colcon_core.package_identification:_identify(src/fiducials) by extension 'colcon_meta'
+[1.024s] Level 1:colcon.colcon_core.package_identification:_identify(src/fiducials) by extensions ['ros']
+[1.024s] Level 1:colcon.colcon_core.package_identification:_identify(src/fiducials) by extension 'ros'
+[1.025s] DEBUG:colcon.colcon_core.package_identification:Package 'src/fiducials' with type 'ros.ament_cmake' and name 'fiducials'
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extensions ['ignore', 'ignore_ament_install']
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extension 'ignore'
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extension 'ignore_ament_install'
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extensions ['colcon_pkg']
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extension 'colcon_pkg'
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extensions ['colcon_meta']
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extension 'colcon_meta'
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extensions ['ros']
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extension 'ros'
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extensions ['cmake', 'python']
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extension 'cmake'
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extension 'python'
+[1.025s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extensions ['python_setup_py']
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_jaco_docker) by extension 'python_setup_py'
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_pupil_neon) by extensions ['ignore', 'ignore_ament_install']
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_pupil_neon) by extension 'ignore'
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_pupil_neon) by extension 'ignore_ament_install'
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_pupil_neon) by extensions ['colcon_pkg']
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_pupil_neon) by extension 'colcon_pkg'
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_pupil_neon) by extensions ['colcon_meta']
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_pupil_neon) by extension 'colcon_meta'
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_pupil_neon) by extensions ['ros']
+[1.026s] Level 1:colcon.colcon_core.package_identification:_identify(src/ros2_pupil_neon) by extension 'ros'
+[1.026s] DEBUG:colcon.colcon_core.package_identification:Package 'src/ros2_pupil_neon' with type 'ros.ament_cmake' and name 'pupil_neon_pkg'
+[1.026s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[1.027s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[1.027s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[1.027s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[1.027s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[1.086s] Level 5:colcon.colcon_core.verb:set package 'diegetic_button_pkg' build argument 'cmake_args' from command line to 'None'
+[1.086s] Level 5:colcon.colcon_core.verb:set package 'diegetic_button_pkg' build argument 'cmake_target' from command line to 'None'
+[1.086s] Level 5:colcon.colcon_core.verb:set package 'diegetic_button_pkg' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.086s] Level 5:colcon.colcon_core.verb:set package 'diegetic_button_pkg' build argument 'cmake_clean_cache' from command line to 'False'
+[1.086s] Level 5:colcon.colcon_core.verb:set package 'diegetic_button_pkg' build argument 'cmake_clean_first' from command line to 'False'
+[1.086s] Level 5:colcon.colcon_core.verb:set package 'diegetic_button_pkg' build argument 'cmake_force_configure' from command line to 'False'
+[1.086s] Level 5:colcon.colcon_core.verb:set package 'diegetic_button_pkg' build argument 'ament_cmake_args' from command line to 'None'
+[1.086s] Level 5:colcon.colcon_core.verb:set package 'diegetic_button_pkg' build argument 'catkin_cmake_args' from command line to 'None'
+[1.086s] Level 5:colcon.colcon_core.verb:set package 'diegetic_button_pkg' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.087s] DEBUG:colcon.colcon_core.verb:Building package 'diegetic_button_pkg' with the following arguments: {'ament_cmake_args': None, 'build_base': '/root/ws/origami/build/diegetic_button_pkg', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/root/ws/origami/install/diegetic_button_pkg', 'merge_install': False, 'path': '/root/ws/origami/src/diegetic_button_pkg', 'symlink_install': False, 'test_result_base': None}
+[1.096s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_args' from command line to 'None'
+[1.096s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_target' from command line to 'None'
+[1.096s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.096s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_clean_cache' from command line to 'False'
+[1.096s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_clean_first' from command line to 'False'
+[1.096s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'cmake_force_configure' from command line to 'False'
+[1.096s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'ament_cmake_args' from command line to 'None'
+[1.096s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'catkin_cmake_args' from command line to 'None'
+[1.096s] Level 5:colcon.colcon_core.verb:set package 'fiducials' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.096s] DEBUG:colcon.colcon_core.verb:Building package 'fiducials' with the following arguments: {'ament_cmake_args': None, 'build_base': '/root/ws/origami/build/fiducials', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/root/ws/origami/install/fiducials', 'merge_install': False, 'path': '/root/ws/origami/src/fiducials', 'symlink_install': False, 'test_result_base': None}
+[1.108s] Level 5:colcon.colcon_core.verb:set package 'pupil_neon_pkg' build argument 'cmake_args' from command line to 'None'
+[1.108s] Level 5:colcon.colcon_core.verb:set package 'pupil_neon_pkg' build argument 'cmake_target' from command line to 'None'
+[1.108s] Level 5:colcon.colcon_core.verb:set package 'pupil_neon_pkg' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.108s] Level 5:colcon.colcon_core.verb:set package 'pupil_neon_pkg' build argument 'cmake_clean_cache' from command line to 'False'
+[1.108s] Level 5:colcon.colcon_core.verb:set package 'pupil_neon_pkg' build argument 'cmake_clean_first' from command line to 'False'
+[1.108s] Level 5:colcon.colcon_core.verb:set package 'pupil_neon_pkg' build argument 'cmake_force_configure' from command line to 'False'
+[1.108s] Level 5:colcon.colcon_core.verb:set package 'pupil_neon_pkg' build argument 'ament_cmake_args' from command line to 'None'
+[1.108s] Level 5:colcon.colcon_core.verb:set package 'pupil_neon_pkg' build argument 'catkin_cmake_args' from command line to 'None'
+[1.108s] Level 5:colcon.colcon_core.verb:set package 'pupil_neon_pkg' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.108s] DEBUG:colcon.colcon_core.verb:Building package 'pupil_neon_pkg' with the following arguments: {'ament_cmake_args': None, 'build_base': '/root/ws/origami/build/pupil_neon_pkg', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/root/ws/origami/install/pupil_neon_pkg', 'merge_install': False, 'path': '/root/ws/origami/src/ros2_pupil_neon', 'symlink_install': False, 'test_result_base': None}
+[1.118s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[1.129s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[1.130s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/root/ws/origami/src/diegetic_button_pkg' with build type 'ament_cmake'
+[1.130s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/root/ws/origami/src/diegetic_button_pkg'
+[1.142s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[1.142s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.143s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.176s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/root/ws/origami/src/fiducials' with build type 'ament_cmake'
+[1.176s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/root/ws/origami/src/fiducials'
+[1.185s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.185s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.217s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/root/ws/origami/src/ros2_pupil_neon' with build type 'ament_cmake'
+[1.217s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/root/ws/origami/src/ros2_pupil_neon'
+[1.227s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.227s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.273s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/root/ws/origami/build/diegetic_button_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/diegetic_button_pkg -- -j12 -l12
+[1.277s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/root/ws/origami/build/fiducials': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/fiducials -- -j12 -l12
+[1.280s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/root/ws/origami/build/pupil_neon_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/pupil_neon_pkg -- -j12 -l12
+[1.602s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/root/ws/origami/build/pupil_neon_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/pupil_neon_pkg -- -j12 -l12
+[1.633s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/root/ws/origami/build/pupil_neon_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /root/ws/origami/build/pupil_neon_pkg
+[1.694s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(pupil_neon_pkg)
+[1.694s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/root/ws/origami/build/pupil_neon_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /root/ws/origami/build/pupil_neon_pkg
+[1.710s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg' for CMake module files
+[1.711s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg' for CMake config files
+[1.711s] Level 1:colcon.colcon_core.shell:create_environment_hook('pupil_neon_pkg', 'cmake_prefix_path')
+[1.727s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/hook/cmake_prefix_path.ps1'
+[1.728s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/hook/cmake_prefix_path.dsv'
+[1.728s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/hook/cmake_prefix_path.sh'
+[1.730s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/lib'
+[1.730s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/bin'
+[1.730s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/lib/pkgconfig/pupil_neon_pkg.pc'
+[1.734s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/lib/python3.10/site-packages'
+[1.734s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/bin'
+[1.749s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.ps1'
+[1.751s] INFO:colcon.colcon_core.shell:Creating package descriptor '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.dsv'
+[1.752s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.sh'
+[1.753s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.bash'
+[1.753s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.zsh'
+[1.754s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/root/ws/origami/install/pupil_neon_pkg/share/colcon-core/packages/pupil_neon_pkg)
+[1.830s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(pupil_neon_pkg)
+[1.848s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg' for CMake module files
+[1.849s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg' for CMake config files
+[1.849s] Level 1:colcon.colcon_core.shell:create_environment_hook('pupil_neon_pkg', 'cmake_prefix_path')
+[1.864s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/hook/cmake_prefix_path.ps1'
+[1.865s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/hook/cmake_prefix_path.dsv'
+[1.865s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/hook/cmake_prefix_path.sh'
+[1.866s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/lib'
+[1.866s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/bin'
+[1.866s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/lib/pkgconfig/pupil_neon_pkg.pc'
+[1.867s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/lib/python3.10/site-packages'
+[1.867s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/pupil_neon_pkg/bin'
+[1.887s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.ps1'
+[1.888s] INFO:colcon.colcon_core.shell:Creating package descriptor '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.dsv'
+[1.888s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.sh'
+[1.889s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.bash'
+[1.889s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/pupil_neon_pkg/share/pupil_neon_pkg/package.zsh'
+[1.890s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/root/ws/origami/install/pupil_neon_pkg/share/colcon-core/packages/pupil_neon_pkg)
+[2.347s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/root/ws/origami/build/diegetic_button_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/diegetic_button_pkg -- -j12 -l12
+[2.469s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/root/ws/origami/build/diegetic_button_pkg': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /root/ws/origami/build/diegetic_button_pkg
+[2.555s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/root/ws/origami/build/fiducials' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/fiducials -- -j12 -l12
+[2.596s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(diegetic_button_pkg)
+[2.628s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/root/ws/origami/build/diegetic_button_pkg' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /root/ws/origami/build/diegetic_button_pkg
+[2.638s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg' for CMake module files
+[2.640s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg' for CMake config files
+[2.641s] Level 1:colcon.colcon_core.shell:create_environment_hook('diegetic_button_pkg', 'cmake_prefix_path')
+[2.661s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/cmake_prefix_path.ps1'
+[2.662s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/cmake_prefix_path.dsv'
+[2.662s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/cmake_prefix_path.sh'
+[2.663s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/lib'
+[2.664s] Level 1:colcon.colcon_core.shell:create_environment_hook('diegetic_button_pkg', 'ld_library_path_lib')
+[2.687s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/ld_library_path_lib.ps1'
+[2.688s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/ld_library_path_lib.dsv'
+[2.688s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/ld_library_path_lib.sh'
+[2.689s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/bin'
+[2.689s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/lib/pkgconfig/diegetic_button_pkg.pc'
+[2.690s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/lib/python3.10/site-packages'
+[2.690s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/bin'
+[2.710s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.ps1'
+[2.711s] INFO:colcon.colcon_core.shell:Creating package descriptor '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.dsv'
+[2.712s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.sh'
+[2.712s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.bash'
+[2.713s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.zsh'
+[2.713s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/root/ws/origami/install/diegetic_button_pkg/share/colcon-core/packages/diegetic_button_pkg)
+[2.810s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/root/ws/origami/build/fiducials': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /root/ws/origami/build/fiducials
+[2.957s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(diegetic_button_pkg)
+[2.982s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg' for CMake module files
+[2.983s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg' for CMake config files
+[2.983s] Level 1:colcon.colcon_core.shell:create_environment_hook('diegetic_button_pkg', 'cmake_prefix_path')
+[3.001s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/cmake_prefix_path.ps1'
+[3.002s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/cmake_prefix_path.dsv'
+[3.002s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/cmake_prefix_path.sh'
+[3.003s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/lib'
+[3.003s] Level 1:colcon.colcon_core.shell:create_environment_hook('diegetic_button_pkg', 'ld_library_path_lib')
+[3.019s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/ld_library_path_lib.ps1'
+[3.020s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/ld_library_path_lib.dsv'
+[3.020s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/hook/ld_library_path_lib.sh'
+[3.020s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/bin'
+[3.021s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/lib/pkgconfig/diegetic_button_pkg.pc'
+[3.021s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/lib/python3.10/site-packages'
+[3.021s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/diegetic_button_pkg/bin'
+[3.040s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.ps1'
+[3.040s] INFO:colcon.colcon_core.shell:Creating package descriptor '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.dsv'
+[3.042s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.sh'
+[3.043s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.bash'
+[3.044s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/diegetic_button_pkg/share/diegetic_button_pkg/package.zsh'
+[3.045s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/root/ws/origami/install/diegetic_button_pkg/share/colcon-core/packages/diegetic_button_pkg)
+[3.049s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(fiducials)
+[3.055s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/root/ws/origami/build/fiducials' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /root/ws/origami/build/fiducials
+[3.068s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials' for CMake module files
+[3.069s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials' for CMake config files
+[3.069s] Level 1:colcon.colcon_core.shell:create_environment_hook('fiducials', 'cmake_prefix_path')
+[3.086s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/fiducials/share/fiducials/hook/cmake_prefix_path.ps1'
+[3.086s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/fiducials/share/fiducials/hook/cmake_prefix_path.dsv'
+[3.086s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/fiducials/share/fiducials/hook/cmake_prefix_path.sh'
+[3.087s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/lib'
+[3.087s] Level 1:colcon.colcon_core.shell:create_environment_hook('fiducials', 'ld_library_path_lib')
+[3.102s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/fiducials/share/fiducials/hook/ld_library_path_lib.ps1'
+[3.103s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/fiducials/share/fiducials/hook/ld_library_path_lib.dsv'
+[3.103s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/fiducials/share/fiducials/hook/ld_library_path_lib.sh'
+[3.104s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/bin'
+[3.104s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/lib/pkgconfig/fiducials.pc'
+[3.104s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/lib/python3.10/site-packages'
+[3.104s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/bin'
+[3.122s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/fiducials/share/fiducials/package.ps1'
+[3.123s] INFO:colcon.colcon_core.shell:Creating package descriptor '/root/ws/origami/install/fiducials/share/fiducials/package.dsv'
+[3.124s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/fiducials/share/fiducials/package.sh'
+[3.124s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/fiducials/share/fiducials/package.bash'
+[3.125s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/fiducials/share/fiducials/package.zsh'
+[3.125s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/root/ws/origami/install/fiducials/share/colcon-core/packages/fiducials)
+[3.365s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(fiducials)
+[3.385s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials' for CMake module files
+[3.387s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials' for CMake config files
+[3.387s] Level 1:colcon.colcon_core.shell:create_environment_hook('fiducials', 'cmake_prefix_path')
+[3.405s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/fiducials/share/fiducials/hook/cmake_prefix_path.ps1'
+[3.405s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/fiducials/share/fiducials/hook/cmake_prefix_path.dsv'
+[3.406s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/fiducials/share/fiducials/hook/cmake_prefix_path.sh'
+[3.406s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/lib'
+[3.406s] Level 1:colcon.colcon_core.shell:create_environment_hook('fiducials', 'ld_library_path_lib')
+[3.423s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/fiducials/share/fiducials/hook/ld_library_path_lib.ps1'
+[3.424s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/fiducials/share/fiducials/hook/ld_library_path_lib.dsv'
+[3.424s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/fiducials/share/fiducials/hook/ld_library_path_lib.sh'
+[3.425s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/bin'
+[3.425s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/lib/pkgconfig/fiducials.pc'
+[3.425s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/lib/python3.10/site-packages'
+[3.426s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/fiducials/bin'
+[3.440s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/fiducials/share/fiducials/package.ps1'
+[3.440s] INFO:colcon.colcon_core.shell:Creating package descriptor '/root/ws/origami/install/fiducials/share/fiducials/package.dsv'
+[3.441s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/fiducials/share/fiducials/package.sh'
+[3.442s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/fiducials/share/fiducials/package.bash'
+[3.443s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/fiducials/share/fiducials/package.zsh'
+[3.444s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/root/ws/origami/install/fiducials/share/colcon-core/packages/fiducials)
+[3.444s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[3.445s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[3.446s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[3.446s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[3.468s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[3.469s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[3.469s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[3.469s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[3.472s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.Spawn.ExecFailed: /usr/bin/dbus-launch terminated abnormally without any error message
+[3.472s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[3.486s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/install/local_setup.ps1'
+[3.488s] INFO:colcon.colcon_core.shell:Creating prefix util module '/root/ws/origami/install/_local_setup_util_ps1.py'
+[3.489s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/install/setup.ps1'
+[3.505s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/install/local_setup.sh'
+[3.506s] INFO:colcon.colcon_core.shell:Creating prefix util module '/root/ws/origami/install/_local_setup_util_sh.py'
+[3.506s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/install/setup.sh'
+[3.519s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/install/local_setup.bash'
+[3.519s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/install/setup.bash'
+[3.535s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/install/local_setup.zsh'
+[3.536s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/install/setup.zsh'

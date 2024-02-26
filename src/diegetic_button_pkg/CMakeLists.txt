@@ -44,8 +44,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   DEPENDENCIES geometry_msgs
 )
 
-
-
+# Install python scripts
 install(PROGRAMS
   scripts/diegetic_button.py
   scripts/input_check.py

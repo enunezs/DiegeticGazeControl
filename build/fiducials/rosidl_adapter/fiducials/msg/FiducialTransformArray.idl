@@ -1,0 +1,21 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from fiducials/msg/FiducialTransformArray.msg
+// generated code does not contain a copyright notice
+
+#include "fiducials/msg/FiducialTransform.idl"
+#include "std_msgs/msg/Header.idl"
+
+module fiducials {
+  module msg {
+    @verbatim (language="comment", text=
+      "A set of camera to fiducial transform with supporting data corresponding" "\n"
+      "to an image")
+    struct FiducialTransformArray {
+      std_msgs::msg::Header header;
+
+      int32 image_seq;
+
+      sequence<fiducials::msg::FiducialTransform> transforms;
+    };
+  };
+};

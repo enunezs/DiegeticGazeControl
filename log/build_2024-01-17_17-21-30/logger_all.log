@@ -1,0 +1,82 @@
+[0.796s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.796s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=12, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x7fbd2591a890>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7fbd25bca200>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7fbd25bca200>>, mixin_verb=('build',))
+[0.830s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.830s] INFO:colcon.colcon_metadata.package_discovery.colcon_meta:Using configuration from '/root/.colcon/metadata/default/Gazebo.meta'
+[0.831s] INFO:colcon.colcon_metadata.package_discovery.colcon_meta:Using configuration from '/root/.colcon/metadata/default/fastrtps.meta'
+[0.831s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.831s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.831s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.831s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.831s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.831s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/root/ws/origami'
+[0.831s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.831s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.831s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.831s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.831s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.831s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.831s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.831s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.831s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.843s] DEBUG:colcon.colcon_core.package_identification:Package '.' with type 'ros.ament_cmake' and name 'origami'
+[0.843s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.843s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.843s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.843s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.843s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.895s] Level 5:colcon.colcon_core.verb:set package 'origami' build argument 'cmake_args' from command line to 'None'
+[0.895s] Level 5:colcon.colcon_core.verb:set package 'origami' build argument 'cmake_target' from command line to 'None'
+[0.895s] Level 5:colcon.colcon_core.verb:set package 'origami' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.895s] Level 5:colcon.colcon_core.verb:set package 'origami' build argument 'cmake_clean_cache' from command line to 'False'
+[0.895s] Level 5:colcon.colcon_core.verb:set package 'origami' build argument 'cmake_clean_first' from command line to 'False'
+[0.895s] Level 5:colcon.colcon_core.verb:set package 'origami' build argument 'cmake_force_configure' from command line to 'False'
+[0.895s] Level 5:colcon.colcon_core.verb:set package 'origami' build argument 'ament_cmake_args' from command line to 'None'
+[0.895s] Level 5:colcon.colcon_core.verb:set package 'origami' build argument 'catkin_cmake_args' from command line to 'None'
+[0.895s] Level 5:colcon.colcon_core.verb:set package 'origami' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.895s] DEBUG:colcon.colcon_core.verb:Building package 'origami' with the following arguments: {'ament_cmake_args': None, 'build_base': '/root/ws/origami/build/origami', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/root/ws/origami/install/origami', 'merge_install': False, 'path': '/root/ws/origami', 'symlink_install': False, 'test_result_base': None}
+[0.904s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.914s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.914s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/root/ws/origami' with build type 'ament_cmake'
+[0.914s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/root/ws/origami'
+[0.924s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.924s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.924s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.959s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/root/ws/origami/build/origami': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/origami -- -j12 -l12
+[1.266s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/root/ws/origami/build/origami' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/origami -- -j12 -l12
+[1.291s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(origami)
+[1.302s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/origami' for CMake module files
+[1.302s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/origami' for CMake config files
+[1.303s] Level 1:colcon.colcon_core.shell:create_environment_hook('origami', 'cmake_prefix_path')
+[1.311s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/origami/share/origami/hook/cmake_prefix_path.ps1'
+[1.312s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/root/ws/origami/install/origami/share/origami/hook/cmake_prefix_path.dsv'
+[1.312s] INFO:colcon.colcon_core.shell:Creating environment hook '/root/ws/origami/install/origami/share/origami/hook/cmake_prefix_path.sh'
+[1.313s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/origami/bin'
+[1.313s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/origami/lib/pkgconfig/origami.pc'
+[1.314s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/origami/lib/python3.10/site-packages'
+[1.314s] Level 1:colcon.colcon_core.environment:checking '/root/ws/origami/install/origami/bin'
+[1.324s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/origami/share/origami/package.ps1'
+[1.325s] INFO:colcon.colcon_core.shell:Creating package descriptor '/root/ws/origami/install/origami/share/origami/package.dsv'
+[1.325s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/origami/share/origami/package.sh'
+[1.326s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/origami/share/origami/package.bash'
+[1.326s] INFO:colcon.colcon_core.shell:Creating package script '/root/ws/origami/install/origami/share/origami/package.zsh'
+[1.327s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/root/ws/origami/install/origami/share/colcon-core/packages/origami)
+[1.337s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[1.337s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[1.337s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '2'
+[1.337s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[1.352s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[1.352s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[1.352s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[1.352s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[1.354s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.Spawn.ExecFailed: /usr/bin/dbus-launch terminated abnormally without any error message
+[1.354s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[1.364s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/install/local_setup.ps1'
+[1.365s] INFO:colcon.colcon_core.shell:Creating prefix util module '/root/ws/origami/install/_local_setup_util_ps1.py'
+[1.366s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/install/setup.ps1'
+[1.375s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/install/local_setup.sh'
+[1.375s] INFO:colcon.colcon_core.shell:Creating prefix util module '/root/ws/origami/install/_local_setup_util_sh.py'
+[1.376s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/install/setup.sh'
+[1.385s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/install/local_setup.bash'
+[1.386s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/install/setup.bash'
+[1.395s] INFO:colcon.colcon_core.shell:Creating prefix script '/root/ws/origami/install/local_setup.zsh'
+[1.395s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/ws/origami/install/setup.zsh'

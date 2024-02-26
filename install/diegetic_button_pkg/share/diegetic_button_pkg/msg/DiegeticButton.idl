@@ -1,0 +1,27 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from diegetic_button_pkg/msg/DiegeticButton.msg
+// generated code does not contain a copyright notice
+
+#include "geometry_msgs/msg/Transform.idl"
+
+module diegetic_button_pkg {
+  module msg {
+    struct DiegeticButton {
+      @verbatim (language="comment", text=
+        "Details of a button")
+      string button_id;
+
+      geometry_msgs::msg::Transform button_transform;
+
+      @verbatim (language="comment", text=
+        "bounding box vertices in local coordinates")
+      double x0;
+
+      double y0;
+
+      double x1;
+
+      double y1;
+    };
+  };
+};
