@@ -1,6 +1,6 @@
 xhost +local:root
 
-docker image build -t origami .     
+docker image build -t origami:1.0 -f docker/Dockerfile docker     
 
 docker run -it --env="DISPLAY" \
 	--device=/dev/video0:/dev/video0 \
