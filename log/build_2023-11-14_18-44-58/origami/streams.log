@@ -1,0 +1,22 @@
+[0.037s] Invoking command in '/root/ws/origami/build/origami': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/origami -- -j12 -l12
+[0.055s] -- Found ament_cmake: 1.3.5 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.165s] -- Found rclpy: 3.3.10 (/opt/ros/humble/share/rclpy/cmake)
+[0.166s] -- Found builtin_interfaces: 1.2.1 (/opt/ros/humble/share/builtin_interfaces/cmake)
+[0.185s] -- Found rosidl_generator_c: 3.1.5 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.187s] -- Found rosidl_adapter: 3.1.5 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.192s] -- Found rosidl_generator_cpp: 3.1.5 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.202s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.216s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.229s] -- Found geometry_msgs: 4.2.3 (/opt/ros/humble/share/geometry_msgs/cmake)
+[0.318s] -- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[0.324s] [31mCMake Error at /opt/ros/humble/share/rosidl_cmake/cmake/rosidl_generate_interfaces.cmake:93 (message):
+[0.325s]   rosidl_generate_interfaces() the passed file 'msg/ArucoMarkers.msg' doesn't
+[0.325s]   exist relative to the CMAKE_CURRENT_SOURCE_DIR '/root/ws/origami'
+[0.325s] Call Stack (most recent call first):
+[0.325s]   CMakeLists.txt:17 (rosidl_generate_interfaces)
+[0.325s] 
+[0.325s] [0m
+[0.325s] -- Configuring incomplete, errors occurred!
+[0.325s] See also "/root/ws/origami/build/origami/CMakeFiles/CMakeOutput.log".
+[0.328s] gmake: *** [Makefile:226: cmake_check_build_system] Error 1
+[0.329s] Invoked command in '/root/ws/origami/build/origami' returned '2': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/origami -- -j12 -l12

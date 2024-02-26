@@ -1,0 +1,23 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from fiducials/msg/FiducialTransform.msg
+// generated code does not contain a copyright notice
+
+#include "geometry_msgs/msg/Transform.idl"
+
+module fiducials {
+  module msg {
+    @verbatim (language="comment", text=
+      "A camera to fiducial transform with supporting data")
+    struct FiducialTransform {
+      int32 fiducial_id;
+
+      geometry_msgs::msg::Transform transform;
+
+      double image_error;
+
+      double object_error;
+
+      double fiducial_area;
+    };
+  };
+};

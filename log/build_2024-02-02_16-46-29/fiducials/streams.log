@@ -1,0 +1,35 @@
+[0.085s] Invoking command in '/root/ws/origami/build/fiducials': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /root/ws/origami/build/fiducials -- -j12 -l12
+[0.128s] [  1%] Built target fiducials__cpp
+[0.337s] [  1%] Built target ament_cmake_python_copy_scripts
+[0.357s] [ 12%] Built target fiducials__rosidl_typesupport_introspection_cpp
+[0.535s] running egg_info
+[0.536s] writing scripts.egg-info/PKG-INFO
+[0.536s] writing dependency_links to scripts.egg-info/dependency_links.txt
+[0.537s] writing top-level names to scripts.egg-info/top_level.txt
+[0.538s] reading manifest file 'scripts.egg-info/SOURCES.txt'
+[0.539s] writing manifest file 'scripts.egg-info/SOURCES.txt'
+[0.562s] [ 12%] Built target ament_cmake_python_build_scripts_egg
+[0.582s] [ 23%] Built target fiducials__rosidl_typesupport_fastrtps_cpp
+[0.603s] [ 35%] Built target fiducials__rosidl_typesupport_cpp
+[0.627s] [ 35%] Built target ament_cmake_python_copy_fiducials
+[0.644s] [ 46%] Built target fiducials__rosidl_generator_c
+[0.820s] running egg_info
+[0.821s] writing fiducials.egg-info/PKG-INFO
+[0.821s] writing dependency_links to fiducials.egg-info/dependency_links.txt
+[0.821s] writing top-level names to fiducials.egg-info/top_level.txt
+[0.823s] reading manifest file 'fiducials.egg-info/SOURCES.txt'
+[0.824s] writing manifest file 'fiducials.egg-info/SOURCES.txt'
+[0.846s] [ 46%] Built target ament_cmake_python_build_fiducials_egg
+[0.865s] [ 57%] Built target fiducials__rosidl_typesupport_c
+[0.883s] [ 69%] Built target fiducials__rosidl_typesupport_introspection_c
+[0.903s] [ 80%] Built target fiducials__rosidl_typesupport_fastrtps_c
+[0.919s] [ 80%] Built target fiducials
+[0.936s] [ 81%] Built target fiducials__py
+[0.956s] [ 83%] [32mBuilding C object CMakeFiles/fiducials__rosidl_generator_py.dir/rosidl_generator_py/fiducials/msg/_fiducial_s.c.o[0m
+[1.017s] [01m[K/root/ws/origami/build/fiducials/rosidl_generator_py/fiducials/msg/_fiducial_s.c:11:10:[m[K [01;31m[Kfatal error: [m[Knumpy/ndarrayobject.h: No such file or directory
+[1.017s]    11 | #include [01;31m[K"numpy/ndarrayobject.h"[m[K
+[1.017s]       |          [01;31m[K^~~~~~~~~~~~~~~~~~~~~~~[m[K
+[1.017s] compilation terminated.
+[1.020s] gmake[2]: *** [CMakeFiles/fiducials__rosidl_generator_py.dir/build.make:76: CMakeFiles/fiducials__rosidl_generator_py.dir/rosidl_generator_py/fiducials/msg/_fiducial_s.c.o] Error 1
+[1.020s] gmake[1]: *** [CMakeFiles/Makefile2:478: CMakeFiles/fiducials__rosidl_generator_py.dir/all] Error 2
+[1.020s] gmake: *** [Makefile:146: all] Error 2

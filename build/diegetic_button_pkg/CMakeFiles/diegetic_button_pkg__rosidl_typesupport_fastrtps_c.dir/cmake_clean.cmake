@@ -1,0 +1,25 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/diegetic_button__type_support_c.cpp.o"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/diegetic_button__type_support_c.cpp.o.d"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/diegetic_button_array__type_support_c.cpp.o"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/diegetic_button_array__type_support_c.cpp.o.d"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/input_status__type_support_c.cpp.o"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/input_status__type_support_c.cpp.o.d"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/input_status_array__type_support_c.cpp.o"
+  "CMakeFiles/diegetic_button_pkg__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/input_status_array__type_support_c.cpp.o.d"
+  "libdiegetic_button_pkg__rosidl_typesupport_fastrtps_c.pdb"
+  "libdiegetic_button_pkg__rosidl_typesupport_fastrtps_c.so"
+  "rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/diegetic_button__rosidl_typesupport_fastrtps_c.h"
+  "rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/diegetic_button__type_support_c.cpp"
+  "rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/diegetic_button_array__rosidl_typesupport_fastrtps_c.h"
+  "rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/diegetic_button_array__type_support_c.cpp"
+  "rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/input_status__rosidl_typesupport_fastrtps_c.h"
+  "rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/input_status__type_support_c.cpp"
+  "rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/input_status_array__rosidl_typesupport_fastrtps_c.h"
+  "rosidl_typesupport_fastrtps_c/diegetic_button_pkg/msg/detail/input_status_array__type_support_c.cpp"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/diegetic_button_pkg__rosidl_typesupport_fastrtps_c.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

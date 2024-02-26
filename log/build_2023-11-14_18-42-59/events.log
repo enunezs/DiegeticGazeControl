@@ -1,0 +1,60 @@
+[0.000000] (-) TimerEvent: {}
+[0.000510] (origami) JobQueued: {'identifier': 'origami', 'dependencies': OrderedDict()}
+[0.000584] (origami) JobStarted: {'identifier': 'origami'}
+[0.030765] (origami) JobProgress: {'identifier': 'origami', 'progress': 'cmake'}
+[0.031764] (origami) JobProgress: {'identifier': 'origami', 'progress': 'build'}
+[0.031813] (origami) Command: {'cmd': ['/usr/bin/cmake', '--build', '/root/ws/origami/build/origami', '--', '-j12', '-l12'], 'cwd': '/root/ws/origami/build/origami', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('ROS_PYTHON_VERSION', '3'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('PWD', '/root/ws/origami/build/origami'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[0.050575] (origami) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.5 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[0.099773] (-) TimerEvent: {}
+[0.163399] (origami) StdoutLine: {'line': b'-- Found rclpy: 3.3.10 (/opt/ros/humble/share/rclpy/cmake)\n'}
+[0.164334] (origami) StdoutLine: {'line': b'-- Found builtin_interfaces: 1.2.1 (/opt/ros/humble/share/builtin_interfaces/cmake)\n'}
+[0.188261] (origami) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.5 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[0.192484] (origami) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.5 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[0.199674] (origami) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.5 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[0.200019] (-) TimerEvent: {}
+[0.211704] (origami) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.227781] (origami) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.243700] (origami) StdoutLine: {'line': b'-- Found geometry_msgs: 4.2.3 (/opt/ros/humble/share/geometry_msgs/cmake)\n'}
+[0.300143] (-) TimerEvent: {}
+[0.332752] (origami) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)\n'}
+[0.339427] (origami) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.12.8 (/opt/ros/humble/share/ament_lint_auto/cmake)\n'}
+[0.400260] (-) TimerEvent: {}
+[0.500492] (-) TimerEvent: {}
+[0.575061] (origami) StdoutLine: {'line': b"-- Added test 'cppcheck' to perform static code analysis on C / C++ code\n"}
+[0.575194] (origami) StdoutLine: {'line': b'-- Configured cppcheck include dirs: \n'}
+[0.575255] (origami) StdoutLine: {'line': b'-- Configured cppcheck exclude dirs and/or files: \n'}
+[0.597259] (origami) StdoutLine: {'line': b"-- Added test 'flake8' to check Python code syntax and style conventions\n"}
+[0.600558] (-) TimerEvent: {}
+[0.639462] (origami) StdoutLine: {'line': b"-- Added test 'lint_cmake' to check CMake code style\n"}
+[0.660928] (origami) StdoutLine: {'line': b"-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257\n"}
+[0.700659] (-) TimerEvent: {}
+[0.800893] (-) TimerEvent: {}
+[0.836360] (origami) StdoutLine: {'line': b"-- Added test 'uncrustify' to check C / C++ code style\n"}
+[0.836519] (origami) StdoutLine: {'line': b'-- Configured uncrustify additional arguments: \n'}
+[0.857385] (origami) StdoutLine: {'line': b"-- Added test 'xmllint' to check XML markup files\n"}
+[0.858022] (origami) StdoutLine: {'line': b'-- Configuring done\n'}
+[0.861375] (origami) StdoutLine: {'line': b'-- Generating done\n'}
+[0.862467] (origami) StdoutLine: {'line': b'-- Build files have been written to: /root/ws/origami/build/origami\n'}
+[0.881141] (origami) CommandEnded: {'returncode': 0}
+[0.896930] (origami) JobProgress: {'identifier': 'origami', 'progress': 'install'}
+[0.901000] (-) TimerEvent: {}
+[0.903463] (origami) Command: {'cmd': ['/usr/bin/cmake', '--install', '/root/ws/origami/build/origami'], 'cwd': '/root/ws/origami/build/origami', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('ROS_PYTHON_VERSION', '3'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':0'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('PWD', '/root/ws/origami/build/origami'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[0.909561] (origami) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[0.909739] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/ament_index/resource_index/package_run_dependencies/origami\n'}
+[0.909832] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/ament_index/resource_index/parent_prefix_path/origami\n'}
+[0.909922] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/origami/environment/ament_prefix_path.sh\n'}
+[0.909977] (origami) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/origami/share/origami/environment/ament_prefix_path.dsv\n'}
+[0.910079] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/origami/environment/path.sh\n'}
+[0.910164] (origami) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/origami/share/origami/environment/path.dsv\n'}
+[0.910236] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/origami/local_setup.bash\n'}
+[0.910291] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/origami/local_setup.sh\n'}
+[0.910358] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/origami/local_setup.zsh\n'}
+[0.910443] (origami) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/origami/share/origami/local_setup.dsv\n'}
+[0.910521] (origami) StdoutLine: {'line': b'-- Installing: /root/ws/origami/install/origami/share/origami/package.dsv\n'}
+[0.910572] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/ament_index/resource_index/packages/origami\n'}
+[0.910622] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/origami/cmake/origamiConfig.cmake\n'}
+[0.910671] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/origami/cmake/origamiConfig-version.cmake\n'}
+[0.910721] (origami) StdoutLine: {'line': b'-- Up-to-date: /root/ws/origami/install/origami/share/origami/package.xml\n'}
+[0.911730] (origami) CommandEnded: {'returncode': 0}
+[0.994808] (origami) JobEnded: {'identifier': 'origami', 'rc': 0}
+[0.995329] (-) EventReactorShutdown: {}

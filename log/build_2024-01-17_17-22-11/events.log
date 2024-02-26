@@ -1,0 +1,57 @@
+[0.000000] (-) TimerEvent: {}
+[0.000106] (origami) JobQueued: {'identifier': 'origami', 'dependencies': OrderedDict()}
+[0.000153] (origami) JobStarted: {'identifier': 'origami'}
+[0.034676] (origami) JobProgress: {'identifier': 'origami', 'progress': 'cmake'}
+[0.034890] (origami) Command: {'cmd': ['/usr/bin/cmake', '/root/ws/origami', '-DCMAKE_INSTALL_PREFIX=/root/ws/origami/install/origami'], 'cwd': '/root/ws/origami/build/origami', 'env': OrderedDict([('HOSTNAME', 'franka-pc'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/root'), ('ROS_PYTHON_VERSION', '3'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('TERM', 'xterm'), ('ROS_LOCALHOST_ONLY', '0'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':1'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS_DOMAIN_ID', '7'), ('AMENT_PREFIX_PATH', '/opt/ros/humble'), ('PWD', '/root/ws/origami/build/origami'), ('LC_ALL', 'C.UTF-8'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/opt/ros/humble')]), 'shell': False}
+[0.080889] (origami) StdoutLine: {'line': b'-- The C compiler identification is GNU 11.4.0\n'}
+[0.099383] (-) TimerEvent: {}
+[0.129619] (origami) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 11.4.0\n'}
+[0.135382] (origami) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.191844] (origami) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.198058] (origami) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[0.198258] (origami) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.198571] (origami) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.199486] (-) TimerEvent: {}
+[0.201159] (origami) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.263439] (origami) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.269840] (origami) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.270059] (origami) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.270452] (origami) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.272681] (origami) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.5 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[0.299602] (-) TimerEvent: {}
+[0.399815] (-) TimerEvent: {}
+[0.408556] (origami) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3.10 (found version "3.10.12") found components: Interpreter \n'}
+[0.477998] (origami) StdoutLine: {'line': b'-- Found rclpy: 3.3.10 (/opt/ros/humble/share/rclpy/cmake)\n'}
+[0.479087] (origami) StdoutLine: {'line': b'-- Found builtin_interfaces: 1.2.1 (/opt/ros/humble/share/builtin_interfaces/cmake)\n'}
+[0.499936] (-) TimerEvent: {}
+[0.503254] (origami) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.5 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[0.507103] (origami) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.5 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[0.514661] (origami) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.5 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[0.525962] (origami) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.542865] (origami) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.558051] (origami) StdoutLine: {'line': b'-- Found geometry_msgs: 4.2.3 (/opt/ros/humble/share/geometry_msgs/cmake)\n'}
+[0.600020] (-) TimerEvent: {}
+[0.647848] (origami) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)\n'}
+[0.661270] (origami) StderrLine: {'line': b'\x1b[31mCMake Error at CMakeLists.txt:16 (find_package):\n'}
+[0.661522] (origami) StderrLine: {'line': b'  By not providing "Findfiducials.cmake" in CMAKE_MODULE_PATH this project\n'}
+[0.661594] (origami) StderrLine: {'line': b'  has asked CMake to find a package configuration file provided by\n'}
+[0.661652] (origami) StderrLine: {'line': b'  "fiducials", but CMake did not find one.\n'}
+[0.661707] (origami) StderrLine: {'line': b'\n'}
+[0.661759] (origami) StderrLine: {'line': b'  Could not find a package configuration file provided by "fiducials" with\n'}
+[0.661813] (origami) StderrLine: {'line': b'  any of the following names:\n'}
+[0.661864] (origami) StderrLine: {'line': b'\n'}
+[0.661915] (origami) StderrLine: {'line': b'    fiducialsConfig.cmake\n'}
+[0.661967] (origami) StderrLine: {'line': b'    fiducials-config.cmake\n'}
+[0.662019] (origami) StderrLine: {'line': b'\n'}
+[0.662069] (origami) StderrLine: {'line': b'  Add the installation prefix of "fiducials" to CMAKE_PREFIX_PATH or set\n'}
+[0.662122] (origami) StderrLine: {'line': b'  "fiducials_DIR" to a directory containing one of the above files.  If\n'}
+[0.662174] (origami) StderrLine: {'line': b'  "fiducials" provides a separate development package or SDK, be sure it has\n'}
+[0.662226] (origami) StderrLine: {'line': b'  been installed.\n'}
+[0.662276] (origami) StderrLine: {'line': b'\n'}
+[0.662329] (origami) StderrLine: {'line': b'\x1b[0m\n'}
+[0.662380] (origami) StdoutLine: {'line': b'-- Configuring incomplete, errors occurred!\n'}
+[0.662458] (origami) StdoutLine: {'line': b'See also "/root/ws/origami/build/origami/CMakeFiles/CMakeOutput.log".\n'}
+[0.665928] (origami) CommandEnded: {'returncode': 1}
+[0.701269] (-) TimerEvent: {}
+[0.712944] (origami) JobEnded: {'identifier': 'origami', 'rc': 1}
+[0.723555] (-) EventReactorShutdown: {}
