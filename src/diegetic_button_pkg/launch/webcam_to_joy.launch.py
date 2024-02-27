@@ -8,8 +8,8 @@ def generate_launch_description():
         [
             Node(
                 package="pupil_neon_pkg",
-                executable="pupil_publisher.py",
-                name="pupil_glasses",
+                executable="emulator_publisher.py",
+                name="pupil_glasses_emulator",
                 arguments=[("__log_level:=debug")],
                 output="screen",
                 parameters=["src/pupil_neon_pkg/config/params.yaml"],
