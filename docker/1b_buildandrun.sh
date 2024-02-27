@@ -1,7 +1,6 @@
 xhost +local:root
 
-#docker image build -t origami:1.0 -f docker/Dockerfile docker     
-docker pull enunezs/origami:1.0
+docker image build -t origami:latest -f docker/Dockerfile docker     
 
 docker run -it --env="DISPLAY" \
 	--device=/dev/video0:/dev/video0 \
@@ -13,6 +12,7 @@ docker run -it --env="DISPLAY" \
 	--net=host \
 	--volume $(pwd):/root/ws/origami \
 	--volume /dev/shm:/dev/shm \
-	enunezs/origami:1.0
+	origami:latest
 
 export containerId=$(docker ps -l -q)
+
