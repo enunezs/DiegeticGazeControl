@@ -10,19 +10,12 @@ from fiducials.msg import FiducialArray
 from fiducials.msg import FiducialTransform
 from fiducials.msg import FiducialTransformArray
 
-
 from geometry_msgs.msg import Transform
 from geometry_msgs.msg import PoseArray, Pose
-
 
 # Publish messages
 from diegetic_button_pkg.msg import DiegeticButton
 from diegetic_button_pkg.msg import DiegeticButtonArray
-
-# from ros2_aruco_interfaces import ArucoMarkers
-
-# For now
-from std_msgs.msg import Float32MultiArray
 
 # Aruco
 from cv2 import aruco
@@ -53,7 +46,6 @@ class diegeticButton:  # Inherits from FiducialTransformArray?
         self.bounding_box = bounding_box
         # Dictionary of parent ID and their relative Transforms {"id",[x,y,z,q1,q2,q3,q4]}
         self.marker_parents = {}
-        # Might need to change type?
         self.active_parents = []
         self.parent_pos = Transform()
         self.pos_2d = [0, 0]
@@ -88,7 +80,6 @@ class diegeticButtonPublisher(Node):
         )
 
         # Publish information of found diegetic buttons
-        # self.publisher_diegetic_button_data = self.create_publisher(ButtonData, '/button_data', 1)
 
     ##### Loading function #####
     # Every  fiducial marker (or collection of markers) will have the coordinates of a button associated with it
@@ -96,8 +87,7 @@ class diegeticButtonPublisher(Node):
 
     def load_diegetic_button_data(self):
         button_dictionary = {}  # key is the button id
-
-        # self.get_logger().info("Loading marker to button map...")
+        self.get_logger().info("Loading marker to button map...")
 
         with open(button_map_path) as file:
             lines = file.readlines()
@@ -128,17 +118,9 @@ class diegeticButtonPublisher(Node):
             "Loaded data for " + str(len(button_dictionary)) + " Buttons"
         )
         self.get_logger().info(str(button_dictionary.keys()))
-
         return button_dictionary
 
-    ##### Use the fiducial markers and dictionary with button from markers data to find button position #####
-    # Receives a FiducialTransforms message
-
-    # Send
-    def unpack_button_message(self, fiducial_transform_array_msg):
-        # Unpacks the message into a dictionary
-        pass
-
+    ##### Callback function #####
     def get_diegetic_button_frames(self, fiducial_transform_array_msg):
         start_time = self.get_clock().now()
 
@@ -336,39 +318,6 @@ class diegeticButtonPublisher(Node):
         self.publisher_button_transforms.publish(DiegeticButtonArrayMsg)
 
         end_time = self.get_clock().now()
-
-        """
-        # Find 2D position of button
-        for button in active_button_list:
-            for parent_marker in button.active_parents:
-                # Offset for the button from the parent
-                button_local_pos = [-button.marker_parents[parent_marker.fiducial_id][0] / 1000, #x
-                                    -button.marker_parents[parent_marker.fiducial_id][1]/1000,
-                                    0]
-                # Pos of the parent
-                button_local_rot = []
-
-
-                pos_vector = [parent_marker.transform.translation.x,
-                    parent_marker.transform.translation.y, parent_marker.transform.translation.z]
-                rot_vector = [parent_marker.transform.translation.x,
-                    parent_marker.transform.translation.y, parent_marker.transform.translation.z]
-
-
-
-                imagePoints, _ = projectPoints(
-                    button_local_pos, rot_vector, pos_vector, camera_matrix, distCoeffs)
-
-                button.pos_2d = [u, v]
-                self.get_logger().info(u, v)
-
-                # Pack and send
-
-                msg = Float32MultiArray()
-                msg.data = [u, v]
-                self.publisher_test.publish(msg)
-                break
-        """
 
         # Clear active markers
         for b_id, button in self.button_dictionary.items():

@@ -219,7 +219,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
         )
         self.get_logger().info("Distortion Coefficients: \n %s" % self.dist_coeffs)
 
-        print("Camera intrinsics loaded")
+        self.get_logger().info("Camera intrinsics loaded")
 
     def update_controller(self, Joy_msg):
         a_button = Joy_msg.buttons[0]
