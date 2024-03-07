@@ -1,6 +1,8 @@
+import os
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import ExecuteProcess
+from launch.substitutions import ThisLaunchFileDir, PathJoinSubstitution
 
 
 def generate_launch_description():
@@ -9,10 +11,16 @@ def generate_launch_description():
             Node(
                 package="pupil_neon_pkg",
                 executable="emulator_publisher.py",
-                name="pupil_glasses_emulator",
+                name="pupil_glasses_emulator_node",
                 arguments=[("__log_level:=debug")],
                 output="screen",
-                parameters=["src/pupil_neon_pkg/config/params.yaml"],
+                parameters=[
+                    os.path.join(
+                        get_package_share_directory("pupil_neon_pkg"),
+                        "config",
+                        "params.yaml",
+                    )
+                ],
             ),
             Node(
                 package="fiducials",
