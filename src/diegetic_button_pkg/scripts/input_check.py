@@ -15,7 +15,6 @@ from diegetic_button_pkg.msg import InputStatus
 from diegetic_button_pkg.msg import InputStatusArray
 
 from std_msgs.msg import Float32
-from std_msgs.msg import Float32MultiArray
 from geometry_msgs.msg import PointStamped
 
 # Maths
@@ -25,38 +24,41 @@ import numpy as np
 import matplotlib.path as mpltPath  # For finding gaze and button overlap. Apparently very fast
 
 # Aruco
-from cv2 import aruco
 from cv2 import drawFrameAxes
 from cv2 import projectPoints
 from cv2 import Rodrigues
 
 # For handling inputs
 from pynput import keyboard  # import Listener, Key
-
-
-# For handling outputs
-# import serial
-# import time
-
-# Loading camera intrinsics
-# import pickle
+from sensor_msgs.msg import Joy
 
 ### * PARAMETERS * ###  Debug optionsrosbag_to_csv
 # Input interaction parameters
 # TODO: Expose these later
 # Dwell time settings
-active_threshold = 0.40  # Close to 0 start quickly
-inactive_threshold = 0.60  # Close to 1 stop quickly
-cycle_duration = (
+cycle_duration_seconds = (
     0.30  # 3 seconds for complete transition #slope, we can split this later
 )
+active_threshold_percent = 0.40  # Close to 0 start quickly
+inactive_threshold_percent = 0.60  # Close to 1 stop quickly
 
-# Input modes and params
+
+### Input modes
 input_trigger_mode = "keyboard_trigger"
 # input_trigger_mode = "sloppy"
 # input_trigger_mode = "dwell_time"
 # keyboard_trigger
 # "Dwell Time"
+
+from enum import Enum
+
+
+class ControlMode(Enum):
+    GLOBAL = 0
+    RELATIVE_EE = 1
+    # HEAD_FOLLOW_SPHERICAL = 2
+    # HEAD_FOLLOW_CYLINDRICAL = 3
+
 
 # "Keyboard Trigger"
 button_ids = ["????"]  # How to point to button?
@@ -68,12 +70,8 @@ draw_on_fiducials = True
 serial_com = False
 send_serial = False
 
-### FUTURE
-# "Earswitch"
-# ????
 
-
-class input_status:  # Inherits from FiducialTransformArray?
+class input_status:
     def __init__(self, id, status="inactive", percent=0.0):
         self.id = id  # UNIQUE id for button
         # Array with 4 corners from center [x0,y0,x1,y1]
@@ -90,17 +88,17 @@ class input_status:  # Inherits from FiducialTransformArray?
 # Node publishes the list of debounced pressed buttons
 
 
-class ProcessInputs(Node):  # Create node inheriting from Node
-    # Does not alert about change. Left on per-application basis
-
+class ProcessInputs(Node):
     def __init__(self):
-        # * Base node init
         super().__init__("process_inputs_node")
+        self.get_logger().info("Process Inputs Node is Running...")
+
+        # Initialize vars
         self.buttons = []
         self.gaze_position = [0.5, 0.5]  # Default to center
 
         # Load camera intrinsics
-        self.load_camera_intrinsics()
+        self.load_camera_intrinsics()  # ! Why?
 
         #  Open bridge for editting
         self.bridge = CvBridge()
@@ -113,32 +111,32 @@ class ProcessInputs(Node):  # Create node inheriting from Node
         self.frame = np.zeros([1200, 1600, 3], dtype=np.uint8)
         self.frame.fill(0)  # or img[:] = 255
         self.height, self.width = [1200, 1600]
+
         # TODO:
         # screen_res_x,screen_res_y = pyautogui.size()
 
         # TODO: Clunky!
-
         def on_press(key):
             self.key_pressed = True
-            # print('alphanumeric key {0} pressed'.format(key.char))
+            # self.get_logger().info('alphanumeric key {0} pressed'.format(key.char))
 
         def on_release(key):
             self.key_pressed = False
 
         # * Input parameter init
         if input_trigger_mode == "keyboard_trigger":
-            cycle_duration = 0.05
-            active_threshold = 0.10  # percent
-            inactive_threshold = 0.90
+            cycle_duration_seconds = 0.05
+            active_threshold_percent = 0.10  # percent
+            inactive_threshold_percent = 0.90
 
             listener = keyboard.Listener(on_press=on_press, on_release=on_release)
             listener.start()
         self.key_pressed = False
 
         if input_trigger_mode == "gamepad_trigger":
-            cycle_duration = 0.05
-            active_threshold = 0.10  # percent
-            inactive_threshold = 0.90
+            cycle_duration_seconds = 0.05
+            active_threshold_percent = 0.10  # percent
+            inactive_threshold_percent = 0.90
             self.subscriber_controller = self.create_subscription(
                 Joy, "/joy", self.update_controller, 1
             )
@@ -164,10 +162,6 @@ class ProcessInputs(Node):  # Create node inheriting from Node
             InputStatusArray, "diegetic/inputs", 1
         )
 
-        """
-        self.publisher_simple_output = self.create_publisher(
-            Float32MultiArray, "/simple_output", 1)
-        """
         self.publisher_simple_output = self.create_publisher(
             Float32, "/simple_output", 1
         )
@@ -175,7 +169,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
     # TODO: Add image to button list?
 
     def load_camera_intrinsics(self):
-        print("Loading camera intrinsics...")
+        self.get_logger().info("Loading camera intrinsics...")
 
         # Camera matrix
         camera_matrix_default = [
@@ -218,7 +212,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
     def update_controller(self, Joy_msg):
         a_button = Joy_msg.buttons[0]
         self.key_pressed = bool(a_button)
-        # print(f"From XBOX got {a_button}")
+        # self.get_logger().info(f"From XBOX got {a_button}")
 
         pass
 
@@ -226,12 +220,12 @@ class ProcessInputs(Node):  # Create node inheriting from Node
     def update_gaze_pos(self, gaze_msg):
         # self.gaze_position = [float(x) for x in gaze_msg.data.split(",")]
         self.gaze_position = [gaze_msg.point.x, gaze_msg.point.y]
-        # print(f"Received gaze of {self.gaze_position}")
+        # self.get_logger().info(f"Received gaze of {self.gaze_position}")
 
     def update_frame(self, img_msg):
         # Unpack message, get image
         img = self.bridge.imgmsg_to_cv2(img_msg)
-        # print("Camera image updated!")
+        # self.get_logger().info("Camera image updated!")
         # img = self.bridge.compressed_imgmsg_to_cv2(img_msg)
         self.frame = img
 
@@ -241,7 +235,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
         visible_buttons = self.buttons
         gaze_pos = self.gaze_position
 
-        # print(f"HUHH?? {visible_buttons} ")
+        # self.get_logger().info(f"HUHH?? {visible_buttons} ")
 
         # start_time = self.get_clock().now()
 
@@ -251,14 +245,14 @@ class ProcessInputs(Node):  # Create node inheriting from Node
         input_list = self.get_active_inputs(
             visible_buttons, gaze_pos, publish_image=True
         )
-        # print inputs
-        # print(f"Found {input_list} inputs")
+        # self.get_logger().info inputs
+        # self.get_logger().info(f"Found {input_list} inputs")
 
         ### Combine current button list with prev timesteps
         # Receives an array of the active button's ids, uses it to update the master list of buttons as they appear
         # If button is in list, it is active. If input is not in the list, add it
         self.button_status = self.update_button_status(input_list, self.button_status)
-        # print(f"Updated to {input_list} inputs")
+        # self.get_logger().info(f"Updated to {input_list} inputs")
 
         ### Filtering
         delta_time = (self.get_clock().now() - self.prev_time).nanoseconds * 0.000000001
@@ -267,9 +261,9 @@ class ProcessInputs(Node):  # Create node inheriting from Node
             self.button_status,
             input_list,
             delta_time,
-            input_trigger_mode="keyboard_trigger",
+            input_trigger_mode=input_trigger_mode,
         )
-        # print(f"Filtered to {input_list} inputs")
+        # self.get_logger().info(f"Filtered to {input_list} inputs")
 
         ### Pack and publish
         InputStatusArrayMsg = InputStatusArray()
@@ -280,7 +274,8 @@ class ProcessInputs(Node):  # Create node inheriting from Node
             InputStatusMsg = InputStatus()
             InputStatusMsg.input_id = button.id
             InputStatusMsg.status = button.status
-            # print(InputStatusMsg.input_id, InputStatusMsg.status)
+            # InputStatusMsg.button_status =
+            # self.get_logger().info(InputStatusMsg.input_id, InputStatusMsg.status)
             InputStatusMsg.percent = float(button.percent)
 
             InputStatusArrayMsg.inputs.append(InputStatusMsg)
@@ -298,16 +293,16 @@ class ProcessInputs(Node):  # Create node inheriting from Node
 
                 encoded_message = bytes(message, "utf-8")
 
-                print(f"Sending to arduino: {encoded_message}")
+                # self.get_logger().info(f"Sending to arduino: {encoded_message}")
                 # self.sendSerial.write(bytes(message, 'utf-8'))
                 self.sendSerial.write((encoded_message))
-                # print("Sent")
+                # self.get_logger().info("Sent")
 
                 # time.sleep(0.05)
                 data = self.sendSerial.readline()
-                print(f"received {data}")
+                # self.get_logger().info(f"received {data}")
 
-            # print(f"Sending simple outputs {str(self.button_status)}")
+            # self.get_logger().info(f"Sending simple outputs {str(self.button_status)}")
 
             """
             SimpleOutputMsg = Float32MultiArray()
@@ -315,7 +310,6 @@ class ProcessInputs(Node):  # Create node inheriting from Node
             self.publisher_simple_output.publish(SimpleOutputMsg)
             """
             SimpleOutputMsg = Float32()
-            print(f"Percent is {button.percent}")
             SimpleOutputMsg.data = float(button.percent)  # +float(button.id))
             self.publisher_simple_output.publish(SimpleOutputMsg)
 
@@ -326,14 +320,13 @@ class ProcessInputs(Node):  # Create node inheriting from Node
         # InputStatusArrayMsg.header.stamp = DiegeticButtonArray_msg.header.stamp
 
         # Publish
-        # print(f"Sending list of inputs {str(self.button_status)}")
+        # self.get_logger().info(f"Sending list of inputs {str(self.button_status)}")
         self.publisher_input_array.publish(InputStatusArrayMsg)
-        # print(InputStatusArrayMsg)
+        # self.get_logger().info(InputStatusArrayMsg)
 
         # TODO: Check actual processing time
 
     # Updates the button list according to the input information, delta_time and mode
-    # input_trigger_mode = "keyboard_trigger"
     # "sloppy"
     # "dwell_time"
     # keyboard_trigger
@@ -346,7 +339,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
             # Get frame
             frame = self.frame.copy()
             self.height, self.width = frame.shape[:2]
-            # print(f"frame stuff {frame.shape[: 2]}")
+            # self.get_logger().info(f"frame stuff {frame.shape[: 2]}")
 
             # Add eye markers
             draw_circle = True
@@ -404,7 +397,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
 
             points = np.int32(np.squeeze(img_points, axis=1))
             path = mpltPath.Path(np.squeeze(img_points, axis=1))
-            # print(f"This is the path {path}")
+            # self.get_logger().info(f"This is the path {path}")
             # height, width = frame.shape[: 2]
             inside = path.contains_points(
                 [[gaze_pos[0] * self.width, gaze_pos[1] * self.height]]
@@ -420,7 +413,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
                     frame, self.camera_matrix, self.dist_coeffs, rvec, tvec, 0.05
                 )
 
-                # print(f"This is the path {path}")
+                # self.get_logger().info(f"This is the path {path}")
                 # height, width = frame.shape[: 2]
                 key_color = (0, 255, 0)
 
@@ -446,7 +439,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
             # TODO: Call other stuff
             # self.button_pressed(input_list)
 
-            # print("Sending Image")
+            # self.get_logger().info("Sending Image")
             self.pub.publish(imgmsg)  # Publish the message
 
         return input_list
@@ -462,7 +455,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
             if active_input not in ids:
                 # Create class and pack
                 button = input_status(active_input, status="inactive", percent=0.0)
-                # print(f"creating button {active_input}")
+                # self.get_logger().info(f"creating button {active_input}")
                 button_status.append(button)
 
         return button_status
@@ -485,7 +478,7 @@ class ProcessInputs(Node):  # Create node inheriting from Node
             for button in button_status:
                 if button.id in input_list:
                     if self.key_pressed:
-                        # print(f"Pressed  {button.id }!")
+                        # self.get_logger().info(f"Pressed  {button.id }!")
                         button.status = "active"
                     else:
                         button.status = "hover"
@@ -496,30 +489,30 @@ class ProcessInputs(Node):  # Create node inheriting from Node
             if button.id in input_list:
                 # Dwell_time stuff
                 # increment
-                button.percent += delta_time / cycle_duration
+                button.percent += delta_time / cycle_duration_seconds
                 button.percent = min(button.percent, 1)
 
-                if button.percent > active_threshold:
+                if button.percent > active_threshold_percent:
                     """
                     if input_trigger_mode == "keyboard_trigger":
                         button.status = "hover"
 
                         if self.key_pressed:
-                            # print(f"Pressed  {button.id }!")
+                            # self.get_logger().info(f"Pressed  {button.id }!")
                             button.status = "active"
                     """
                     if input_trigger_mode == "dwell_time":
                         button.status = "active"
                     # TODO: Hover status
 
-                # print(f"Button {button.id} is at {100*button.percent:.2f}%, status {button.status}")
+                # self.get_logger().info(f"Button {button.id} is at {100*button.percent:.2f}%, status {button.status}")
 
             else:
                 # decrease
-                button.percent -= delta_time / cycle_duration
+                button.percent -= delta_time / cycle_duration_seconds
                 button.percent = max(button.percent, 0)
 
-                if button.percent < inactive_threshold:
+                if button.percent < inactive_threshold_percent:
                     button.status = "inactive"
                     # optional ish?
                     # self.input_list.remove(button)

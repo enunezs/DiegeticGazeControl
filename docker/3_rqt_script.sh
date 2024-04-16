@@ -11,7 +11,7 @@ docker run -it \
 	-v /dev/shm:/dev/shm \
 	-e "ROS_DOMAIN_ID=7" \
 	osrf/ros:humble-desktop \
-	rqt_graph
+	rqt
 
 export containerId=$(docker ps -l -q)
 
