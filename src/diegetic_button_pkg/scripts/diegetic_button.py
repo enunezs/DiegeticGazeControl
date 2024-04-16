@@ -28,6 +28,7 @@ import tf_transformations as tf
 import numpy as np
 
 # Button calculation mode
+# TODO: To enumerator
 button_center_finding_mode = "inverse_quintic"
 # average, inverse_square, inverse_cubic, first_found, closest
 
