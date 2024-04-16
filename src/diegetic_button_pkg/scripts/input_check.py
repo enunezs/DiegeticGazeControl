@@ -9,11 +9,8 @@ from rclpy.node import Node
 
 # Messages
 from sensor_msgs.msg import Image
-from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
-from diegetic_button_pkg.msg import DiegeticButton
 from diegetic_button_pkg.msg import DiegeticButtonArray
-from std_msgs.msg import String
 from diegetic_button_pkg.msg import InputStatus
 from diegetic_button_pkg.msg import InputStatusArray
 
@@ -37,8 +34,6 @@ from cv2 import Rodrigues
 from pynput import keyboard  # import Listener, Key
 
 
-# TODO: XBOX controller, or generic joystick
-
 # For handling outputs
 # import serial
 # import time
@@ -50,15 +45,15 @@ from pynput import keyboard  # import Listener, Key
 # Input interaction parameters
 # TODO: Expose these later
 # Dwell time settings
-active_threshold = 0.80  # Close to 0 start quickly
-inactive_threshold = 0.80  # Close to 1 stop quickly
+active_threshold = 0.40  # Close to 0 start quickly
+inactive_threshold = 0.60  # Close to 1 stop quickly
 cycle_duration = (
-    0.050  # 3 seconds for complete transition #slope, we can split this later
+    0.30  # 3 seconds for complete transition #slope, we can split this later
 )
 
 # Input modes and params
-# input_trigger_mode = "keyboard_trigger"
-input_trigger_mode = "sloppy"
+input_trigger_mode = "keyboard_trigger"
+# input_trigger_mode = "sloppy"
 # input_trigger_mode = "dwell_time"
 # keyboard_trigger
 # "Dwell Time"
@@ -66,7 +61,6 @@ input_trigger_mode = "sloppy"
 # "Keyboard Trigger"
 button_ids = ["????"]  # How to point to button?
 # "Other triggers?"
-
 
 ### * DEBUG * ###  Debug options
 publish_image = True
