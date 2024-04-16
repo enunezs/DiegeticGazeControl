@@ -53,15 +53,15 @@ input_trigger_mode = "keyboard_trigger"
 from enum import Enum
 
 
-class ControlMode(Enum):
-    GLOBAL = 0
-    RELATIVE_EE = 1
-    # HEAD_FOLLOW_SPHERICAL = 2
-    # HEAD_FOLLOW_CYLINDRICAL = 3
+class InputTriggerMode(Enum):
+    DWELL_TIME = 0
+    SLOPPY = 1
+    KEYBOARD_TRIGGER = 2
+    GAMEPAD_TRIGGER = 3
 
 
 # "Keyboard Trigger"
-button_ids = ["????"]  # How to point to button?
+button_ids = ["????"]  # How to point to button? # By moving it to a different node
 # "Other triggers?"
 
 ### * DEBUG * ###  Debug options
@@ -69,6 +69,15 @@ publish_image = True
 draw_on_fiducials = True
 serial_com = False
 send_serial = False
+
+
+### TODO ###
+# Add config files
+# Fix multiple marker bug
+# CLEAN
+# Piano fix
+# PID
+# Separate keyboard processing onto its own node
 
 
 class input_status:
