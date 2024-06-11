@@ -9,11 +9,22 @@ This project, as detailed in the paper [_"Pupil System: A Wearable Eye Tracking 
 - [Current Version: Origami](#current-version-origami)
   - [Table of Contents](#table-of-contents)
 - [Prerequisites](#prerequisites)
+  - [Prep for Windows through WSL 2](#prep-for-windows-through-wsl-2)
+    - [Docker Desktop](#docker-desktop)
+    - [Install Windows Subsystem for Linux (WSL)](#install-windows-subsystem-for-linux-wsl)
+    - [Ubuntu on WSL Configuration](#ubuntu-on-wsl-configuration)
+    - [AHEM Making the webcam work](#ahem-making-the-webcam-work)
+  - [Installation through Virtual Machine or Linux](#installation-through-virtual-machine-or-linux)
 - [Installation](#installation)
   - [Clone the repository](#clone-the-repository)
 - [Running](#running)
   - [Gaze input to joystick output](#gaze-input-to-joystick-output)
   - [Emulated/Developer mode](#emulateddeveloper-mode)
+- [The code](#the-code)
+  - [Pupil Neon Pkg](#pupil-neon-pkg)
+  - [Fiducials / ArUco detection \[\[source\]\](](#fiducials--aruco-detection-source)
+  - [Diegetic button pkg](#diegetic-button-pkg)
+  - [Launch files](#launch-files)
 - [Cite this repository](#cite-this-repository)
 
 ---
@@ -21,7 +32,7 @@ This project, as detailed in the paper [_"Pupil System: A Wearable Eye Tracking 
 # Prerequisites
 
 - Pupil Neon Glasses OR a webcam, ideally an external one.
-- Docker, for running ROS2 Humble. [Install Docker here](https://docs.docker.com/get-docker/)
+- Optioanlly, Docker, for a quick start. [Install Docker here](https://docs.docker.com/get-docker/)
 - Print the sample control interface on paper (see [here](/src/diegetic_button_pkg/printables/)).
 
 ## Prep for Windows through WSL 2
