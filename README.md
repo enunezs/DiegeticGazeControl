@@ -4,14 +4,9 @@ This project, as detailed in the paper [_"Pupil System: A Wearable Eye Tracking 
 
 [![DGUI V2-1](http://img.youtube.com/vi/hrXuNYLDFds/0.jpg)](https://www.youtube.com/watch?v=hrXuNYLDFds)
 
-# How does it work?
-
-The project is divided into three main packages: `pupil_neon_pkg`, `aruco_pkg`, and `diegetic_button_pkg`. The first package connects to the glasses and receives the gaze data. The second package detects the ArUco markers in the environment. The third package performs all the transformations and calculations to find the button position relative to the ArUco markers. The `input_check` node checks whether the user is looking at a button or not. It receives the gaze data and uses it to determine which button the user is looking at. The button is then activated, and the joystick signals are output.
-
 ## Table of Contents
 
 - [Current Version: Origami](#current-version-origami)
-- [How does it work?](#how-does-it-work)
   - [Table of Contents](#table-of-contents)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -19,7 +14,7 @@ The project is divided into three main packages: `pupil_neon_pkg`, `aruco_pkg`, 
 - [Running](#running)
   - [Gaze input to joystick output](#gaze-input-to-joystick-output)
   - [Emulated/Developer mode](#emulateddeveloper-mode)
-- [The code](#the-code)
+- [How does it work?](#how-does-it-work)
   - [Pupil Neon Pkg](#pupil-neon-pkg)
   - [Fiducials / ArUco detection \[\[source\]\](](#fiducials--aruco-detection-source)
   - [Diegetic button pkg](#diegetic-button-pkg)
@@ -30,11 +25,9 @@ The project is divided into three main packages: `pupil_neon_pkg`, `aruco_pkg`, 
 
 # Prerequisites
 
-- Pupil Neon Glasses OR a webcam, ideally an external one.
-- Optionally, Docker, for a quick start. [Install Docker here](https://docs.docker.com/get-docker/)
+- Pupil Neon Glasses, Tobii Glasses Pro 2 OR a webcam, ideally an external (USB) one.
+- Optionally for a quick start, Docker. [Install Docker here](https://docs.docker.com/get-docker/)
 - Print the sample control interface on paper (see [here](/src/diegetic_button_pkg/printables/)).
-
----
 
 # Installation
 
@@ -81,7 +74,9 @@ ros2 launch diegetic_button_pkg devel.launch.py
 
 ---
 
-# The code
+# How does it work?
+
+The project is divided into three main packages: `pupil_neon_pkg`, `aruco_pkg`, and `diegetic_button_pkg`. The first package connects to the glasses and receives the gaze data. The second package detects the ArUco markers in the environment. The third package performs all the transformations and calculations to find the button position relative to the ArUco markers. The `input_check` node checks whether the user is looking at a button or not. It receives the gaze data and uses it to determine which button the user is looking at. The button is then activated, and the joystick signals are output.
 
 The following is a brief overview of the code structure. It is composed of three main packages:
 
