@@ -1,8 +1,10 @@
 <p align="center">
-  <img src="./doc/DiegeticGazeControlLogo.png" alt="Description Anim" width="500">
+  <img src="./doc/DiegeticGazeControlLogo.png" alt="Description Anim" width="400">
 </p>
 
-`Diegetic Gaze Control` lets you **interact** with printed paper interfaces, the world and robots using your **eye-gaze**.
+<p align="center">
+Diegetic Gaze Control lets you interact with printed paper interfaces, the world and robots using your eye-gaze.
+</p>
 
 <h4 align="center">
   <a href="https://www.youtube.com/watch?v=hrXuNYLDFds&feature=youtu.be">
@@ -14,18 +16,19 @@
   <img src="./doc/DGUI_StartTrim.gif" alt="Description Anim" width="500">
 </p>
 
+<p align="center">
 Define and interact with **printed interfaces** or with **everyday objects** directly .
+</p>
 
 <p align="center">
   <img src="./doc/DGUI_OtherInputsTrim.gif" alt="Description Anim" width="600">
 </p>
 
-Our goal is to empower people with dissabilities to interact with the world around them, without constraining them to a screen.
-
 <p align="center">
-  <img src="https://raw.githubusercontent.com/fkromer/awesome-ros2/master/ros_logo.svg?sanitize=true" alt="Description Anim" width="100">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Docker_logo.png" alt="Description Anim" width="100">
+Our goal is to empower people with dissabilities to interact with the world around them, without constraining them to a screen.
 </p>
+
+---
 
 <p align="center">
   The project is detailed in the preprint
@@ -34,6 +37,13 @@ Our goal is to empower people with dissabilities to interact with the world arou
   Diegetic Graphical User Interfaces and Intuitive Control of Assistive Robots via Eye-gaze
   </a>
 </p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/fkromer/awesome-ros2/master/ros_logo.svg?sanitize=true" alt="Description Anim" width="100">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Docker_logo.png" alt="Description Anim" width="100">
+</p>
+
+---
 
 # Pending
 
@@ -69,16 +79,10 @@ Our goal is to empower people with dissabilities to interact with the world arou
 aims to enable interaction with prepared environments via eye-gaze using ArUco markers. Using the **_Pupil Neon Glasses_**, the user's gaze is detected and used to interact with printed interfaces or everyday items. The **_final output will be joy signals_** in ROS2.
 
 <p align="center">
-
-[![DGUI V2-1](http://img.youtube.com/vi/hrXuNYLDFds/0.jpg)](https://www.youtube.com/watch?v=hrXuNYLDFds)
-
+  <img src="./doc/DGUI_DescriptionTrim.gif" alt="Description Anim" width="600">
 </p>
 
 # How does it work?
-
-<p align="center">
-  <img src="./doc/DGUI_DescriptionTrim.gif" alt="Description Anim" width="600">
-</p>
 
 The following is a brief overview of the code structure. It is composed of three main packages:
 
