@@ -45,13 +45,6 @@ The project is detailed in the preprint:
 
 ---
 
-Pending
-
-- [ ] Docker?
-- [ ] Other repos
-
----
-
 # Contents
 
 - [Contents](#contents)
@@ -63,6 +56,8 @@ Pending
 - [How does it work?](#how-does-it-work)
   - [Launch files](#launch-files)
 - [Citing this work](#citing-this-work)
+
+---
 
 # Why?
 
