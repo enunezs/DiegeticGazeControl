@@ -89,7 +89,7 @@ RUN apt-get update && apt-get install -y \
      libportaudio2
 
 # SET ENVIRONMENT
-WORKDIR $HOME/ws/origami
+WORKDIR $HOME/ws/DiegeticGazeControl
 
 RUN echo 'alias python="python3"' >> $HOME/.bashrc
 RUN echo 'source /opt/ros/humble/setup.sh && colcon build' >> $HOME/.bashrc
