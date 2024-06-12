@@ -25,7 +25,7 @@ Define and interact with **printed interfaces** or with **everyday objects** dir
 </p>
 
 <p align="center">
-Our goal is to empower people with dissabilities to interact with the world around them, without constraining them to a screen.
+Our goal is to empower people with dissabilities to interact with the world without constraining them to a screen.
 </p>
 
 Made with:
@@ -66,16 +66,16 @@ Pending
 - [Running](#running)
   - [Gaze input to joystick output](#gaze-input-to-joystick-output)
   - [Emulated/Developer mode](#emulateddeveloper-mode)
-    - [Pupil Neon Pkg](#pupil-neon-pkg)
-    - [Fiducials / ArUco detection](#fiducials--aruco-detection)
-    - [Diegetic button pkg](#diegetic-button-pkg)
-    - [Launch files](#launch-files)
-- [License](#license)
-- [Cite this repository](#cite-this-repository)
+- [How does it work?](#how-does-it-work)
+  - [Pupil Neon Pkg](#pupil-neon-pkg)
+  - [Fiducials / ArUco detection](#fiducials--aruco-detection)
+  - [Diegetic button pkg](#diegetic-button-pkg)
+  - [Launch files](#launch-files)
+- [Citing this work](#citing-this-work)
 
 # Why?
 
-- Interfaces are flexible, cheap, and easy to create.
+- Paper interfaces are flexible, cheap, and easy to create and modify.
 - Compared to screens, it doesnt constrain the user to a specific location.
 - No VR illness, no need for a large VR headset.
 
@@ -187,13 +187,7 @@ The third package performs all the transformations and calculations to find the 
 
 ---
 
-# License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-# Cite this repository
+# Citing this work
 
 If you use this repository in your research, please cite the following:
 
