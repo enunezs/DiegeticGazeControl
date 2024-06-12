@@ -1,4 +1,6 @@
-<p align="center"style="font-family: 'Courier New', Courier, monospace; font-size: 40px;">Diegetic Gaze Control</p>
+<p align="center">
+  <img src="./doc/DiegeticGazeControlLogo.png" alt="Description Anim" width="500">
+</p>
 
 `Diegetic Gaze Control` lets you **interact** with printed paper interfaces, the world and robots using your **eye-gaze**.
 
@@ -6,7 +8,6 @@
   <a href="https://www.youtube.com/watch?v=hrXuNYLDFds&feature=youtu.be">
     <img src="https://img.shields.io/badge/youtube-d95652.svg?style=flat-square&logo=youtube" alt="youtube" style="height: 20px;">
   </a>
-<img src='https://img.shields.io/github/v/release/enunezs/origami/?color=%23FDD835&label=version&style=for-the-badge'>
 </h4>
 
 <p align="center">
@@ -23,7 +24,6 @@ Our goal is to empower people with dissabilities to interact with the world arou
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/fkromer/awesome-ros2/master/ros_logo.svg?sanitize=true" alt="Description Anim" width="100">
-  ^^^
   <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Docker_logo.png" alt="Description Anim" width="100">
 </p>
 
