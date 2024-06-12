@@ -1,13 +1,19 @@
-# Current Version: Origami
+# Diegetic Gaze Control for Robots
 
-This project, as detailed in the paper [_"Pupil System: A Wearable Eye Tracking System for People with Severe Motor Impairments"_](https://arxiv.org/abs/2105.05782), aims to enable interaction with prepared environments via eye-gaze using ArUco markers. Using the **_Pupil Neon Glasses_**, the user's gaze is detected and used to interact with printed interfaces or everyday items. The **_final output will be joy signals_** in ROS2.
+_Diegetic Gaze Control_ lets you interact with pritned paper interfaces, the world and robots using your _eye-gaze_.
 
-[![DGUI V2-1](http://img.youtube.com/vi/hrXuNYLDFds/0.jpg)](https://www.youtube.com/watch?v=hrXuNYLDFds)
+It lets you define interfaces on paper or on top of everyday objects and design interactions with them.
+
+Our goal is to empower people with dissabilities to interact with the world around them, without constraining them to a screen.
+
+The project is detailed in the paper [_Diegetic Graphical User Interfaces_](https://arxiv.org/abs/2105.05782).
+
+![](https://github.com/enunezs/origami/blob/humble/doc/DGUI_DescriptionTrim.gif)
 
 ## Table of Contents
 
-- [Current Version: Origami](#current-version-origami)
-  - [Table of Contents](#table-of-contents)
+- [Table of Contents](#table-of-contents) •
+- [Why?](#why)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
   - [Clone the repository](#clone-the-repository)
@@ -21,7 +27,15 @@ This project, as detailed in the paper [_"Pupil System: A Wearable Eye Tracking 
   - [Launch files](#launch-files)
 - [Cite this repository](#cite-this-repository)
 
----
+# Why?
+
+- Interfaces are flexible, cheap, and easy to create.
+- Compared to screens, it doesnt constrain the user to a specific location.
+- No VR illness, no need for a large VR headset.
+
+aims to enable interaction with prepared environments via eye-gaze using ArUco markers. Using the **_Pupil Neon Glasses_**, the user's gaze is detected and used to interact with printed interfaces or everyday items. The **_final output will be joy signals_** in ROS2.
+
+[![DGUI V2-1](http://img.youtube.com/vi/hrXuNYLDFds/0.jpg)](https://www.youtube.com/watch?v=hrXuNYLDFds)
 
 # Prerequisites
 
