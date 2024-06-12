@@ -2,15 +2,15 @@
   <img src="./doc/images/DiegeticGazeControlLogo.png" alt="Description Anim" width="400">
 </p>
 
+<a href="https://www.youtube.com/watch?v=hrXuNYLDFds&feature=youtu.be">
+  <img src="https://img.shields.io/badge/youtube-d95652.svg?style=flat-square&logo=youtube" alt="youtube" style="height: 20px;">
+</a>
+
+[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/enunezs/diegetic_gaze_control/1.0?logo=docker)](https://hub.docker.com/repository/docker/enunezs/diegetic_gaze_control/general)
+
 <p align="center">
 <b>Diegetic Gaze Control</b> lets you interact with printed paper interfaces, the world, and even robots, using only <b>your eye-gaze</b>.
 </p>
-
-<h4 align="center">
-  <a href="https://www.youtube.com/watch?v=hrXuNYLDFds&feature=youtu.be">
-    <img src="https://img.shields.io/badge/youtube-d95652.svg?style=flat-square&logo=youtube" alt="youtube" style="height: 20px;">
-  </a>
-</h4>
 
 <p align="center">
   <img src="./doc/images/DGUI_StartTrim.gif" alt="Description Anim" width="500">
@@ -106,7 +106,7 @@ This will add this repository and the [Pupil Neon Glasses repository](https://gi
 
 # Running
 
-From the root of the repository, run the following command to **pull and run** the docker image with the following command:
+From the root of the repository, run the following command to **pull and run** the following [docker image](https://hub.docker.com/repository/docker/enunezs/diegetic_gaze_control/general) with:
 
 ```bash
 ./docker/1_dockerscript.sh
