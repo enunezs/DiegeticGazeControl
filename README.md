@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./doc/DiegeticGazeControlLogo.png" alt="Description Anim" width="400">
+  <img src="./doc/images/DiegeticGazeControlLogo.png" alt="Description Anim" width="400">
 </p>
 
 <p align="center">
@@ -13,7 +13,7 @@ Diegetic Gaze Control lets you interact with printed paper interfaces, the world
 </h4>
 
 <p align="center">
-  <img src="./doc/DGUI_StartTrim.gif" alt="Description Anim" width="500">
+  <img src="./doc/images/DGUI_StartTrim.gif" alt="Description Anim" width="500">
 </p>
 
 <p align="center">
@@ -21,50 +21,53 @@ Define and interact with **printed interfaces** or with **everyday objects** dir
 </p>
 
 <p align="center">
-  <img src="./doc/DGUI_OtherInputsTrim.gif" alt="Description Anim" width="600">
+  <img src="./doc/images/DGUI_OtherInputsTrim.gif" alt="Description Anim" width="600">
 </p>
 
 <p align="center">
 Our goal is to empower people with dissabilities to interact with the world around them, without constraining them to a screen.
 </p>
 
----
+Made with:
 
 <p align="center">
-  The project is detailed in the preprint
+  <img src="https://raw.githubusercontent.com/fkromer/awesome-ros2/master/ros_logo.svg?sanitize=true" alt="Description Anim" height="30" style="margin: 0 10px;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Docker_logo.png" alt="Description Anim" height="30" style="margin: 0 10px;">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/OpenCV_Logo_with_text.png/487px-OpenCV_Logo_with_text.png" alt="Description Anim" height="40" style="margin: 0 10px;">
+</p>
+
+---
+
+The project is detailed in the preprint:
+
+<p align="center">
 
   <a href="https://arxiv.org/abs/2401.03944">
   Diegetic Graphical User Interfaces and Intuitive Control of Assistive Robots via Eye-gaze
   </a>
 </p>
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/fkromer/awesome-ros2/master/ros_logo.svg?sanitize=true" alt="Description Anim" width="100">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/7/70/Docker_logo.png" alt="Description Anim" width="100">
-</p>
-
 ---
 
-# Pending
+Pending
 
 - [ ] Docker?
 - [ ] Other repos
 
 ---
 
-## Table of Contents
+# Contents
 
-- [Pending](#pending)
-  - [Table of Contents](#table-of-contents)
+- [Contents](#contents)
 - [Why?](#why)
-- [How does it work?](#how-does-it-work)
-- [Prerequisites](#prerequisites)
 - [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Cloning](#cloning)
 - [Running](#running)
   - [Gaze input to joystick output](#gaze-input-to-joystick-output)
   - [Emulated/Developer mode](#emulateddeveloper-mode)
     - [Pupil Neon Pkg](#pupil-neon-pkg)
-    - [Fiducials / ArUco detection \[\[source\]\](](#fiducials--aruco-detection-source)
+    - [Fiducials / ArUco detection](#fiducials--aruco-detection)
     - [Diegetic button pkg](#diegetic-button-pkg)
     - [Launch files](#launch-files)
 - [License](#license)
@@ -76,39 +79,23 @@ Our goal is to empower people with dissabilities to interact with the world arou
 - Compared to screens, it doesnt constrain the user to a specific location.
 - No VR illness, no need for a large VR headset.
 
-aims to enable interaction with prepared environments via eye-gaze using ArUco markers. Using the **_Pupil Neon Glasses_**, the user's gaze is detected and used to interact with printed interfaces or everyday items. The **_final output will be joy signals_** in ROS2.
+Our aim is to enable interaction with prepared environments via eye-gaze using ArUco markers. Using the **_Pupil Neon Glasses_**, the user's gaze is detected and used to interact with printed interfaces or everyday items. The **_final output will be joy signals_** in ROS2.
 
 <p align="center">
-  <img src="./doc/DGUI_DescriptionTrim.gif" alt="Description Anim" width="600">
+  <img src="./doc/images/DGUI_DescriptionTrim.gif" alt="Description Anim" width="600">
 </p>
-
-# How does it work?
-
-The following is a brief overview of the code structure. It is composed of three main packages:
-
-![ImageProcessingDiagramAlt(1).png](<doc/ImageProcessingDiagramAlt(1).png>)
-
-The project is workspace with three main components:
-
-- **Input from the gaze-tracking glasses**, receiving a stream of the scene and gaze point data. This is captured and processed by the `pupil_neon_pkg` or the `tobii_pro` package.
-
-- **Detection of the Diegetic Buttons**, which is processed by the `aruco_pkg` and `diegetic_button_pkg` packages. The `aruco_pkg` package detects the ArUco markers in the environment, while the `diegetic_button_pkg` package performs all the transformations and calculations to find the button position relative to the ArUco markers.
-
-- **Gaze interaction pipeline**, which is processed by the `input_check` node. The `input_check` node checks whether the user is looking at the buttons and filters or debounces depending on the preferred strategy. The button is then activated, and if desired, `joy_message` is sent.
-
-The third package performs all the transformations and calculations to find the button position relative to the ArUco markers. The `input_check` node checks whether the user is looking at a button or not. It receives the gaze data and uses it to determine which button the user is looking at. The button is then activated, and the joystick signals are output.
-
-![Nodes2.png](Nodes2.png)
 
 ---
 
-# Prerequisites
+# Installation
+
+## Prerequisites
 
 - Pupil Neon Glasses, Tobii Glasses Pro 2 OR a webcam, ideally an external (USB) one.
 - Optionally for a quick start, Docker. [Install Docker here](https://docs.docker.com/get-docker/)
 - Print the sample control interface on paper (see [here](/src/diegetic_button_pkg/printables/)).
 
-# Installation
+## Cloning
 
 Navigate to a new workspace, then clone the repository with submodules:
 
@@ -122,6 +109,8 @@ cd origami
 NOTE: On linux, you need to use Ctrk+Shift+V to paste in the terminal!
 
 This will add this repository and the [Pupil Neon Glasses repository](https://github.com/enunezs/pupil_neon_pkg/tree/release) in the `/src` folder
+
+---
 
 # Running
 
@@ -151,12 +140,32 @@ ros2 launch diegetic_button_pkg devel.launch.py
 
 ---
 
+# How does it work?
+
+The following is a brief overview of the code structure. It is composed of three main packages:
+
+![ImageProcessingDiagramAlt(1).png](<doc/images/ImageProcessingDiagramAlt(1).png>)
+
+The project is workspace with three main components:
+
+- **Input from the gaze-tracking glasses**, receiving a stream of the scene and gaze point data. This is captured and processed by the `pupil_neon_pkg` or the `tobii_pro` package.
+
+- **Detection of the Diegetic Buttons**, which is processed by the `aruco_pkg` and `diegetic_button_pkg` packages. The `aruco_pkg` package detects the ArUco markers in the environment, while the `diegetic_button_pkg` package performs all the transformations and calculations to find the button position relative to the ArUco markers.
+
+- **Gaze interaction pipeline**, which is processed by the `input_check` node. The `input_check` node checks whether the user is looking at the buttons and filters or debounces depending on the preferred strategy. The button is then activated, and if desired, `joy_message` is sent.
+
+- **Robot control**, which is robot-dependant. It is handled by the `ros2_jaco` package.
+
+The third package performs all the transformations and calculations to find the button position relative to the ArUco markers. The `input_check` node checks whether the user is looking at a button or not. It receives the gaze data and uses it to determine which button the user is looking at. The button is then activated, and the joystick signals are output.
+
+![Nodes2.png](doc/images/Nodes2.png)
+
 ### Pupil Neon Pkg
 
 - `pupil_neon_pkg`: The package for connecting to the glasses and receiving the gaze data. It acts as a wrapper for the Pupil Labs API, and it is used to connect to the glasses and receive the gaze data. It outputs two messages: the gaze data (coordinates) and the scene image.
   [See the package here](/src/pupil_neon_pkg/)
 
-### Fiducials / ArUco detection [[source]](
+### Fiducials / ArUco detection
 
 - `aruco_pkg`: The package for detecting ArUco markers in the environment. It is used to detect the ArUco markers in the environment and to determine the user's gaze point. It wraps parts of the opencv library to detect the markers and calculate the gaze point. It outputs the position of the markers and their number code associated to each.
   [See the package here](/src/aruco_pkg/)
@@ -179,6 +188,8 @@ ros2 launch diegetic_button_pkg devel.launch.py
 ---
 
 # License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
