@@ -70,7 +70,7 @@ Our goal is to empower people with dissabilities to interact with the world with
 - Paper interfaces are flexible, cheap, and easy to create and customise.
 - No VR illness, no need for a large VR headset.
 
-Our aim is to enable interaction with prepared environments via eye-gaze using ArUco markers. Using the **_Pupil Neon Glasses_**, the user's gaze is detected and used to interact with printed interfaces or everyday items. The **_final output will be joy signals_** in ROS2.
+Our aim is to enable interaction with prepared environments via eye-gaze using ArUco markers. Using the **_Pupil Neon Glasses_**, the user's gaze is detected and used to interact with printed interfaces or everyday items. The **_final output is a `/joy` message_** in ROS2.
 
 <p align="center">
   <img src="./doc/images/DGUI_DescriptionTrim.gif" alt="Description Anim" width="700">
