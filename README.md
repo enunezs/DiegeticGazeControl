@@ -161,13 +161,14 @@ The project is workspace with three main components:
 If you use this repository in your research, please cite the following:
 
 ```
-@software{NunezSardinha2024,
+@software{NunezSardinha2024_DGUI,
 author = {Emanuel, Nunez Sardinha and Marcela, Munera and Nancy, Zook and David, Western and Virginia, Ruiz Garate},
 doi = {pending},
-month = nov,
-title = {{Diegetic Graphical User Interfaces 2}},
-url = {https://github.com/enunezs/Origami},
-version = {2.0},
+month = june,
+title = {{Diegetic Graphical User Interfaces \& Intuitive
+Control of Assistive Robots via Eye-gaze}},
+url = {https://github.com/enunezs/DiegeticGazeControl},
+version = {1.0},
 year = {2024}
 }
 ```
