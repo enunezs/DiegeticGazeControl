@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-Define and interact with <b>printed interfaces</b> or with <b>everyday objects</b> directly .
+Define and interact with <b>printed interfaces</b> or with <b>everyday objects</b> directly.
 </p>
 
 <p align="center">
@@ -62,11 +62,11 @@ The project is detailed in the preprint:
 # Why?
 
 <p align="center">
-Our goal is to empower people with dissabilities to interact with the world without constraining them to a screen.
+Our goal is to empower people with disabilities to interact with the world without constraining them to a screen.
 </p>
 
 - Compared to other approaches, gaze is always kept on the robot. This makes it easier, more intuitive and safer.
-- Compared to screens, it doesnt constrain the user to a specific location.
+- Compared to screens, it does not constrain the user to a specific location.
 - Paper interfaces are flexible, cheap, and easy to create and customise.
 - No VR illness, no need for a large VR headset.
 
