@@ -9,7 +9,7 @@
 [![Docker Image Version (latest semver)](https://img.shields.io/docker/v/enunezs/diegetic_gaze_control/1.0?logo=docker)](https://hub.docker.com/repository/docker/enunezs/diegetic_gaze_control/general)
 
 <p align="center">
-<b>Diegetic Gaze Control</b> lets you interact with printed paper interfaces, the world, and even robots, using only <b>your eye-gaze</b>.
+<b>Diegetic Gaze Control</b> allows you to interact with printed paper interfaces, the world, and even robots, using only <b>your eye-gaze</b>.
 </p>
 
 <p align="center">
