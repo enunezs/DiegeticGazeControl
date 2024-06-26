@@ -124,7 +124,7 @@ ros2 launch diegetic_button_pkg webcam_to_joy.launch.py
 You can visualize the scene and gaze data by running the following command:
 
 ```bash
-./docker/2_rviz.sh
+./docker/2_rviz2.sh
 ```
 
 ---
