@@ -47,15 +47,70 @@ The project is detailed in the preprint:
 
 # Contents
 - [Why?](#why)
-- [Installation](#installation)
-  - [Method 1: <a href="https://pypi.org/project/shallow-backup/" rel="nofollow">pipx</a>](#method-1-pipx)
-  - [Method 2: Install From Source](#method-2-install-from-source)
-- [Dependencies](#dependencies)
+- [Setting up the software environment](#Software-Setup)
+- [Hardware Setup](#installation)
+  - [Method 1: Setting Up Pupil Glasses](#Pupil-neon-glasses-setup)
+  - [Method 2: Install From Source](#Webcam-setup)
+- [Setting Up Robotic Arm](#Robotic-arm-setup)
+- [Exploring Features](#Exploring-new-features)
+- [How does it work?](#How-does-it-work)
+- [Citing The Work](#citing-this-work)
 
 
 ### why
 
+<p align="center">
+Our goal is to empower people with disabilities to interact with the world without constraining them to a screen.
+</p>
+
+- Compared to other approaches, gaze is always kept on the robot. This makes it easier, more intuitive and safer.
+- Compared to screens, it does not constrain the user to a specific location.
+- Paper interfaces are flexible, cheap, and easy to create and customise.
+- No VR illness, no need for a large VR headset.
+
+Our aim is to enable interaction with prepared environments via eye-gaze using ArUco markers. Using the **_Pupil Neon Glasses_**, the user's gaze is detected and used to interact with printed interfaces or everyday items. The **_final output is a `/joy` message_** in ROS2.
+
+<p align="center">
+  <img src="./doc/images/DGUI_DescriptionTrim.gif" alt="Description Anim" width="700">
+</p>
+
+---
+
 ### installation
+
+
+### How Does It Work
+
+The following is a brief overview of the code structure. It is composed of three main packages:
+
+![ImageProcessingDiagramAlt(1).png](<doc/images/ImageProcessingDiagramAlt(1).png>)
+
+The project is workspace with three main components:
+
+- **Input from the gaze-tracking glasses**, receiving a stream of the scene and gaze point data. This is captured and processed by the [`pupil_neon_pkg`](https://github.com/enunezs/pupil_neon_pkg) or the [`ros2_tobii_glasses2`](https://github.com/enunezs/ros2_tobii_glasses2) package, wrappers for their respective APIs. It outputs two messages: the gaze data (coordinates) and the scene image.
+
+- **Detection of the Diegetic Buttons**, is processed by the [`fiducials`](/src/fiducials/) which detects the ArUco markers, and [`diegetic_button_pkg`](/src/diegetic_button_pkg/) which finds the button position relative to the fiducials.
+
+- **Gaze interaction pipeline**, which is processed by the [`gaze_input`](/src/diegetic_button_pkg/) node. The node checks whether the user is looking at the buttons and filters or debounces depending on the preferred strategy. The button is then activated, and if desired, `/joy_message` is sent.
+
+- **Robot control**, which is robot-dependant. It is handled by the [`ros2_franka`](https://github.com/enunezs/ros2_franka_docker) or [`ros2_jaco_controller`](https://github.com/enunezs/ros2_jaco_controller).
+
+![Nodes2.png](doc/images/Nodes2.png)
+
+### Citing this work
+
+If you use this repository in your research, please cite the following:
+
+```
+@software{NunezSardinha2024_DGUI,
+author = {Emanuel, Nunez Sardinha and Marcela, Munera and Nancy, Zook and David, Western and Virginia, Ruiz Garate},
+doi = {pending},
+month = june,
+title = {{Diegetic Graphical User Interfaces \& Intuitive
+Control of Assistive Robots via Eye-gaze}},
+url = {https://github.com/enunezs/DiegeticGazeControl},
+version = {1.0},
+year = {2024}
 
 
 
