@@ -50,7 +50,7 @@ The project is detailed in the preprint:
 - [Setting up the software environment](#Software-Setup)
 - [Hardware Setup](#Installation)
   - [Method 1: Setting Up Pupil Glasses](#Pupil-Neon-Glasses-Setup)
-  - [Method 2: Install From Source](#Webcam-Setup)
+  - [Method 2: Webcam Setup](#Webcam-Setup)
 - [Setting Up Robotic Arm](#Robotic-Arm-Setup)
 - [Exploring Features](#Exploring-New-Features)
 - [How does it work?](#How-Does-It-Work)
