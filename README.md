@@ -73,25 +73,6 @@ You can visualize the scene and gaze data by running the following command:
 ./docker/2_rviz2.sh
 ```
 
-
-## How Does It Work
-
-The following is a brief overview of the code structure. It is composed of three main packages:
-
-![ImageProcessingDiagramAlt(1).png](<doc/images/ImageProcessingDiagramAlt(1).png>)
-
-The project is workspace with three main components:
-
-- **Input from the gaze-tracking glasses**, receiving a stream of the scene and gaze point data. This is captured and processed by the [`pupil_neon_pkg`](https://github.com/enunezs/pupil_neon_pkg) or the [`ros2_tobii_glasses2`](https://github.com/enunezs/ros2_tobii_glasses2) package, wrappers for their respective APIs. It outputs two messages: the gaze data (coordinates) and the scene image.
-
-- **Detection of the Diegetic Buttons**, is processed by the [`fiducials`](/src/fiducials/) which detects the ArUco markers, and [`diegetic_button_pkg`](/src/diegetic_button_pkg/) which finds the button position relative to the fiducials.
-
-- **Gaze interaction pipeline**, which is processed by the [`gaze_input`](/src/diegetic_button_pkg/) node. The node checks whether the user is looking at the buttons and filters or debounces depending on the preferred strategy. The button is then activated, and if desired, `/joy_message` is sent.
-
-- **Robot control**, which is robot-dependant. It is handled by the [`ros2_franka`](https://github.com/enunezs/ros2_franka_docker) or [`ros2_jaco_controller`](https://github.com/enunezs/ros2_jaco_controller).
-
-![Nodes2.png](doc/images/Nodes2.png)
-
 ## Citing this work
 
 If you use this repository in your research, please cite the following:
