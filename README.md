@@ -76,7 +76,7 @@ Our aim is to enable interaction with prepared environments via eye-gaze using A
 
 ---
 
-## installation
+## Installation
 
 Navigate to a new workspace, then clone the repository with submodules:
 
@@ -91,15 +91,35 @@ This will add this repository and the [Pupil Neon Glasses repository](https://gi
 
 ### Pupil Neon Glasses Setup
 
-For some wearers, you may find a constant offset in their gaze estimates. To compensate for those, you can use the Offset Correction feature in the Neon Companion App. See the video below to learn how it works!
+For some wearers, you may find a constant offset in their gaze estimates. To compensate for those, you can use the Offset Correction feature in the Neon Companion App. See the video below to learn how it works! Check https://docs.pupil-labs.com/neon/ for documentation.
 
 [![Watch the video](https://img.youtube.com/vi/7weK8UPLOzo/0.jpg)](https://youtu.be/7weK8UPLOzo)
 
+To **connect to the glasses and start** the gaze input to joystick output, first modify the `config.yaml` file in the `pupil_neon_pkg` package to match your glasses' IP address at `src/pupil_neon_pkg/config/config.yaml`.
 
-https://docs.pupil-labs.com/neon/
+Then run the following command:
 
+```bash
+ros2 launch diegetic_button_pkg eyes_to_joy.launch.py
+```
 
 ### Webcam Setup
+
+The laptop webcam can be used instead of the glasses with the use of a mouse for the focus.
+
+Alternatively, you can run the following command to start the **emulated mode**, which will use a **webcam instead of the glasses**:
+
+```bash
+ros2 launch diegetic_button_pkg webcam_to_joy.launch.py
+```
+
+### Visualising Gaze Data
+
+You can visualize the scene and gaze data by running the following command:
+
+```bash
+./docker/2_rviz2.sh
+```
 
 
 ## How Does It Work
