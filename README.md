@@ -87,6 +87,12 @@ cd DiegeticGazeControl
 
 This will add this repository and the [Pupil Neon Glasses repository](https://github.com/enunezs/pupil_neon_pkg/tree/release) in the `/src` folder
 
+From the root of the repository, run the following command to **pull and run** the following [docker image](https://hub.docker.com/repository/docker/enunezs/diegetic_gaze_control/general) with:
+
+```bash
+./docker/1_dockerscript.sh
+```
+
 ---
 
 ### Pupil Neon Glasses Setup
@@ -120,7 +126,6 @@ You can visualize the scene and gaze data by running the following command:
 ```bash
 ./docker/2_rviz2.sh
 ```
-
 
 ## How Does It Work
 
