@@ -45,19 +45,19 @@ The project is detailed in the preprint:
 
 ---
 
-# Contents
+## Contents
 - [Why?](#why)
 - [Setting up the software environment](#Software-Setup)
-- [Hardware Setup](#installation)
-  - [Method 1: Setting Up Pupil Glasses](#Pupil-neon-glasses-setup)
-  - [Method 2: Install From Source](#Webcam-setup)
-- [Setting Up Robotic Arm](#Robotic-arm-setup)
-- [Exploring Features](#Exploring-new-features)
-- [How does it work?](#How-does-it-work)
-- [Citing The Work](#citing-this-work)
+- [Hardware Setup](#Installation)
+  - [Method 1: Setting Up Pupil Glasses](#Pupil-Neon-Glasses-Setup)
+  - [Method 2: Install From Source](#Webcam-Setup)
+- [Setting Up Robotic Arm](#Robotic-Arm-Setup)
+- [Exploring Features](#Exploring-New-Features)
+- [How does it work?](#How-Does-It-Work)
+- [Citing The Work](#Citing-This-Work)
 
 
-### why
+## why
 
 <p align="center">
 Our goal is to empower people with disabilities to interact with the world without constraining them to a screen.
@@ -76,10 +76,33 @@ Our aim is to enable interaction with prepared environments via eye-gaze using A
 
 ---
 
-### installation
+## installation
+
+Navigate to a new workspace, then clone the repository with submodules:
+
+```bash
+git clone --recurse-submodules https://github.com/enunezs/DiegeticGazeControl
+cd DiegeticGazeControl
+```
+
+This will add this repository and the [Pupil Neon Glasses repository](https://github.com/enunezs/pupil_neon_pkg/tree/release) in the `/src` folder
+
+---
+
+### Pupil Neon Glasses Setup
+
+For some wearers, you may find a constant offset in their gaze estimates. To compensate for those, you can use the Offset Correction feature in the Neon Companion App. See the video below to learn how it works!
+
+[![Watch the video](https://img.youtube.com/vi/7weK8UPLOzo/0.jpg)](https://youtu.be/7weK8UPLOzo)
 
 
-### How Does It Work
+https://docs.pupil-labs.com/neon/
+
+
+### Webcam Setup
+
+
+## How Does It Work
 
 The following is a brief overview of the code structure. It is composed of three main packages:
 
@@ -97,9 +120,10 @@ The project is workspace with three main components:
 
 ![Nodes2.png](doc/images/Nodes2.png)
 
-### Citing this work
+## Citing this work
 
 If you use this repository in your research, please cite the following:
+
 
 ```
 @software{NunezSardinha2024_DGUI,
@@ -111,6 +135,4 @@ Control of Assistive Robots via Eye-gaze}},
 url = {https://github.com/enunezs/DiegeticGazeControl},
 version = {1.0},
 year = {2024}
-
-
 
