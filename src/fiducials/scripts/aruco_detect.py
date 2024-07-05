@@ -19,15 +19,10 @@ from cv2 import (
     destroyAllWindows,
     drawFrameAxes,
     Rodrigues,
-    undistort,
-    fisheye,
-    remap,
 )
-import cv2
 from cv_bridge import CvBridge
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, Image
-from tf_transformations import quaternion_from_matrix
 
 # Local application imports
 from fiducials.msg import (
@@ -36,10 +31,8 @@ from fiducials.msg import (
     FiducialTransform,
     FiducialTransformArray,
 )
-from geometry_msgs.msg import Transform
 
 
-# TODO CAMERA INFO
 class arucoPublisher(Node):
     def __init__(self):
         super().__init__("aruco_detect")
@@ -67,7 +60,7 @@ class arucoPublisher(Node):
 
         # Aruco dictionary
         # Use https://chev.me/arucogen/ to make the markers
-        aruco_dict = aruco.DICT_4X4_100  # TODO: Restrict dictionary number later
+        aruco_dict = aruco.DICT_4X4_100
         # Other params at https://docs.opencv.org/3.4/d9/d6a/group__aruco.html
         self.aruco_dict = self.declare_and_get_parameter("aruco_dict", aruco_dict)
         self.aruco_dict = aruco_dict
@@ -86,7 +79,7 @@ class arucoPublisher(Node):
             10,
         )
 
-        # Publishers
+        ### * Publishers
         self.publisher_marker_vertices = self.create_publisher(
             FiducialArray, "/fiducial_vertices", 1
         )
