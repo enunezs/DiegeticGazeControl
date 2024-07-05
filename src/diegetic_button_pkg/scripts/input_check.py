@@ -44,8 +44,8 @@ inactive_threshold_percent = 0.60  # Close to 1 stop quickly
 
 
 ### Input modes
-input_trigger_mode = "keyboard_trigger"
-# input_trigger_mode = "sloppy"
+# input_trigger_mode = "keyboard_trigger"
+input_trigger_mode = "sloppy"
 # input_trigger_mode = "dwell_time"
 # keyboard_trigger
 # "Dwell Time"
