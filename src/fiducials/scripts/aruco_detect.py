@@ -5,8 +5,6 @@
 ros2 run fiducials aruco_detect.py --ros-args --params-file config/params.yaml
 """
 
-# ! IMPORTANT: CHANGED FROM RODRIGUES TO QUATERNIONS
-
 # Core ROS dependencies
 import rclpy
 from rclpy.node import Node
@@ -31,8 +29,6 @@ from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, Image
 from tf_transformations import quaternion_from_matrix
 
-# from scipy.spatial.transform import Rotation
-
 # Local application imports
 from fiducials.msg import (
     Fiducial,
@@ -42,42 +38,52 @@ from fiducials.msg import (
 )
 from geometry_msgs.msg import Transform
 
-# Initialize constants
-PUBLISH_DRAWN_MARKER = True
-MARKER_LENGTH = 0.035  # meters
 
 # TODO CAMERA INFO
 class arucoPublisher(Node):
     def __init__(self):
         super().__init__("aruco_detect")
 
-        # Aruco parameters
-        # Use https://chev.me/arucogen/ to make the markers
-        aruco_dict = aruco.DICT_4X4_250  # TODO: Restrict dictionary number later
-        self.arucoDict = aruco.Dictionary_get(aruco_dict)
-        self.arucoParams = aruco.DetectorParameters_create()
-
+        ### * Initialize variables
+        # to store camera intrinsics
+        self.camera_matrix = None
+        self.dist_coeffs = None
         # CV Bridge for image conversion
         self.bridge = CvBridge()
 
-        # Load camera intrinsics
-        self.load_camera_intrinsics()
-
-        # Load other parameters
-        self.camera_topic = self.declare_and_get_parameter(
-            "front_camera_subscription", "pupil_glasses/front_camera/image_color"
+        ### * Load parameters
+        self.camera_img_topic = self.declare_and_get_parameter(
+            "front_camera_image", "pupil_glasses/front_camera/image_color"
+        )
+        self.camera_info_topic = self.declare_and_get_parameter(
+            "front_camera_params", "pupil_glasses/front_camera/camera_info"
         )
         self.publish_drawn_marker = self.declare_and_get_parameter(
-            "publish_drawn_marker", PUBLISH_DRAWN_MARKER
+            "publish_drawn_marker", True
         )
         self.marker_length = self.declare_and_get_parameter(
-            "marker_length", MARKER_LENGTH
+            "marker_length", 0.035  # meters
         )
-        self.aruco_dict = self.declare_and_get_parameter("aruco_dict", aruco_dict)
 
-        # Subscribers
+        # Aruco dictionary
+        # Use https://chev.me/arucogen/ to make the markers
+        aruco_dict = aruco.DICT_4X4_100  # TODO: Restrict dictionary number later
+        # Other params at https://docs.opencv.org/3.4/d9/d6a/group__aruco.html
+        self.aruco_dict = self.declare_and_get_parameter("aruco_dict", aruco_dict)
+        self.aruco_dict = aruco_dict
+
+        self.arucoDict = aruco.Dictionary_get(aruco_dict)
+        self.arucoParams = aruco.DetectorParameters_create()
+
+        ### * Subscribers
         self.subscriber_camera_images = self.create_subscription(
-            Image, self.camera_topic, self.detect_aruco_markers, 3
+            Image, self.camera_img_topic, self.detect_aruco_markers, 3
+        )
+        self.subscriber_camera_info = self.create_subscription(
+            CameraInfo,
+            self.camera_info_topic,
+            self.camera_info_callback,
+            10,
         )
 
         # Publishers
@@ -91,55 +97,14 @@ class arucoPublisher(Node):
             Image, "/fiducial_images", 1
         )
 
-        self.new_camera_matrix = None
+        self.new_camera_matrix = None  ### ! ?????
 
-    def load_camera_intrinsics(self):
-        self.get_logger().info("Loading camera intrinsics...")
-
-        # Camera matrix
-        camera_matrix_default = [
-            887.79147665,
-            0.0,
-            809.32877594,
-            0.0,
-            887.14056667,
-            614.39688332,
-            0.0,
-            0.0,
-            1.0,
-        ]
-        self.declare_parameter("camera_matrix", camera_matrix_default)
-        self.camera_matrix = np.array(
-            self.get_parameter("camera_matrix").get_parameter_value().double_array_value
-        ).reshape(3, 3)
-
-        self.get_logger().info("Camera Matrix: %s" % self.camera_matrix)
-
-        # Distortion coefficients
-        dist_coeffs_default = [
-            -1.28152845e-01,
-            1.06973881e-01,
-            -1.50877076e-05,
-            -9.10823342e-04,
-            2.62431778e-03,
-            1.69108143e-01,
-            5.02584562e-02,
-            2.94127262e-02,
-        ]
-
-        self.declare_parameter("dist_coeffs", dist_coeffs_default)
-        self.dist_coeffs = np.array(
-            self.get_parameter("dist_coeffs").get_parameter_value().double_array_value
-        ).reshape((8, 1))
-
-        self.declare_parameter("camera_alpha", 0.5)
-        self.camera_alpha = (
-            self.get_parameter("camera_alpha").get_parameter_value().double_value
-        )
-
-        self.get_logger().info("Distortion Coefficients: %s" % self.dist_coeffs)
-
-        self.get_logger().info("Camera intrinsics loaded")
+    def camera_info_callback(self, msg):
+        if self.camera_matrix is None:  # Only set once to avoid unnecessary computation
+            # Convert camera info into usable format for OpenCV
+            self.camera_matrix = np.array(msg.k).reshape(3, 3)
+            self.dist_coeffs = np.array(msg.d)
+            self.get_logger().info("Camera intrinsics loaded")
 
     def declare_and_get_parameter(self, name, default):
         self.declare_parameter(name, default)
@@ -149,33 +114,18 @@ class arucoPublisher(Node):
         return self.get_parameter(name).value
 
     def detect_aruco_markers(self, img_msg):
+
+        if self.camera_matrix is None or self.dist_coeffs is None:
+            self.get_logger().warn("Camera intrinsics not yet received.")
+            return
+
         # * Unpack message, get image
         img = self.bridge.imgmsg_to_cv2(img_msg)
 
         # Find new camera matrix
         if self.new_camera_matrix is None:
-            """self.new_camera_matrix, self.roi = cv2.getOptimalNewCameraMatrix(
-                self.camera_matrix,
-                self.dist_coeffs,
-                (img.shape[1], img.shape[0]),
-                self.camera_alpha,
-                (img.shape[1], img.shape[0]),
-                centerPrincipalPoint=1,
-            )"""
             self.new_camera_matrix = self.camera_matrix
             self.get_logger().info("New camera matrix: %s" % self.new_camera_matrix)
-
-        # self.get_logger().info(f"Min: {np.min(img)}, Max: {np.max(img)}")
-
-        ### ! Undistort image with base cv2 method
-        # self.get_logger().info("Undistorting image")
-
-        """img = undistort(
-            img, self.camera_matrix, self.dist_coeffs, None, self.new_camera_matrix
-        )"""
-
-        # x, y, w, h = self.roi
-        # img = img[y : y + h, x : x + w]
 
         ### * 2D * ###
         # Perform marker detection
@@ -301,8 +251,7 @@ class arucoPublisher(Node):
         fiducialTransformArrayMsg.header.stamp = self.get_clock().now().to_msg()
         fiducialTransformArrayMsg.header.frame_id = "fiducial_transform"
 
-        # TODO: Unoptimized, change as much as possible with numpy stuff
-        # Likely the problem then
+        # TODO: Unoptimized, update to numpy
 
         # TODO to function
         if rvecs is not None:
