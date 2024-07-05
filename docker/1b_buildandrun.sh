@@ -1,6 +1,6 @@
 xhost +local:root
 
-docker image build -t origami:latest -f docker/Dockerfile docker     
+docker image build -t diegetic_gaze_control:latest -f docker/Dockerfile docker     
 
 docker run -it --env="DISPLAY" \
 	--device=/dev/video0:/dev/video0 \
@@ -9,9 +9,9 @@ docker run -it --env="DISPLAY" \
 	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 	--privileged \
 	--net=host \
-	--volume $(pwd):/root/ws/origami \
+	--volume $(pwd):/root/ws/DiegeticGazeControl \
 	--volume /dev/shm:/dev/shm \
-	origami:latest
+	diegetic_gaze_control:latest
 #	--env "ROS_DOMAIN_ID=7" \
 
 export containerId=$(docker ps -l -q)
