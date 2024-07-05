@@ -9,29 +9,6 @@
     ip: "192.168.0.2"
     port: "8080"
     print_performance: False
-/glasses_emulator_node:
-  ros__parameters:
-    camera_id: 0
-    publish_freq: 50
-    draw_circle: false
-    camera_depth: 1.0
-    video_resolution:
-      - 1920
-      - 1080
-    print_performance: False
-    camera_matrix:
-      [
-        883.10398037,
-        0.0,
-        796.76508223,
-        0.0,
-        889.42718313,
-        646.25149238,
-        0.0,
-        0.0,
-        1.0,
-      ]
-    dist_coeff: [-0.28984511, 0.08497217, -0.00134947, -0.00125141, -0.01016795]
 
 /aruco_detect:
   ros__parameters:
@@ -40,23 +17,24 @@
     front_camera_params: pupil_glasses/front_camera/camera_info
     publish_drawn_marker: True
     marker_length: 0.035
-    aruco_dict: 1 # DICT_4X4_100
+    aruco_dict: 6 # DICT_4X4_100
 # Properties at https://docs.opencv.org/3.4/d9/d6a/group__aruco.html
 
-/diegetic_button_pubsub_node:
+/diegetic_button:
   ros__parameters:
-    button_map_path: "src/diegetic_button_pkg/button_maps/ButtonMap - O-Joy V2.csv"
+    button_map_path: "src/diegetic_button_pkg/button_maps/ButtonMap - A3Piano.csv"
     button_center_finding_mode: "inverse_quintic"
+
 /process_inputs_node:
-  ros__parameters: 
+  ros__parameters:
     input_trigger_mode: "sloppy"
-    cycle_duration_seconds: 0.30  # seconds to complete transition
-    active_threshold_percent: 0.40  # percentage. Close to 0 start quickly
-    inactive_threshold_percent: 0.60  # percentage. Close to 1 stop quickly
-    publish_image : True
-    draw_on_fiducials : True
-    serial_com : False
-    send_serial : False
+    cycle_duration_seconds: 0.30 # seconds to complete transition
+    active_threshold_percent: 0.40 # percentage. Close to 0 start quickly
+    inactive_threshold_percent: 0.60 # percentage. Close to 1 stop quickly
+    publish_image: True
+    draw_on_fiducials: True
+    serial_com: False
+    send_serial: False
 
 /process_inputs_node:
   ros__parameters:

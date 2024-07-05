@@ -60,12 +60,13 @@ class arucoPublisher(Node):
 
         # Aruco dictionary
         # Use https://chev.me/arucogen/ to make the markers
-        aruco_dict = aruco.DICT_4X4_100
-        # Other params at https://docs.opencv.org/3.4/d9/d6a/group__aruco.html
-        self.aruco_dict = self.declare_and_get_parameter("aruco_dict", aruco_dict)
-        self.aruco_dict = aruco_dict
 
-        self.arucoDict = aruco.Dictionary_get(aruco_dict)
+        # Other params at https://docs.opencv.org/3.4/d9/d6a/group__aruco.html
+        self.aruco_dict = self.declare_and_get_parameter(
+            "aruco_dict", aruco.DICT_4X4_100
+        )
+
+        self.arucoDict = aruco.Dictionary_get(self.aruco_dict)
         self.arucoParams = aruco.DetectorParameters_create()
 
         ### * Subscribers
