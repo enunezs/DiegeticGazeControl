@@ -90,8 +90,6 @@ class arucoPublisher(Node):
             Image, "/fiducial_images", 1
         )
 
-        self.new_camera_matrix = None  ### ! ?????
-
     def camera_info_callback(self, msg):
         if self.camera_matrix is None:  # Only set once to avoid unnecessary computation
             # Convert camera info into usable format for OpenCV
@@ -115,18 +113,13 @@ class arucoPublisher(Node):
         # * Unpack message, get image
         img = self.bridge.imgmsg_to_cv2(img_msg)
 
-        # Find new camera matrix
-        if self.new_camera_matrix is None:
-            self.new_camera_matrix = self.camera_matrix
-            self.get_logger().info("New camera matrix: %s" % self.new_camera_matrix)
-
         ### * 2D * ###
         # Perform marker detection
         (corners, ids, rejected) = aruco.detectMarkers(
             img,
             self.arucoDict,
             parameters=self.arucoParams,
-            cameraMatrix=self.new_camera_matrix,
+            cameraMatrix=self.camera_matrix,
         )
 
         # Pack fiducial data into messages
@@ -137,7 +130,7 @@ class arucoPublisher(Node):
         ### * 3D * ###
         # Pose estimation
         (rvecs, tvecs, _objPoints) = aruco.estimatePoseSingleMarkers(
-            corners, self.marker_length, self.new_camera_matrix, self.dist_coeffs
+            corners, self.marker_length, self.camera_matrix, self.dist_coeffs
         )
 
         # Pack message
@@ -160,7 +153,7 @@ class arucoPublisher(Node):
                 for i in range(len(rvecs)):
                     img = drawFrameAxes(
                         img,
-                        self.new_camera_matrix,
+                        self.camera_matrix,
                         self.dist_coeffs,
                         rvecs[i],
                         tvecs[i],
