@@ -46,7 +46,7 @@ from geometry_msgs.msg import Transform
 PUBLISH_DRAWN_MARKER = True
 MARKER_LENGTH = 0.035  # meters
 
-
+# TODO CAMERA INFO
 class arucoPublisher(Node):
     def __init__(self):
         super().__init__("aruco_detect")
@@ -65,7 +65,7 @@ class arucoPublisher(Node):
 
         # Load other parameters
         self.camera_topic = self.declare_and_get_parameter(
-            "front_camera_subscription", "pupil_glasses/front_camera"
+            "front_camera_subscription", "pupil_glasses/front_camera/image_color"
         )
         self.publish_drawn_marker = self.declare_and_get_parameter(
             "publish_drawn_marker", PUBLISH_DRAWN_MARKER
