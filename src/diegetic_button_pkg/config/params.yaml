@@ -1,3 +1,18 @@
+/diegetic_button_pubsub_node:
+  ros__parameters:
+    button_map_path: "src/diegetic_button_pkg/button_maps/ButtonMap - O-Joy V2.csv"
+    button_center_finding_mode: "inverse_quintic"
+/process_inputs_node:
+  ros__parameters: 
+    input_trigger_mode: "sloppy"
+    cycle_duration_seconds: 0.30  # seconds to complete transition
+    active_threshold_percent: 0.40  # percentage. Close to 0 start quickly
+    inactive_threshold_percent: 0.60  # percentage. Close to 1 stop quickly
+    publish_image : True
+    draw_on_fiducials : True
+    serial_com : False
+    send_serial : False
+
 /process_inputs_node:
   ros__parameters:
     camera_matrix:
@@ -20,4 +35,3 @@
         8.55747541e-04,
         4.68416642e+00,
       ]
-

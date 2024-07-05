@@ -27,6 +27,8 @@ import tf_transformations as tf
 
 import numpy as np
 
+# TODO: Log visibility.
+
 # Button calculation mode
 # TODO: To enumerator
 button_center_finding_mode = "inverse_quintic"
@@ -64,10 +66,7 @@ class diegeticButtonPublisher(Node):
         super().__init__("diegetic_button_pubsub_node")
         self.get_logger().info("Diegetic Button Node is Running...")
 
-        # Load button data
-        self.button_dictionary = self.load_diegetic_button_data()
-
-        # Subscribe to 3D position of markers
+        ### Subscribe to 3D position of markers
         self.subscriber_fiducial_transform = self.create_subscription(
             FiducialTransformArray,
             "/fiducial_transforms",
@@ -75,17 +74,28 @@ class diegeticButtonPublisher(Node):
             1,
         )
 
-        # Publishers
+        ### Publishers
         self.publisher_button_transforms = self.create_publisher(
             DiegeticButtonArray, "/button_transforms", 1
         )
 
-        # Publish information of found diegetic buttons
+        ### Parameters
+        self.declare_and_get_parameter("publish_freq", 30)
+        global button_center_finding_mode
+        button_center_finding_mode = self.declare_and_get_parameter(
+            "button_center_finding_mode", "inverse_square"
+        )
+        global button_map_path
+        button_map_path = self.declare_and_get_parameter(
+            "button_map_path",
+            "src/diegetic_button_pkg/button_maps/ButtonMap - O-Joy V2.csv",
+        )
+        # Load button data
+        self.button_dictionary = self.load_diegetic_button_data()
 
     ##### Loading function #####
     # Every  fiducial marker (or collection of markers) will have the coordinates of a button associated with it
     # loaded from an external file. Load into its class and store in a dictionary
-
     def load_diegetic_button_data(self):
         button_dictionary = {}  # key is the button id
         self.get_logger().info("Loading marker to button map...")
@@ -120,6 +130,14 @@ class diegeticButtonPublisher(Node):
         )
         self.get_logger().info(str(button_dictionary.keys()))
         return button_dictionary
+
+    # * Helper functions
+    def declare_and_get_parameter(self, name, default):
+        self.declare_parameter(name, default)
+        self.get_logger().info(
+            f"Loaded parameter {name}: {self.get_parameter(name).value}"
+        )
+        return self.get_parameter(name).value
 
     ##### Callback function #####
     def get_diegetic_button_frames(self, fiducial_transform_array_msg):
@@ -335,7 +353,6 @@ def main():
         # prevents closure. Run until interrupt
         rclpy.spin(diegetic_button_publisher)
     except KeyboardInterrupt:
-        cv2.destroyAllWindows()
         diegetic_button_publisher.destroy_node()  # duh
         rclpy.shutdown()  # Shutdown DDS !
 

@@ -102,12 +102,31 @@ class ProcessInputs(Node):
         super().__init__("process_inputs_node")
         self.get_logger().info("Process Inputs Node is Running...")
 
-        # Initialize vars
+        ### * Parameters
+        global input_trigger_mode
+        input_trigger_mode = self.declare_and_get_parameter(
+            "input_trigger_mode", "dwell_time"
+        )
+        global cycle_duration_seconds
+        cycle_duration_seconds = self.declare_and_get_parameter(
+            "cycle_duration_seconds", 0.30
+        )
+        global active_threshold_percent
+        active_threshold_percent = self.declare_and_get_parameter(
+            "active_threshold_percent", 0.40
+        )
+        global inactive_threshold_percent
+        inactive_threshold_percent = self.declare_and_get_parameter(
+            "inactive_threshold_percent", 0.60
+        )
+
+        ### * Initialize vars
         self.buttons = []
         self.gaze_position = [0.5, 0.5]  # Default to center
 
         # Load camera intrinsics
         self.load_camera_intrinsics()  # ! Why?
+        # TODO: Remove, subscribe to camera info
 
         #  Open bridge for editting
         self.bridge = CvBridge()
@@ -117,6 +136,7 @@ class ProcessInputs(Node):
         self.prev_time = self.get_clock().now()
 
         # Must be same resolution as camera
+        # ? Potential source of error with mismatched resolutions
         self.frame = np.zeros([1200, 1600, 3], dtype=np.uint8)
         self.frame.fill(0)  # or img[:] = 255
         self.height, self.width = [1200, 1600]
@@ -150,7 +170,7 @@ class ProcessInputs(Node):
                 Joy, "/joy", self.update_controller, 1
             )
 
-        # Subscribers
+        ### * Subscribers
         self.subscriber_eye_info = self.create_subscription(
             PointStamped, "pupil_glasses/gaze_position", self.update_gaze_pos, 1
         )
@@ -159,14 +179,14 @@ class ProcessInputs(Node):
         )
 
         # if draw_on_fiducials:
+        # Todo: only if someone is subscribed
         self.subscriber_front_camera = self.create_subscription(
             Image, "/fiducial_images", self.update_frame, 1
         )
 
-        # Publishers
+        ### * Publishers
         # Send modified image for debugging
         self.pub = self.create_publisher(Image, "/inputs_image", 10)
-
         self.publisher_input_array = self.create_publisher(
             InputStatusArray, "diegetic/inputs", 1
         )
@@ -174,6 +194,14 @@ class ProcessInputs(Node):
         self.publisher_simple_output = self.create_publisher(
             Float32, "/simple_output", 1
         )
+
+    # * Helper functions
+    def declare_and_get_parameter(self, name, default):
+        self.declare_parameter(name, default)
+        self.get_logger().info(
+            f"Loaded parameter {name}: {self.get_parameter(name).value}"
+        )
+        return self.get_parameter(name).value
 
     # TODO: Add image to button list?
 
