@@ -1,7 +1,5 @@
 xhost +local:root
 
-
-
 docker run -it \
 	--env="DISPLAY" \
 	--env="QT_X11_NO_MITSHM=1" \
@@ -9,9 +7,9 @@ docker run -it \
 	--privileged \
 	--net=host \
 	-v /dev/shm:/dev/shm \
-	-e "ROS_DOMAIN_ID=7" \
 	osrf/ros:humble-desktop \
 	rqt
+#	-e "ROS_DOMAIN_ID=7" \
 
 export containerId=$(docker ps -l -q)
 
