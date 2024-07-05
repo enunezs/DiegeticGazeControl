@@ -86,6 +86,10 @@ Our aim is to enable interaction with prepared environments via eye-gaze using A
 - Optionally for a quick start, Docker. [Install Docker here](https://docs.docker.com/get-docker/)
 - Print the sample control interface on paper (see [here](/src/diegetic_button_pkg/printables/)).
 
+```bash
+xhost +localhost
+```
+
 ## Cloning
 
 Navigate to a new workspace, then clone the repository with submodules:
