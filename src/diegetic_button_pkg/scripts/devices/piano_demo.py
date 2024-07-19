@@ -12,7 +12,6 @@ from diegetic_button_pkg.msg import InputStatusArray
 
 # Piano stuff
 from pysinewave import SineWave
-
 volume = 0
 
 
@@ -25,14 +24,17 @@ class PianoPublisher(Node):  # Create node inheriting from Node
 
         # Base props
         self.sinewave = SineWave(
-            pitch=0, decibels=0, pitch_per_second=50, decibels_per_second=500
-        )
+            pitch=0, decibels=0, pitch_per_second=50, decibels_per_second=500)
         self.sinewave.stop()
 
         # Subscribers
         self.subscriber_input_listener = self.create_subscription(
-            InputStatusArray, "diegetic/inputs", self.update_piano, 1
-        )
+            InputStatusArray, "diegetic/inputs", self.update_piano, 1)
+
+        # self.sinewave.stop()
+        self.sinewave.play()
+        volume = -100
+        self.sinewave.set_volume(volume)
 
         self.status = "stop"
         self.pitch = 0
@@ -41,9 +43,12 @@ class PianoPublisher(Node):  # Create node inheriting from Node
 
         # Unpack
         inputs = InputStatusArray_msg.inputs
+
         print(f"inputs: {inputs}")
+
         active = False
         new_pitch = []  # TODO: change to avg if multiple?
+
 
         for new_input in inputs:
             # print(f"status: {new_input.status}")
@@ -62,7 +67,7 @@ class PianoPublisher(Node):  # Create node inheriting from Node
             # If stopped
             if self.status == "stop":
                 self.sinewave.play()
-                # volume = 0
+                #volume = 0
                 self.sinewave.set_volume(volume)
                 self.status = "playing"
 
@@ -97,7 +102,8 @@ def main():
     rclpy.init()  # Initialize ROS DDS
 
     piano_publisher = PianoPublisher()  # Create instance of function
-    print("Paper piano demo Publisher Node is Running...")
+
+    print('Paper piano demo Publisher Node is Running...')
 
     try:
         rclpy.spin(piano_publisher)  # prevents closure. Run until interrupt
@@ -107,5 +113,5 @@ def main():
         rclpy.shutdown()  # Shutdown DDS !
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
