@@ -83,6 +83,9 @@ RUN pip3 install python-xlib pyautogui
 RUN pip3 install matplotlib \
 	pynput 
 
+# --- E-ink Display
+RUN pip3 install paho-mqtt
+
 # --- Piano
 RUN pip3 install pysinewave
 RUN apt-get update && apt-get install -y \
