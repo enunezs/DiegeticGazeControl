@@ -8,20 +8,24 @@ import paho.mqtt.client as mqtt
 
 class JoyButtonMonitor(Node):
     def __init__(self):
-        super().__init__("joy_button_monitor")
+        super().__init__("e_ink_server")
+        self.get_logger().info("Starting e-ink server")
 
         self.previous_buttons = [0] * 4  # ABXY四个按钮
 
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.connect("broker.emqx.io", 1883, 60)
         self.topic = "epd/display"
 
-        self.subscription = self.create_subscription(Joy, "joy", self.joy_callback, 10)
-        self.subscription
+        self.subscription = self.create_subscription(Joy, "/joy", self.joy_callback, 10)
+        # self.subscription
 
     def joy_callback(self, data):
         # ABXY 按钮的索引分别为 0, 1, 2, 3
+        # self.get_logger().info("Received!!!!")
+
         buttons = data.buttons[:4]
+
         for i, button in enumerate(buttons):
             if button != self.previous_buttons[i]:
                 if button == 1:
