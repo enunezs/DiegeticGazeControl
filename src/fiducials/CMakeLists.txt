@@ -44,6 +44,7 @@ ament_python_install_package(scripts)
 install(PROGRAMS
   scripts/aruco_detect.py
   scripts/aruco_mapper.py
+  scripts/dummy_aruco_sender.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
