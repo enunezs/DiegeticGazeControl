@@ -32,6 +32,9 @@ from cv2 import Rodrigues
 from pynput import keyboard  # import Listener, Key
 from sensor_msgs.msg import Joy
 
+# haptic_feedback
+from std_msgs.msg import Int32
+
 ### * PARAMETERS * ###  Debug optionsrosbag_to_csv
 # Input interaction parameters
 # TODO: Expose these later
@@ -193,6 +196,10 @@ class ProcessInputs(Node):
 
         self.publisher_simple_output = self.create_publisher(
             Float32, "/simple_output", 1
+        )
+
+        self.publisher_haptic_feedback = self.create_publisher(
+            Int32, "/haptic_feedback", 1
         )
 
     # * Helper functions
@@ -505,6 +512,7 @@ class ProcessInputs(Node):
             for button in button_status:
                 if button.id in input_list:
                     button.status = "active"
+                    self.haptic_feedback()
                 else:
                     button.status = "inactive"
 
@@ -521,6 +529,7 @@ class ProcessInputs(Node):
                         button.status = "hover"
                 else:
                     button.status = "inactive"
+                    self.haptic_feedback()
 
         for button in button_status:
             if button.id in input_list:
@@ -540,6 +549,8 @@ class ProcessInputs(Node):
                     """
                     if input_trigger_mode == "dwell_time":
                         button.status = "active"
+                        self.haptic_feedback()
+
                     # TODO: Hover status
 
                 # self.get_logger().info(f"Button {button.id} is at {100*button.percent:.2f}%, status {button.status}")
@@ -554,6 +565,17 @@ class ProcessInputs(Node):
                     # optional ish?
                     # self.input_list.remove(button)
         return button_status
+
+    def haptic_feedback(self):
+        # send an integer message
+        self.get_logger().info("haptic_feedback")
+
+        # publish message
+        haptic_feedback_msg = Int32()
+        haptic_feedback_msg.data = 3111
+        self.publisher_haptic_feedback.publish(haptic_feedback_msg)
+
+        pass
 
 
 def main():
