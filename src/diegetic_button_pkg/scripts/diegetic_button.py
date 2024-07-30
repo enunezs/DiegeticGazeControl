@@ -35,9 +35,10 @@ button_center_finding_mode = "inverse_quintic"
 # average, inverse_square, inverse_cubic, first_found, closest
 
 # TODO: Expose and move to launch file
-button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap - O-Joy V2.csv"
+button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap-Ink.csv"
 # button_map_path = "src/diegetic_button_pkg/button_maps/AxiomMap - AxiomMap.csv"
 # button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap - A3Piano.csv"
+# button_map_path: "src/diegetic_button_pkg/button_maps/ButtonMap - O-Joy V2.csv"
 
 
 # Class for diegetic buttons. #
@@ -88,7 +89,7 @@ class diegeticButtonPublisher(Node):
         global button_map_path
         button_map_path = self.declare_and_get_parameter(
             "button_map_path",
-            "src/diegetic_button_pkg/button_maps/ButtonMap - O-Joy V2.csv",
+            button_map_path,
         )
         # Load button data
         self.button_dictionary = self.load_diegetic_button_data()

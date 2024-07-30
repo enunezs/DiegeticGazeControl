@@ -1,53 +1,87 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Joy
+from diegetic_button_pkg.msg import InputStatusArray
 import paho.mqtt.client as mqtt
+import time
 
-
-class JoyButtonMonitor(Node):
+class ButtonStateMonitor(Node):
     def __init__(self):
-        super().__init__("e_ink_server")
+        super().__init__('e_ink_server')
         self.get_logger().info("Starting e_ink server")
-        self.previous_buttons = [0] * 4  # ABXY四个按钮
+        
+        self.subscription = self.create_subscription(
+            InputStatusArray,
+            'diegetic/inputs',
+            self.listener_callback,
+            10)
+        self.subscription  # prevent unused variable warning
 
+        # 初始化MQTT客户端
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.connect("broker.emqx.io", 1883, 60)
         self.topic = "epd/display"
+        
+        # 初始化状态字典，存储每个按钮的当前状态
+        self.button_states = {
+            "S1Y_+1": "inactive",
+            "S1Y_-1": "inactive",
+            "S1X_-1": "inactive",
+            "S1X_+1": "inactive",
+            "TR": "inactive",
+            "TL": "inactive"
+        }
 
-        self.subscription = self.create_subscription(Joy, "/joy", self.joy_callback, 10)
-        # self.subscription
-
-    def joy_callback(self, data):
-        # ABXY 按钮的索引分别为 0, 1, 2, 3
-        # self.get_logger().info("Received!!!!")
-
-        buttons = data.buttons[:4]
-
-        for i, button in enumerate(buttons):
-            if button != self.previous_buttons[i]:
-                if button == 1:
-                    msg = (i + 1) * 10  # 按下时发布10, 20, 30, 40
-                else:
-                    msg = (i + 1) * 10 + 1  # 松开时发布11, 21, 31, 41
-
-                # 发布到MQTT
-                self.client.publish(self.topic, msg)
-                self.get_logger().info(
-                    f"Button {i} state changed to {button}, published {msg} to MQTT"
-                )
-
-            self.previous_buttons[i] = button
-
+        # 初始化时间戳字典，存储每个按钮的最后消息发送时间
+        self.last_publish_time = {key: 0 for key in self.button_states}
+        
+        self.button_mapping = {
+            "S1Y_+1": "up",
+            "S1Y_-1": "down",
+            "S1X_-1": "right",
+            "S1X_+1": "left",
+            "TR": "forward",
+            "TL": "backward"
+        }
+        
+    def listener_callback(self, msg):
+        current_time = time.time()
+        debounce_interval = 0.3  # 去抖动时间间隔，单位：秒
+        
+        for input_status in msg.inputs:
+            button_id = input_status.input_id
+            status = input_status.status
+            
+            # 仅处理我们关心的六个按钮
+            if button_id in self.button_states:
+                previous_status = self.button_states[button_id]
+                
+                if status != previous_status:
+                    action = self.button_mapping[button_id]
+                    if status == "active":
+                        message = f'{action}_press'
+                    elif status == "inactive":
+                        message = f'{action}_release'
+                    
+                    # 检查是否符合去抖动时间间隔
+                    if current_time - self.last_publish_time[button_id] > debounce_interval:
+                        self.get_logger().info(message)
+                        self.client.publish(self.topic, message)
+                        self.last_publish_time[button_id] = current_time
+                    
+                    # 更新按钮状态
+                    self.button_states[button_id] = status
 
 def main(args=None):
     rclpy.init(args=args)
-    joy_button_monitor = JoyButtonMonitor()
-    rclpy.spin(joy_button_monitor)
-    joy_button_monitor.destroy_node()
+    button_state_monitor = ButtonStateMonitor()
+    rclpy.spin(button_state_monitor)
+
+    button_state_monitor.destroy_node()
     rclpy.shutdown()
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
+
+
