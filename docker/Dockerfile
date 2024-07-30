@@ -11,8 +11,9 @@ RUN apt-get update && apt-get install -y \
 	ros-$ROS_DISTRO-vision-opencv \
 	ros-$ROS_DISTRO-compressed-image-transport\
 	ros-$ROS_DISTRO-image-transport \
-    ros-$ROS_DISTRO-tf-transformations
-
+    ros-$ROS_DISTRO-tf-transformations \
+    ros-$ROS_DISTRO-joy 
+    
 # General utilities
 RUN apt-get update && apt-get install -y \
     wget \
@@ -83,10 +84,15 @@ RUN pip3 install python-xlib pyautogui
 RUN pip3 install matplotlib \
 	pynput 
 
+# --- E-ink Display
+RUN pip3 install paho-mqtt
+
 # --- Piano
 RUN pip3 install pysinewave
 RUN apt-get update && apt-get install -y \
      libportaudio2
+RUN cd src/diegetic_button_pkg/scripts/pyfluidsynth-master/ && \
+	pip3 install pyfluidsynth
 
 # SET ENVIRONMENT
 WORKDIR $HOME/ws/DiegeticGazeControl
