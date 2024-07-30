@@ -48,7 +48,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 install(PROGRAMS
   scripts/diegetic_button.py
   scripts/input_check.py
-  scripts/bagToCSV.py
+  scripts/record_script.py
   scripts/devices/joy.py
   scripts/devices/piano_demo.py
   DESTINATION lib/${PROJECT_NAME}
