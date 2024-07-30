@@ -181,7 +181,7 @@ class ProcessInputs(Node):
         # if draw_on_fiducials:
         # Todo: only if someone is subscribed
         self.subscriber_front_camera = self.create_subscription(
-            Image, "/fiducial_images", self.update_frame, 1
+            Image, "/pupil_glasses/front_camera/image_color", self.update_frame, 1
         )
 
         ### * Publishers
