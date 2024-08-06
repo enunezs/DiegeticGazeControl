@@ -1,4 +1,5 @@
 #!/bin/bash
+xhost +local:root
 
 docker pull enunezs/diegetic_gaze_control:1.1
 
