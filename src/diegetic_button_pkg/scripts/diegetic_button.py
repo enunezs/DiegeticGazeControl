@@ -35,7 +35,8 @@ button_center_finding_mode = "inverse_quintic"
 # average, inverse_square, inverse_cubic, first_found, closest
 
 # TODO: Expose and move to launch file
-button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap-Ink(boo).csv"
+# button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap-Ink(boo).csv"
+button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap-Ink.csv"
 # button_map_path = "src/diegetic_button_pkg/button_maps/AxiomMap - AxiomMap.csv"
 # button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap - A3Piano.csv"
 # button_map_path: "src/diegetic_button_pkg/button_maps/ButtonMap - O-Joy V2.csv"

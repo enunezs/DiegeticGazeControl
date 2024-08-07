@@ -19,8 +19,8 @@ class ButtonStateMonitor(Node):
 
         # 初始化MQTT客户端
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-        self.client.connect("192.168.0.4", 1883, 60)
-        # self.client.connect("broker.emqx.io", 1883, 60)
+        # self.client.connect("192.168.0.4", 1883, 60)
+        self.client.connect("broker.emqx.io", 1883, 60)
         self.topic = "epd/display"
 
         # 初始化状态字典，存储每个按钮的当前状态
