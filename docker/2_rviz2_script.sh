@@ -7,7 +7,6 @@ docker run -it \
 	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 	--privileged \
 	--net=host \
-	-e "ROS_DOMAIN_ID=7" \
 	-v /dev/shm:/dev/shm \
 	osrf/ros:humble-desktop \
 	rviz2
