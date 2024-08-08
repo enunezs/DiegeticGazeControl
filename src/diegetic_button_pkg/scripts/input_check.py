@@ -15,6 +15,7 @@ from diegetic_button_pkg.msg import InputStatus
 from diegetic_button_pkg.msg import InputStatusArray
 
 from std_msgs.msg import Float32
+from std_msgs.msg import String
 from geometry_msgs.msg import PointStamped
 
 # Maths
@@ -198,8 +199,12 @@ class ProcessInputs(Node):
             Float32, "/simple_output", 1
         )
 
-        self.publisher_haptic_feedback = self.create_publisher(
+        """self.publisher_haptic_feedback = self.create_publisher(
             Int32, "/haptic_feedback", 1
+        )"""
+
+        self.pubisher_haptic_action = self.create_publisher(
+            String, "/haptic_feedback_input_string", 1
         )
 
     # * Helper functions
@@ -497,6 +502,7 @@ class ProcessInputs(Node):
         for active_input in input_list:
             ids = [b.id for b in button_status]
             if active_input not in ids:
+
                 # Create class and pack
                 button = input_status(active_input, status="inactive", percent=0.0)
                 # self.get_logger().info(f"creating button {active_input}")
@@ -511,8 +517,15 @@ class ProcessInputs(Node):
         if input_trigger_mode == "sloppy":
             for button in button_status:
                 if button.id in input_list:
+                    if button.status == "inactive":
+                        # Send to haptic manager
+                        msg = String()
+                        msg.data = "button_press"
+                        self.pubisher_haptic_action.publish(msg)
+                        pass
+
                     button.status = "active"
-                    self.haptic_feedback()
+                    # self.haptic_feedback()
                 else:
                     button.status = "inactive"
 
@@ -529,7 +542,6 @@ class ProcessInputs(Node):
                         button.status = "hover"
                 else:
                     button.status = "inactive"
-                    self.haptic_feedback()
 
         for button in button_status:
             if button.id in input_list:
@@ -549,7 +561,6 @@ class ProcessInputs(Node):
                     """
                     if input_trigger_mode == "dwell_time":
                         button.status = "active"
-                        self.haptic_feedback()
 
                     # TODO: Hover status
 
@@ -566,29 +577,46 @@ class ProcessInputs(Node):
                     # self.input_list.remove(button)
         return button_status
 
-    def haptic_feedback(self):
+    """
+    def haptic_feedback(self, v1, v2, v3):
         # send an integer message
         self.get_logger().info("haptic_feedback")
 
         # publish message
         haptic_feedback_msg = Int32()
-        haptic_feedback_msg.data = 3111
+        haptic_feedback_msg.data = int(f"3{v1}{v2}{v3}")
+        self.publisher_haptic_feedback.publish(haptic_feedback_msg)
+
+        pass
+    def turn_off_feedback(self):
+        self.get_logger().info("haptic_feedback")
+
+        haptic_feedback_msg = Int32()
+        haptic_feedback_msg.data = 3000
         self.publisher_haptic_feedback.publish(haptic_feedback_msg)
 
         pass
 
+    def tap_single_v(self, v_index, val):
+        self.get_logger().info("haptic_feedback")
+
+        haptic_feedback_msg = Int32()
+        haptic_feedback_msg.data = int(f"2{v_index}{val}")
+        self.publisher_haptic_feedback.publish(haptic_feedback_msg)
+
+        pass
+
+    """
+
 
 def main():
     rclpy.init()  # Initialize ROS DDS
-
     publisher = ProcessInputs()  # Create instance of function
-
     print("Visual buttons Pub/Sub Node is Running...")
 
     try:
         rclpy.spin(publisher)  # prevents closure. Run until interrupt
     except KeyboardInterrupt:
-        cv2.destroyAllWindows()
         publisher.destroy_node()  # duh
         rclpy.shutdown()  # Shutdown DDS !
 

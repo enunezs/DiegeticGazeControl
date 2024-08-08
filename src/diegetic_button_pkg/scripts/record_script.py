@@ -18,7 +18,7 @@ import os
 from datetime import datetime
 
 FREQUENCY = 50  # Frequency of recording in Hz
-SUB_DIR = "recordings/test1"
+SUB_DIR = "recordings/pilot1_ontable"
 
 # DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
