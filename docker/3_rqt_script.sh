@@ -9,7 +9,6 @@ docker run -it \
 	--privileged \
 	--net=host \
 	-v /dev/shm:/dev/shm \
-	-e "ROS_DOMAIN_ID=7" \
 	osrf/ros:humble-desktop \
 	rqt_graph
 
