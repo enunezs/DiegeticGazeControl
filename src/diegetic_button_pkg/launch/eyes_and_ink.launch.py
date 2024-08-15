@@ -27,7 +27,7 @@ def generate_launch_description():
         package="fiducials",
         executable="aruco_detect.py",
         name="aruco_detect",
-        parameters=["src/fiducials/config/params.yaml"],
+        parameters=["src/fiducials/config/params_v4.yaml"],
     )
     launch_description.add_action(fiducials_node_detect)
 

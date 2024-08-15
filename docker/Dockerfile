@@ -91,8 +91,9 @@ RUN pip3 install paho-mqtt
 RUN pip3 install pysinewave
 RUN apt-get update && apt-get install -y \
      libportaudio2
-RUN cd src/diegetic_button_pkg/scripts/pyfluidsynth-master/ && \
-	pip3 install pyfluidsynth
+     
+#RUN cd src/diegetic_button_pkg/scripts/pyfluidsynth-master/ && \
+#	pip3 install pyfluidsynth
 
 # SET ENVIRONMENT
 WORKDIR $HOME/ws/DiegeticGazeControl
