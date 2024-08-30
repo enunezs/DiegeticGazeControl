@@ -18,7 +18,8 @@ import os
 from datetime import datetime
 
 FREQUENCY = 50  # Frequency of recording in Hz
-SUB_DIR = "recordings/pilot2"
+# SUB_DIR = "recordings/onrobot_p1"
+SUB_DIR = "recordings_29Aug_onrobot_p15"
 
 # DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
@@ -90,7 +91,7 @@ class MultiTopicRecorder(Node):
 
         # Write headers to the csv files
         for topic, file in self.csv_files.items():
-            self.get_logger().info(f"Recording data for topic: {topic}")
+            # self.get_logger().info(f"Recording data for topic: {topic}")
             if topic == "/pupil_glasses/gaze_position":
                 csv.writer(file).writerow(["timestamp", "x", "y", "z"])
                 self.buffers["/pupil_glasses/gaze_position"].append(
@@ -131,12 +132,12 @@ class MultiTopicRecorder(Node):
 
         # Timer to save buffered data
         self.timer = self.create_timer(1.0 / self.frequency, self.save_buffered_data)
-        self.get_logger().info(f"Recording data to: {self.csv_writers}")
+        # self.get_logger().info(f"Recording data to: {self.csv_writers}")
 
     def gaze_position_callback(self, msg):
-        self.get_logger().info(
+        """self.get_logger().info(
             f"Received gaze position: {msg.point.x}, {msg.point.y}, {msg.point.z}"
-        )
+        )"""
         # Save the data to a buffer
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         data = [timestamp, msg.point.x, msg.point.y, msg.point.z]
@@ -174,7 +175,8 @@ class MultiTopicRecorder(Node):
                             timestamp,
                             input_status.input_id,
                             input_status.percent,
-                        ]  # , input_status.button_status]
+                            input_status.button_status,
+                        ]
                     )
 
     def joy_callback(self, msg):

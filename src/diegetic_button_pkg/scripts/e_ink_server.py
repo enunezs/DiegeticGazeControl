@@ -19,8 +19,8 @@ class ButtonStateMonitor(Node):
 
         # 初始化MQTT客户端
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-        self.client.connect("192.168.1.5", 1883, 60)
-        # self.client.connect("broker.emqx.io", 1883, 60)
+        # self.client.connect("192.168.56.1", 1883, 60)
+        self.client.connect("broker.emqx.io", 1883, 60)
         self.topic = "epd/display"
 
         # 初始化状态字典，存储每个按钮的当前状态
@@ -34,6 +34,35 @@ class ButtonStateMonitor(Node):
             "A": "inactive",
             "B": "inactive",
             "X": "inactive",
+            "a": "inactive",
+            "b": "inactive",
+            "c": "inactive",
+            "d": "inactive",
+            "e": "inactive",
+            "f": "inactive",
+            "g": "inactive",
+            "h": "inactive",
+            "i": "inactive",
+            "j": "inactive",
+            "k": "inactive",
+            "l": "inactive",
+            "m": "inactive",
+            "n": "inactive",
+            "o": "inactive",
+            "p": "inactive",
+            "q": "inactive",
+            "r": "inactive",
+            "s": "inactive",
+            "t": "inactive",
+            "u": "inactive",
+            "v": "inactive",
+            "w": "inactive",
+            "x": "inactive",
+            "y": "inactive",
+            "z": "inactive",
+            "del": "inactive",
+            "refresh": "inactive",
+            "space": "inactive",
         }
 
         # 初始化时间戳字典，存储每个按钮的最后消息发送时间
@@ -49,6 +78,35 @@ class ButtonStateMonitor(Node):
             "A": "open",
             "B": "close",
             "X": "switch",
+            "a": "a",
+            "b": "b",
+            "c": "c",
+            "d": "d",
+            "e": "e",
+            "f": "f",
+            "g": "g",
+            "h": "h",
+            "i": "i",
+            "j": "j",
+            "k": "k",
+            "l": "l",
+            "m": "m",
+            "n": "n",
+            "o": "o",
+            "p": "p",
+            "q": "q",
+            "r": "r",
+            "s": "s",
+            "t": "t",
+            "u": "u",
+            "v": "v",
+            "w": "w",
+            "x": "x",
+            "y": "y",
+            "z": "z",
+            "del": "delete",
+            "refresh": "refresh",
+            "space": "space",
         }
 
     def listener_callback(self, msg):

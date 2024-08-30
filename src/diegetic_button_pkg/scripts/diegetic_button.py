@@ -17,6 +17,10 @@ from geometry_msgs.msg import PoseArray, Pose
 from diegetic_button_pkg.msg import DiegeticButton
 from diegetic_button_pkg.msg import DiegeticButtonArray
 
+# haptics message
+from std_msgs.msg import String as string_msg
+
+
 # Aruco
 from cv2 import aruco
 from cv2 import drawFrameAxes
@@ -35,11 +39,11 @@ button_center_finding_mode = "inverse_quintic"
 # average, inverse_square, inverse_cubic, first_found, closest
 
 # TODO: Expose and move to launch file
-button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap-Ink(boo).csv"
+# button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap-Ink(boo).csv"
 # button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap-Ink.csv"
 # button_map_path = "src/diegetic_button_pkg/button_maps/AxiomMap - AxiomMap.csv"
 # button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap - A3Piano.csv"
-# button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap - O-Joy V2.1.csv"
+button_map_path = "src/diegetic_button_pkg/button_maps/ButtonMap - O-Joy V2.1.csv"
 
 
 # Class for diegetic buttons. #
@@ -79,6 +83,11 @@ class diegeticButtonPublisher(Node):
         ### Publishers
         self.publisher_button_transforms = self.create_publisher(
             DiegeticButtonArray, "/button_transforms", 1
+        )
+
+        ### Haptics Publisher
+        self.publsher_haptics_manager = self.create_publisher(
+            string_msg, "/haptic_feedback_input_string", 1
         )
 
         ### Parameters
@@ -176,6 +185,12 @@ class diegeticButtonPublisher(Node):
                     # ... and if its not yet on the button list, append
                     if button.id not in active_button_list_ids:
                         # self.get_logger().info(f"Button has id of {button.id} and list has {active_button_list_ids}")
+                        #### WYATT HAPTICS
+                        button_msg_haptics = string_msg()
+                        button_msg_haptics.data = "button_press"
+                        # self.publsher_haptics_manager.publish(button_msg_haptics)
+                        ###
+                        # self.get_logger().info(button.id)
                         active_button_list.append(button)
                         active_button_list_ids.append(button.id)
 
@@ -347,8 +362,8 @@ class diegeticButtonPublisher(Node):
         pass
 
 
-def main():
-    rclpy.init()  # Initialize ROS DDS
+def main(args=None):
+    rclpy.init(args=args)  # Initialize ROS DDS
     diegetic_button_publisher = diegeticButtonPublisher()  # Create instance of function
 
     try:

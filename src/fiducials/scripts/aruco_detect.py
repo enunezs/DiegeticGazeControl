@@ -55,7 +55,7 @@ class arucoPublisher(Node):
             "publish_drawn_marker", True
         )
         self.marker_length = self.declare_and_get_parameter(
-            "marker_length", 0.035  # meters
+            "marker_length", 0.035  #  0.02448   # meters
         )
 
         # Aruco dictionary
@@ -287,8 +287,8 @@ class arucoPublisher(Node):
         return fiducialTransformArrayMsg
 
 
-def main():
-    rclpy.init()  # Initialize ROS DDS
+def main(args=None):
+    rclpy.init(args=args)  # Initialize ROS DDS
     aruco_publisher = arucoPublisher()
     print("Aruco Detection Publisher Node is Running...")
 

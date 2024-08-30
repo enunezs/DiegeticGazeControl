@@ -41,16 +41,16 @@ from std_msgs.msg import Int32
 # TODO: Expose these later
 # Dwell time settings
 cycle_duration_seconds = (
-    0.30  # 3 seconds for complete transition #slope, we can split this later
+    None  # 3 seconds for complete transition #slope, we can split this later
 )
-active_threshold_percent = 0.40  # Close to 0 start quickly
-inactive_threshold_percent = 0.60  # Close to 1 stop quickly
+active_threshold_percent = None  # Close to 0 start quickly
+inactive_threshold_percent = None  # Close to 1 stop quickly
 
 
 ### Input modes
 # input_trigger_mode = "keyboard_trigger"
-input_trigger_mode = "sloppy"
-# input_trigger_mode = "dwell_time"
+# input_trigger_mode = "sloppy"
+input_trigger_mode = "dwell_time"
 # keyboard_trigger
 # "Dwell Time"
 
@@ -113,15 +113,15 @@ class ProcessInputs(Node):
         )
         global cycle_duration_seconds
         cycle_duration_seconds = self.declare_and_get_parameter(
-            "cycle_duration_seconds", 0.30
+            "cycle_duration_seconds", 0.40
         )
         global active_threshold_percent
         active_threshold_percent = self.declare_and_get_parameter(
-            "active_threshold_percent", 0.40
+            "active_threshold_percent", 0.60
         )
         global inactive_threshold_percent
         inactive_threshold_percent = self.declare_and_get_parameter(
-            "inactive_threshold_percent", 0.60
+            "inactive_threshold_percent", 0.40
         )
 
         ### * Initialize vars
@@ -206,6 +206,7 @@ class ProcessInputs(Node):
         self.pubisher_haptic_action = self.create_publisher(
             String, "/haptic_feedback_input_string", 1
         )
+        self.last_button_ID = ""
 
     # * Helper functions
     def declare_and_get_parameter(self, name, default):
@@ -560,7 +561,15 @@ class ProcessInputs(Node):
                             button.status = "active"
                     """
                     if input_trigger_mode == "dwell_time":
+                        if button.status != "active":
+                            # self.get_logger().info(f"Button ID: {button.id}")
+                            # self.get_logger().info(f"Saved ID: {self.last_button_ID}")
+                            if button.id != self.last_button_ID:
+                                msg = String()
+                                msg.data = "button_press"
+                                self.pubisher_haptic_action.publish(msg)
                         button.status = "active"
+                        self.last_button_ID = button.id
 
                     # TODO: Hover status
 
@@ -609,8 +618,8 @@ class ProcessInputs(Node):
     """
 
 
-def main():
-    rclpy.init()  # Initialize ROS DDS
+def main(args=None):
+    rclpy.init(args=args)  # Initialize ROS DDS
     publisher = ProcessInputs()  # Create instance of function
     print("Visual buttons Pub/Sub Node is Running...")
 

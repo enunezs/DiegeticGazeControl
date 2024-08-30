@@ -53,6 +53,7 @@ The project is detailed in the preprint:
   - [Prerequisites](#prerequisites)
   - [Cloning](#cloning)
 - [Running](#running)
+- [Running Experiment](#running-experiment)
 - [How does it work?](#how-does-it-work)
   - [Launch files](#launch-files)
 - [Citing this work](#citing-this-work)
@@ -132,6 +133,22 @@ You can visualize the scene and gaze data by running the following command:
 ```
 
 ---
+
+# Running Experiment
+
+Change path of recording script on diegetic/scripts/record_script.py
+
+Open 2 terminals for the Diegetic package, run ./docker/1\_... on each
+Repeat for the ros2_jaco_controller
+
+On the Diegetic, run `ros2 launch diegetic_button_pkg eyes_to_joy.launch.py` to connect to the glasses. If it fails, update IP adress on glasses package config file. Try only turning on when running experiment
+
+On the robot, run `ros2 launch ros2_jaco_controller jaco_and_controller.launch.py `
+
+Fill the forms (Demographics + nausea/fatigue)
+Do the calibration routine
+Do the experiment + remember
+Finsih questionanire
 
 # How does it work?
 

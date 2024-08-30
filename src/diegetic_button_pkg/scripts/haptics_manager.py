@@ -5,6 +5,11 @@ from std_msgs.msg import Int32 as int_msg
 from std_msgs.msg import String as string_msg
 from std_msgs.msg import Float32 as float_msg
 
+import tkinter as tk
+import functools
+
+from threading import Timer
+
 from time import sleep
 
 import numpy as np
@@ -60,19 +65,22 @@ class HapticsNode(Node):
 
         self.update = self.create_timer(1.0/REFRESH_RATE, self.update_haptics)
 
+        self.rootTK = tk.Tk()
+        
+
 
     pass
 
     def update_haptics(self):
         self.haptic_feedback(self.vibration_1, self.vibration_2, self.vibration_3)
         self.vibration_1 = 0
-        self.vibration_2 = 0
+        
         self.vibration_3 = 0
 
     def process_action_robot(self, msg):
 
         data = str(msg.data).lower()
-        self.get_logger().info(f"Processing action: {data}")
+        #self.get_logger().info(f"Processing action: {data}")
         match data:
             case "crash":
                 # SET ALL TO ON
@@ -88,7 +96,8 @@ class HapticsNode(Node):
                 self.vibration_1 = 0
                 self.vibration_3 = 0
             case _:
-                self.get_logger().info("Haptic Feedback action msg invalid.")
+                #self.get_logger().info("Haptic Feedback action msg invalid.")
+                pass
             
     def process_action_input(self, msg):
 
@@ -96,7 +105,10 @@ class HapticsNode(Node):
         self.get_logger().info(f"Processing action: {data}")
         match data:
             case "button_press":
-                vibration_2 = 1
+                self.vibration_2 = 1
+                #self.rootTK.after(200, functools.(self.turn_vibration_2_off, self))
+                self.timer_v2 = Timer(0.1, self.turn_vibration_2_off)
+                self.timer_v2.start()
                 # Do something
             case "off":
                 self.vibration_2 = 0
@@ -104,6 +116,10 @@ class HapticsNode(Node):
                 self.get_logger().info("Haptic Feedback action msg invalid.")
             
         pass
+
+    def turn_vibration_2_off(self):
+        #self.get_logger().log("TURNING OFF")
+        self.vibration_2 = 0
 
     def process_position(self, msg):
         self.get_logger().log("position feedback sent")
@@ -124,6 +140,9 @@ class HapticsNode(Node):
         haptic_feedback_msg = int_msg()
         haptic_feedback_msg.data = int(f"3{v1}{v2}{v3}")
         self.publisher_haptic_feedback.publish(haptic_feedback_msg)
+
+        if(v2 == 1):
+            sleep(1)
 
         pass
 
