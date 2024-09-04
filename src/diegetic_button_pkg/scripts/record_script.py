@@ -19,7 +19,7 @@ from datetime import datetime
 
 FREQUENCY = 50  # Frequency of recording in Hz
 # SUB_DIR = "recordings/onrobot_p1"
-SUB_DIR = "recordings_29Aug_onrobot_p15"
+SUB_DIR = "recordings_04Sep_onrobot_p16"
 
 # DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 

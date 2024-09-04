@@ -69,7 +69,7 @@ class diegeticButtonPublisher(Node):
     ##### Init function #####
     def __init__(self):
         # Base node init
-        super().__init__("diegetic_button_pubsub_node")
+        super().__init__("diegetic_button")
         self.get_logger().info("Diegetic Button Node is Running...")
 
         ### Subscribe to 3D position of markers

@@ -56,7 +56,7 @@ def generate_launch_description():
     diegetic_button_node = Node(
         package="diegetic_button_pkg",
         executable="diegetic_button.py",
-        name="diegetic_button_pubsub_node",
+        name="diegetic_button",
         parameters=["src/diegetic_button_pkg/config/params.yaml"],
     )
     launch_description.add_action(diegetic_button_node)

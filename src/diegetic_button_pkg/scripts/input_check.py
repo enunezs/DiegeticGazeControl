@@ -117,11 +117,11 @@ class ProcessInputs(Node):
         )
         global active_threshold_percent
         active_threshold_percent = self.declare_and_get_parameter(
-            "active_threshold_percent", 0.60
+            "active_threshold_percent", 0.40
         )
         global inactive_threshold_percent
         inactive_threshold_percent = self.declare_and_get_parameter(
-            "inactive_threshold_percent", 0.40
+            "inactive_threshold_percent", 0.20
         )
 
         ### * Initialize vars

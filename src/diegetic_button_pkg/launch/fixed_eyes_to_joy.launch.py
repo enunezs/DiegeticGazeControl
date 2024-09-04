@@ -37,19 +37,20 @@ def generate_launch_description():
         name="dummy_aruco_sender",
     )
     launch_description.add_action(fiducials_node_detect)
+
     # Diegetic Button
     diegetic_button_node = Node(
         package="diegetic_button_pkg",
         executable="diegetic_button.py",
         name="diegetic_button",
-        parameters=["src/diegetic_button_pkg/config/params.yaml"],
+        parameters=["src/diegetic_button_pkg/config/params_fixed.yaml"],
     )
     launch_description.add_action(diegetic_button_node)
 
     input_check_node = Node(
         package="diegetic_button_pkg",
         executable="input_check.py",
-        name="input_check",
+        name="process_inputs_node",
         parameters=["src/diegetic_button_pkg/config/params.yaml"],
     )
     launch_description.add_action(input_check_node)

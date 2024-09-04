@@ -56,7 +56,7 @@ def generate_launch_description():
     input_check_node = Node(
         package="diegetic_button_pkg",
         executable="input_check.py",
-        name="input_check",
+        name="process_inputs_node",
         parameters=["src/diegetic_button_pkg/config/params.yaml"],
     )
     launch_description.add_action(input_check_node)

@@ -8,9 +8,9 @@
 /process_inputs_node:
   ros__parameters: 
     input_trigger_mode: "dwell_time"
-    cycle_duration_seconds: 0.40  # seconds to complete transition
-    active_threshold_percent: 0.6  # percentage. Close to 0 start quickly
-    inactive_threshold_percent: 0.400  # percentage. Close to 1 stop quickly
+    cycle_duration_seconds: 0.400  # seconds to complete transition
+    active_threshold_percent: 0.40  # percentage. Close to 0 start quickly
+    inactive_threshold_percent: 0.200  # percentage. Close to 1 stop quickly
     publish_image : True
     draw_on_fiducials : True
     serial_com : False
