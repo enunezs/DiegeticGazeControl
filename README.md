@@ -137,6 +137,7 @@ You can visualize the scene and gaze data by running the following command:
 
 The following is a brief overview of the code structure. It is composed of three main packages:
 
+
 ![ImageProcessingDiagramAlt(1).png](<doc/images/ImageProcessingDiagramAlt(1).png>)
 
 The project is workspace with three main components:
@@ -149,7 +150,10 @@ The project is workspace with three main components:
 
 - **Robot control**, which is robot-dependant. It is handled by the [`ros2_franka`](https://github.com/enunezs/ros2_franka_docker) or [`ros2_jaco_controller`](https://github.com/enunezs/ros2_jaco_controller).
 
-![Nodes2.png](doc/images/Nodes2.png)
+
+<p align="center">
+  <img src="doc/images/F5_System-Architecture (1).jpg" alt="System Architecture" width="300">
+</p>
 
 ### Launch files
 
