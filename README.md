@@ -49,6 +49,7 @@ The project is detailed in the preprint:
 
 - [Contents](#contents)
 - [Why?](#why)
+- [User testing](#user-testing)
 - [Installation](#installation)
   - [Prerequisites](#prerequisites)
   - [Cloning](#cloning)
@@ -75,6 +76,12 @@ Our aim is to enable interaction with prepared environments via eye-gaze using A
 <p align="center">
   <img src="./doc/images/DGUI_DescriptionTrim.gif" alt="Description Anim" width="700">
 </p>
+
+---
+
+# User Testing
+
+The system was tested with the Yale-CMU-Berkeley (YCB) Block Pick and Place Protocol. [Check our results here](https://github.com/enunezs/DiegeticGazeControl/tree/Release_1.0/YCB_Testing)
 
 ---
 
@@ -165,10 +172,10 @@ If you use this repository in your research, please cite the following:
 author = {Emanuel, Nunez Sardinha and Marcela, Munera and Nancy, Zook and David, Western and Virginia, Ruiz Garate},
 doi = {pending},
 month = june,
-title = {{Diegetic Graphical User Interfaces \& Intuitive
-Control of Assistive Robots via Eye-gaze}},
+title = {{ Diegetic Graphical User Interfaces for \&
+Robot Control via Eye-gaze}},
 url = {https://github.com/enunezs/DiegeticGazeControl},
-version = {1.0},
+version = {1.1},
 year = {2024}
 }
 ```
