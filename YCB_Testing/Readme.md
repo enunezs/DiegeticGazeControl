@@ -5,11 +5,11 @@
 Score information is summarized in Figure 1. The mean score was 13.71 (± 2.10) points, with an execution time for the whole protocol of 739.10 (± 156.52) seconds, or 12 minutes 19.10 seconds (± 2 minutes 36.52 seconds). The score distribution is shown in Figure 1a, with the complete benchmark available in the Supplemental Material. Scores were not normally distributed (p-value = 0.015 < 0.05).
 
 <p align="center">
-<img src="./YCB_Testing/Figs/F6a_ScoreHistogram.jpg" alt="Score Distribution for YCB Block Pick and Place Protocol." width="25%" /> <img src="./YCB_Testing/Figs/F6b_ScoreVsTime.jpg" alt="Score evolution for each user with time. Slope corresponds to points per time measure." width="25%" />
+<img src="./Figs/F6a_ScoreHistogram.jpg" alt="Score Distribution for YCB Block Pick and Place Protocol." width="25%" /> <img src="./Figs/F6b_ScoreVsTime.jpg" alt="Score evolution for each user with time. Slope corresponds to points per time measure." width="25%" />
 </p>
 
 <p align="center">
-<img src="./YCB_Testing/Figs/F6c_TimePerAction.jpg" alt="Duration of each of the eight pick and drop actions. The whisker reflects the extrema and each box tick the 25th percentile, median, and 75th percentile." width="50%" />
+<img src="./Figs/F6c_TimePerAction.jpg" alt="Duration of each of the eight pick and drop actions. The whisker reflects the extrema and each box tick the 25th percentile, median, and 75th percentile." width="50%" />
 </p>
 
 **Figure 1**: 
@@ -24,7 +24,7 @@ Actions were classified and split into pick-up and drop-off for each block (Figu
 Figure 2 shows results for each item of the System Usability Scale test (mean score of 75.36 (± 13.26)) and additional SUS-like questions. Most participants found the system intuitive, with two neutral and one disagreeing. Participants learned the system with minimal instruction and time, with over 80% agreeing the system had low complexity (Q2), was quick to learn (Q7), they felt confident using it (Q9), and needed to learn few things beforehand (Q10).
 
 <p align="center">
-<img src="./YCB_Testing/Figs/F7_CombinedSUSFreq.jpg" alt="Frequency of results for the System Usability Scale (SUS Q1 to Q10 in order) and our SUS-like questions. Averages and standard deviation are shown on the right side. For the SUS, odd-numbered questions refer to positive sentiment, even-numbered ones are negative." width="65%" />
+<img src="./Figs/F7_CombinedSUSFreq.jpg" alt="Frequency of results for the System Usability Scale (SUS Q1 to Q10 in order) and our SUS-like questions. Averages and standard deviation are shown on the right side. For the SUS, odd-numbered questions refer to positive sentiment, even-numbered ones are negative." width="65%" />
 </p>
 
 For additional Likert questions, the interface was intuitive, and the majority found the glasses comfortable. One participant reported nausea after the experiment (Q14), with five reporting fatigue (Q15) and three feeling very fatigued, matching comments on eye strain.
@@ -38,7 +38,7 @@ The average NASA-TLX total workload score was 44.76 (± 18.77), with an average 
 Spearman correlation test showed a positive relationship between the YCB score and perceived system usability scale (spearman-r 0.544, p-value = 0.011 < 0.05), and an inverse relationship between the usability scale and workload index (spearman-r -0.583, p-value = 0.006 < 0.05). No significant correlation was found between the YCB score and workload index (Spearman-r -0.381, p-value = 0.088).
 
 <p align="center">
-<img src="./YCB_Testing/Figs/F8_NASACombined.jpg" alt="NASA-TLX results for each category showing (A) Distribution plots for unweighted scores, where box shows the interquartile range and whiskers show the rest of the distribution excluding outliers \cite{Waskom2021}. (B) Mean weighted scores. The width corresponds to the weight reported by the users." width="100%" />
+<img src="./Figs/F8_NASACombined.jpg" alt="NASA-TLX results for each category showing (A) Distribution plots for unweighted scores, where box shows the interquartile range and whiskers show the rest of the distribution excluding outliers \cite{Waskom2021}. (B) Mean weighted scores. The width corresponds to the weight reported by the users." width="100%" />
 </p>
 
 **Figure 3**: NASA-TLX results for each category showing (A) Distribution plots for unweighted scores, where box shows the interquartile range and whiskers show the rest of the distribution excluding outliers \cite{Waskom2021}. (B) Mean weighted scores. The width corresponds to the weight reported by the users.
