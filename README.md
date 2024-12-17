@@ -56,6 +56,7 @@ The project is detailed in the preprint:
 - [Running Experiment](#running-experiment)
 - [How does it work?](#how-does-it-work)
   - [Launch files](#launch-files)
+- [Performance](#performance)
 - [Citing this work](#citing-this-work)
 
 ---
@@ -154,6 +155,7 @@ Finsih questionanire
 
 The following is a brief overview of the code structure. It is composed of three main packages:
 
+
 ![ImageProcessingDiagramAlt(1).png](<doc/images/ImageProcessingDiagramAlt(1).png>)
 
 The project is workspace with three main components:
@@ -166,7 +168,23 @@ The project is workspace with three main components:
 
 - **Robot control**, which is robot-dependant. It is handled by the [`ros2_franka`](https://github.com/enunezs/ros2_franka_docker) or [`ros2_jaco_controller`](https://github.com/enunezs/ros2_jaco_controller).
 
-![Nodes2.png](doc/images/Nodes2.png)
+```mermaid
+graph TD
+    A[Gaze-tracking Glasses Input] -->|Front Camera| B[Diegetic Buttons Detection]
+    A -->|Gaze point| C[Gaze Interaction Pipeline]
+    B -->|Button Position| C
+    C -->|Active Buttons| D[Robot Controller]
+
+    click A href "https://github.com/enunezs/pupil_neon_pkg"
+    click B href "/src/fiducials/"
+    click C href "/src/diegetic_button_pkg/"
+    click D href "https://github.com/enunezs/ros2_franka_docker"
+```
+
+
+<p align="center">
+  <img src="doc/images/F5_System-Architecture (1).jpg" alt="System Architecture" width="300">
+</p>
 
 ### Launch files
 
@@ -174,6 +192,23 @@ The project is workspace with three main components:
 - `webcam_to_joy.launch.py`: The launch file for the emulated mode, which uses a webcam instead of the glasses.
 
 [See scripts here](/src/diegetic_button_pkg/launch/)
+
+---
+# Performance
+
+Cumulative latency times for our gaze-interaction implementation execution
+
+<div align="center">
+
+| **Process**            | **Latency (ms)**         |
+|------------------------|--------------------------|
+| tobii_glasses.py       | 12 ( ± 4.64)             |
+| ArUco_detect.py        | 23 ( ± 11.28)            |
+| diegetic_buttons.py    | 26 ( ± 13.07)            |
+| input_check.py         | 28 ( ± 13.99)            |
+| joy.py (Final total)   | **30 ( ± 14.17)**        |
+
+</div>
 
 ---
 
