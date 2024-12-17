@@ -19,7 +19,12 @@ from datetime import datetime
 
 FREQUENCY = 50  # Frequency of recording in Hz
 # SUB_DIR = "recordings/onrobot_p1"
-SUB_DIR = "recordings_04Sep_onrobot_p16"
+# MODE = "ON_ROBOT"
+MODE = "OFF_ROBOT"
+# MODE = "FIXED"
+PARTICIPANT = "p34_r"
+# SUB_DIR = "NEO_recordings_05Sep_OFFrobot_p1"
+SUB_DIR = "NEO_recordings_14Sep_" + MODE + "_" + PARTICIPANT
 
 # DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
@@ -74,7 +79,7 @@ class MultiTopicRecorder(Node):
 		"""
 
         # Initialize subfolders and csv files and writers
-        os.makedirs(SUB_DIR, exist_ok=True)
+        os.makedirs(SUB_DIR, exist_ok=False)
         # Initialize subscribers and buffers
         self.buffers = {topic: [] for topic in self.topics}
 
