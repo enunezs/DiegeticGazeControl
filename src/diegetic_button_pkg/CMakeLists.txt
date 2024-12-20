@@ -50,6 +50,7 @@ install(PROGRAMS
   scripts/input_check.py
   scripts/record_script.py
   scripts/e_ink_server.py
+  scripts/diegetic_parser.py
   scripts/devices/joy.py
   scripts/devices/piano_demo.py
   DESTINATION lib/${PROJECT_NAME}

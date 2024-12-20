@@ -3,22 +3,37 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir, Command
+
 from launch_ros.actions import Node
 from launch.substitutions import ThisLaunchFileDir, PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
-    launch_description = LaunchDescription()
 
-    pupil_launch = Node(
-        package="pupil_neon_pkg",
-        executable="pupil_publisher.py",
-        name="pupil_glasses_node",
-        parameters=["src/diegetic_button_pkg/config/piano_config.yaml"],
+    # Declare the launch argument for the optional configuration file
+    override_config_file_arg = DeclareLaunchArgument(
+        "override_config_file",
+        default_value="",
+        description="Path to the override configuration file",
     )
 
+    # Use the custom configuration file if specified, otherwise use the default
+    override_config_file = LaunchConfiguration("override_config_file")
+
+    launch_description = LaunchDescription()
+    launch_description.add_action(override_config_file_arg)
+
+    pupil_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                os.path.join(get_package_share_directory("pupil_neon_pkg"), "launch"),
+                "/emulator_pupil.launch.py",
+            ]
+        )
+    )
     launch_description.add_action(pupil_launch)
 
     # Fiducials
@@ -60,7 +75,16 @@ def generate_launch_description():
     )
     launch_description.add_action(input_check_node)
 
-    # Piano
+    input_check_node = Node(
+        package="diegetic_button_pkg",
+        executable="diegetic_parser.py",
+        name="diegetic_parser_node",
+        parameters=["src/diegetic_button_pkg/config/piano_config.yaml"],
+    )
+    launch_description.add_action(input_check_node)
+
+    """
+    # Old Piano
     piano_node = Node(
         package="diegetic_button_pkg",
         executable="piano_demo.py",
@@ -69,5 +93,6 @@ def generate_launch_description():
     )
 
     launch_description.add_action(piano_node)
+    """
 
     return launch_description
