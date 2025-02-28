@@ -42,3 +42,28 @@ Spearman correlation test showed a positive relationship between the YCB score a
 </p>
 
 **Figure 3**: NASA-TLX results for each category showing (A) Distribution plots for unweighted scores, where box shows the interquartile range and whiskers show the rest of the distribution excluding outliers \cite{Waskom2021}. (B) Mean weighted scores. The width corresponds to the weight reported by the users.
+
+## System
+
+### System Performance Summary
+
+
+<div align="center">
+Table 1: Cumulative latency times for our gaze-interaction implementation execution
+  
+| **Process**             | **Latency (ms)**          |
+|-------------------------|---------------------------|
+| tobii_glasses.py        | 12 (± 4.64)              |
+| ArUco_detect.py         | 23 (± 11.28)             |
+| diegetic_buttons.py     | 26 (± 13.07)             |
+| input_check.py          | 28 (± 13.99)             |
+| **joy.py (Final total)**    | **30 (± 14.17)**         |
+
+</div>
+
+- **Frequency:** System performance was sampled over one minute of user-controlled activity, with the controller operating at **49.401 (± 0.007) Hz**.  
+- **Bandwidth:** Data from the Tobii Pro Glasses 2 averaged **1.56 MB per message**, resulting in a bandwidth of **78 MB/sec**, primarily due to the front camera feed.  
+- **Delay & Latency:** The processing pipeline takes **30 (± 14.17) ms** to complete, with detailed node latencies provided in **Table 1**. Communication with the Tobii Pro Glasses 2 showed an average latency of **11.96 (± 23.91) ms**, occasionally exceeding **200 ms** based on proximity to the host machine.  
+- **Total:** Wireless communication between the eye-tracker and the system is identified as the primary bottleneck, with future iterations considering **tethered connections** to improve performance.  
+
+
