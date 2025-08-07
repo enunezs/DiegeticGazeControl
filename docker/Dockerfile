@@ -57,16 +57,44 @@ RUN pip3 install CairoSVG
 RUN apt-get update && apt-get install -y \ 
 	poppler-utils
 
-#RUN pip3 install opencv-contrib-python==4.3.0.38 
+RUN pip3 install opencv-contrib-python
 
 #	opencv-python-headless	\
 # opencv-contrib-python==4.3.0.38 # Last with backwards compatibility
 
 # Opencv from Ubuntu 
+# JACK: Removed apt-update to avoid conflict with pip install
+# RUN apt-get update && apt-get install -y \
+#	libopencv-dev \
+#	python3-opencv """
+    
+# QT GUI Dependencies
 RUN apt-get update && apt-get install -y \
-	libopencv-dev \
-	python3-opencv 
-	
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcb-glx0 \
+    libxcb-keysyms1 \
+    libxcb-image0 \
+    libxcb-shm0 \
+    libxcb-icccm4 \
+    libxcb-sync1 \
+    libxcb-xfixes0 \
+    libxcb-shape0 \
+    libxcb-randr0 \
+    libxcb-render-util0 \
+    libxcb-xinerama0 \
+    libxcb-xkb1 \
+    libxkbcommon-x11-0 \
+    libxkbcommon0 \
+    x11-apps \
+    xauth \
+    xorg \
+    libgl1-mesa-glx \
+    libgl1-mesa-dri
+
 
 #'stevedore>=1.3.0,<1.4.0'
 RUN apt-get update && apt-get install -y \
@@ -79,6 +107,19 @@ RUN pip3 install pupil-labs-realtime-api
 
 # Glasses emulation (Via Mouse)
 RUN pip3 install python-xlib pyautogui
+
+# Installing pyqt5 and dependencies
+RUN apt-get update && apt-get install -y \
+    python3-pyqt5 \
+    python3-pyqt5.qtsvg \
+    python3-pyqt5.qtwebengine \
+    python3-pyqt5.qtmultimedia \
+    python3-pyqt5.qtquick \
+    python3-pyqt5.qtwebsockets
+
+# JACK: Added for GUI 
+ENV QT_QPA_PLATFORM=xcb
+ENV QT_X11_NO_MITSHM=1
 
 # --- Digetic Buttons
 RUN pip3 install matplotlib \

@@ -66,8 +66,15 @@ class arucoPublisher(Node):
             "aruco_dict", aruco.DICT_4X4_100
         )
 
-        self.arucoDict = aruco.Dictionary_get(self.aruco_dict)
+        self.arucoDict = aruco.getPredefinedDictionary(self.aruco_dict)
+
+        #self.arucoDict = aruco.Dictionary_get(self.aruco_dict)
         self.arucoParams = aruco.DetectorParameters_create()
+
+        #detector = cv.aruco.ArucoDetector(dictionary, parameters)
+        #self.detector = aruco.ArucoDetector(self.arucoDict, self.arucoParams)
+
+
 
         ### * Subscribers
         self.subscriber_camera_images = self.create_subscription(
@@ -119,9 +126,10 @@ class arucoPublisher(Node):
         (corners, ids, rejected) = aruco.detectMarkers(
             img,
             self.arucoDict,
-            parameters=self.arucoParams,
-            cameraMatrix=self.camera_matrix,
+            parameters=self.arucoParams
         )
+        # corners, ids, rejected = self.detector.detectMarkers(img)
+
 
         # Pack fiducial data into messages
         fiducialArrayMsg = self.pack_fiducial_array_msg(corners, ids)

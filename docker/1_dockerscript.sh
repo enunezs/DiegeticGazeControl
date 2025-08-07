@@ -8,6 +8,7 @@ docker run -it \
 	--device=/dev/video0:/dev/video0 \
 	--env DISPLAY=$DISPLAY \
 	--env="QT_X11_NO_MITSHM=1" \
+	--env="QT_QPA_PLATFORM=xcb" \
 	--privileged \
 	--net=host \
 	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \

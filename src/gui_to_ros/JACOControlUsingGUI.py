@@ -42,7 +42,8 @@ class Buttons(QWidget):
 
         # Set up the layout
         layout = QVBoxLayout()
-        layout.addWidget(self.speed_up_button)
+        layout.self.addLabel(self.gripper_title)
+        addWidget(self.speed_up_button)
         layout.addWidget(self.stop_button)
         self.setLayout(layout)
 
@@ -67,14 +68,13 @@ class Buttons(QWidget):
         print(self.joystick_outs[1])
 
 
-class ClickableWindow(QWidget):
+class ClickableWindow(QLabel):
     def __init__(self, button_click_func=None, window_click_func=None):
         super().__init__()
 
         # Set up the label to display cself.size().width(), self.size().height())lick coordinates
         self.label = QLabel("Click anywhere in the window", self)
         self.label.setAlignment(Qt.AlignCenter)
-        self.setStyleSheet("background-color: lightblue;")
         self.speed = np.array((0, 0))
         self.size_np_array = np.array((self.size().width(), self.size().height()))
         self.button_click_func = button_click_func
@@ -90,7 +90,7 @@ class ClickableWindow(QWidget):
         layout.addWidget(self.label)
         self.setLayout(layout)
 
-        # Set up the window
+        # Set u        self.addLabel(self.gripper_title)p the window
         self.setWindowTitle("Clickable Window")
         self.setGeometry(100, 100, 400, 300)
 
