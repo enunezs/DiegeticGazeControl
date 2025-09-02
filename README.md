@@ -98,6 +98,7 @@ Navigate to a new workspace, then clone the repository with submodules:
 
 ```bash
 git clone --recurse-submodules https://github.com/enunezs/DiegeticGazeControl
+# git submodule update --init # If you already cloned the repository without submodules
 cd DiegeticGazeControl
 ```
 
@@ -167,26 +168,9 @@ The project is workspace with three main components:
 
 - **Robot control**, which is robot-dependant. It is handled by the [`ros2_franka`](https://github.com/enunezs/ros2_franka_docker) or [`ros2_jaco_controller`](https://github.com/enunezs/ros2_jaco_controller).
 
-```mermaid
-graph TD
-    A[Gaze-tracking Glasses Input] -->|Front Camera| B[Diegetic Buttons Detection]
-    A -->|Gaze point| C[Gaze Interaction Pipeline]
-    B -->|Button Position| C
-    C -->|Active Buttons| D[Robot Controller]
-    D -->|Joy Message| E[Franka Controller]
-    D -->|Joy Message| F[Jaco Controller]
-
-    click A href "https://github.com/enunezs/pupil_neon_pkg"
-    click B href "/src/fiducials/"
-    click C href "/src/diegetic_button_pkg/"
-    click E href "https://github.com/enunezs/ros2_franka_docker"
-    click F href "https://github.com/enunezs/ros2_jaco_controller"
-
-```
-
-<p align="center">
+<!-- <p align="center">
   <img src="doc/images/F5_System-Architecture (1).jpg" alt="System Architecture" width="300">
-</p>
+</p> -->
 
 ### Launch files
 

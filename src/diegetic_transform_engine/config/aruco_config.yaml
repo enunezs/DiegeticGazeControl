@@ -1,0 +1,21 @@
+aruco_dict: "DICT_4X4_100"
+marker_size: 0.044 # meters
+camera_frame: "camera_optical_frame"
+world_frame: "world"
+
+# Individual marker configuration
+# Each marker can be configured with a custom frame_id and what it's relative to
+markers:
+  # Example configurations:
+  # "0":
+  #   frame_id: 'landing_pad'
+  #   relative_to: 'world'
+  # "1":
+  #   frame_id: 'charging_station'
+  #   relative_to: 'transient'
+
+# Publishing options
+publish_tf: true
+publish_poses: true
+debug_images: true
+marker_persistence: 0.5

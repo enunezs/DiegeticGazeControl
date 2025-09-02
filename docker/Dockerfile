@@ -1,20 +1,14 @@
 ARG ROS_DISTRO=humble
 FROM ros:$ROS_DISTRO-ros-base
 LABEL maintainer="Emanuel Nunez S gmail dot com"
-ENV HOME /root
+ENV HOME=/root
 WORKDIR $HOME
 SHELL ["/bin/bash", "-c"]
 
-# Install ros2 packages
-RUN apt-get update && apt-get install -y \ 
-	ros-$ROS_DISTRO-cv-bridge \
-	ros-$ROS_DISTRO-vision-opencv \
-	ros-$ROS_DISTRO-compressed-image-transport\
-	ros-$ROS_DISTRO-image-transport \
-    ros-$ROS_DISTRO-tf-transformations \
-    ros-$ROS_DISTRO-joy 
-    
-# General utilities
+# Set environment variables for OpenCV
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update package lists and install basic utilities
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
@@ -22,84 +16,112 @@ RUN apt-get update && apt-get install -y \
     gdb \
     vim \
     nano \
-	apt-utils \
-	dialog \
-	unzip \
-	python3-vcstool
+    apt-utils \
+    dialog \
+    unzip \
+    python3-vcstool \
+    build-essential \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
-# Other tools
+# Install Python development tools
 RUN apt-get update && apt-get install -y \
-	scrot \
-	python3-tk\
-	python3-dev
+    python3-pip \
+    python3-dev \
+    python3-setuptools \
+    python3-tk \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install pip 
-RUN apt-get update && apt-get install -y \ 
-	python3-pip 
+# Upgrade pip
 RUN pip3 install --upgrade pip
 
-# Transformation packages
-RUN apt-get update && apt-get install -y \ 
-	python3-numpy
+# Install specific numpy version FIRST (critical for cv_bridge and OpenCV compatibility)
+# Use system numpy to avoid version conflicts with precompiled OpenCV
+RUN apt-get update && apt-get install -y \
+    python3-numpy \
+    python3-numpy-dev \
+    && rm -rf /var/lib/apt/lists/*
 
+# Lock pip numpy to match system version and prevent upgrades
+# RUN pip3 install "numpy>=1.21.0,<1.25.0" --force-reinstall
+RUN pip3 install numpy==1.23.5 --force-reinstall
+
+# Install OpenCV system dependencies
+RUN apt-get update && apt-get install -y \
+    libopencv-dev \
+    libopencv-contrib-dev \
+    python3-opencv \
+    libgtk-3-dev \
+    libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libv4l-dev \
+    libxvidcore-dev \
+    libx264-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libatlas-base-dev \
+    gfortran \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ROS2 packages (after OpenCV dependencies)
+RUN apt-get update && apt-get install -y \
+    ros-$ROS_DISTRO-cv-bridge \
+    ros-$ROS_DISTRO-vision-opencv \
+    ros-$ROS_DISTRO-compressed-image-transport \
+    ros-$ROS_DISTRO-image-transport \
+    ros-$ROS_DISTRO-tf-transformations \
+    ros-$ROS_DISTRO-joy \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python scientific packages (maintaining strict numpy version constraint)
+RUN pip3 install --no-deps \
+    scipy \
+    matplotlib \
+    transforms3d \
+    argcomplete
+
+# Reinstall dependencies that scipy/matplotlib need, but control numpy version
 RUN pip3 install \
-	transforms3d \
-	scipy \
-	matplotlib 
+    python-dateutil \
+    pyparsing \
+    cycler \
+    kiwisolver \
+    pillow \
+    fonttools \
+    packaging
 
-# Opencv from pip
-RUN pip3 install argcomplete
-# Last with backwards compatibility
-RUN pip3 install --upgrade pip
-
-# ARuco
-RUN pip3 install CairoSVG
-RUN apt-get update && apt-get install -y \ 
-	poppler-utils
-
-#RUN pip3 install opencv-contrib-python==4.3.0.38 
-
-#	opencv-python-headless	\
-# opencv-contrib-python==4.3.0.38 # Last with backwards compatibility
-
-# Opencv from Ubuntu 
+# Additional multimedia libraries
 RUN apt-get update && apt-get install -y \
-	libopencv-dev \
-	python3-opencv 
-	
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    scrot \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
 
-#'stevedore>=1.3.0,<1.4.0'
-RUN apt-get update && apt-get install -y \
-	ffmpeg \
-	libsm6 \
-	libxext6  
+# Install application-specific packages
+RUN pip3 install \
+    pupil-labs-realtime-api \
+    python-xlib \
+    pyautogui \
+    CairoSVG
 
-# --- PUPIL GLASSES
-RUN pip3 install pupil-labs-realtime-api
+# Network configuration for RTP streams
+RUN echo 'net.core.rmem_max = 134217728' >> /etc/sysctl.conf && \
+    echo 'net.core.rmem_default = 65536' >> /etc/sysctl.conf
 
-# Glasses emulation (Via Mouse)
-RUN pip3 install python-xlib pyautogui
-
-# --- Digetic Buttons
-RUN pip3 install matplotlib \
-	pynput 
-
-# --- E-ink Display
-RUN pip3 install paho-mqtt
-
-# --- Piano
-RUN pip3 install pysinewave
-RUN apt-get update && apt-get install -y \
-     libportaudio2
-     
-#RUN cd src/diegetic_button_pkg/scripts/pyfluidsynth-master/ && \
-#	pip3 install pyfluidsynth
-
-# SET ENVIRONMENT
+# Set up environment
 WORKDIR $HOME/ws/DiegeticGazeControl
 
-RUN echo 'alias python="python3"' >> $HOME/.bashrc
-RUN echo 'source /opt/ros/humble/setup.sh && colcon build' >> $HOME/.bashrc
-RUN echo 'source install/setup.bash' >> $HOME/.bashrc
+# Configure bash environment
+RUN echo 'alias python="python3"' >> $HOME/.bashrc && \
+    echo 'source /opt/ros/humble/setup.bash && colcon build' >> $HOME/.bashrc && \
+    echo 'source install/setup.bash' >> $HOME/.bashrc
 
-
+# Verification step - check OpenCV installation
+RUN python3 -c "import numpy; print('NumPy version:', numpy.__version__)" && \
+    python3 -c "import cv2; print('OpenCV version:', cv2.__version__); print('OpenCV build info:'); print(cv2.getBuildInformation())"
