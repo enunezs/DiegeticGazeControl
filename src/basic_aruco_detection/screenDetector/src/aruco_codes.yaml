@@ -1,0 +1,26 @@
+aruco_dict_index: 1 #4X4 Aruco dict, 100 entries. check cv2 for other dictionaries.
+aruco_size: 150
+border_size: False #We should really be playing with this dynamically if were testing ARUCO size.
+
+# At the moment this is preset for
+monitor_size:
+  - 1600
+  - 1200
+
+corner_ids:
+  - 80 # Top left
+  - 81 # Top right
+  - 82 # Bottom right
+  - 83 # Bottom left
+
+corner_edges:
+  - 0 # Top left
+  - 1 # Top right
+  - 2 # Bottom right
+  - 3 # Bottom left
+
+background_colour:
+  #White!
+  - 255
+  - 255
+  - 255
