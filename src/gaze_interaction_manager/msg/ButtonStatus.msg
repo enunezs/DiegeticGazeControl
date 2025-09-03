@@ -1,4 +1,5 @@
 std_msgs/Header header
+string button_id
 
 # Details of input
 int32 last_seen

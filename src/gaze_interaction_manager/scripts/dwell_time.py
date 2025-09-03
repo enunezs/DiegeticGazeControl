@@ -177,7 +177,7 @@ class GazeInteractionNode(Node):
         self.button_timeout = self.get_parameter("button_timeout_seconds").value
 
         # Debug parameters
-        self.declare_parameter("publish_debug_image", True)
+        self.declare_parameter("publish_debug_image", False)
         self.publish_debug_image = self.get_parameter("publish_debug_image").value
 
         self.declare_parameter("verbose_logging", False)
@@ -382,7 +382,6 @@ class GazeInteractionNode(Node):
                 status_msg.button = DiegeticButton2D()
 
                 status_msg.button.button_id = button_id
-
                 status_msg.button.center_x = status.center_x
                 status_msg.button.center_y = status.center_y
                 status_msg.button.x_points = status.x_points
@@ -396,6 +395,7 @@ class GazeInteractionNode(Node):
                 elif status.state == ButtonState.ACTIVE:
                     status_msg.button_status = 1  # BUTTON_ACTIVE
 
+                status_msg.button_id = button_id
                 status_msg.percent = float(status.activation_level)
                 status_updates.append(status_msg)
 
@@ -551,6 +551,8 @@ class GazeInteractionNode(Node):
 
             status_msg.button_status = 0 # INACTIVE
             status_msg.percent = 0.0
+            status_msg.button_id = ""
+
         else:
             # Pick the highest-activation active button
             max_button_status = max(active_buttons, key=lambda b: b.activation_level)
@@ -564,6 +566,8 @@ class GazeInteractionNode(Node):
 
             status_msg.button_status = 1  # ACTIVE
             status_msg.percent = float(max_button_status.activation_level)
+            status_msg.button_id = max_button_status.button_id
+
 
         status_msg.header.stamp = self.get_clock().now().to_msg()
         status_msg.header.frame_id = "active_buttons"

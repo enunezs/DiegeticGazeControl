@@ -25,8 +25,8 @@ find_package(rosidl_default_generators REQUIRED)
 
 # Install python scripts
 install(PROGRAMS
-  scripts/visualizer_2d.py
-  scripts/visualizer_3d.py
+  scripts/2D_visuals.py
+  scripts/3D_visuals.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
