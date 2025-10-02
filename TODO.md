@@ -113,6 +113,7 @@ flowchart TB
 ```
 
 - [ ] Migrate to Kaiju
+- [ ] Check config files work
 
 ## pupil_glasses_node
 
@@ -131,6 +132,7 @@ flowchart TB
 
 - [x] At start, defines fixed button transforms at the beggining from csv / config file. TF (button*candidate*\*), /button_candidates (ButtonArray.msg)
 - [x] Aggregates multiple TFs to find fused pose TF (button*fused*\*), /fused_buttons (ButtonArray.msg)
+- [x] 2D Visualization node, color depending on dwell time
 - [ ] 3D Visualization node, color depending on dwell time
 
 ## dwell_interaction_node
@@ -140,10 +142,13 @@ flowchart TB
 
 ## recalibration_manager_node
 
-- [ ] Subscribe to dwell events and smooth pursuit.
-- [ ] **IMPORTANT:** Plot activation and blocks for start / end events in RQT
-  - [ ] Visualizer to plot data to rqt? Do from controller instead
-- [ ] Analyze gaze drift from events, publish recalibration offsets (call service)
+- [x] Subscribe to dwell events and smooth pursuit.
+- [x] **IMPORTANT:** Plot activation and blocks for start / end events in RQT
+  - [x] Visualizer to plot data to rqt? Do from controller instead
+- [x] Analyze gaze drift from events
+
+## error_compensation_node
+
 
 ## sound_feedback_node
 
