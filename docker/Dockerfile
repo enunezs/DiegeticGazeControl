@@ -110,6 +110,37 @@ RUN pip3 install \
     pyautogui \
     CairoSVG
 
+
+# Install X11 and Qt dependencies for PySide6
+RUN apt-get update && apt-get install -y \
+    libxcb-cursor0 \
+    libxcb-cursor-dev \
+    libxcb-icccm4 \
+    libxcb-image0 \
+    libxcb-keysyms1 \
+    libxcb-randr0 \
+    libxcb-render-util0 \
+    libxcb-shape0 \
+    libxcb-xinerama0 \
+    libxcb-xfixes0 \
+    libxcb-xkb1 \
+    libxkbcommon-x11-0 \
+    libxkbcommon0 \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libdbus-1-3 \
+    libfontconfig1 \
+    libx11-xcb1 \
+    libegl1 \
+    libxcb-glx0 \
+    && rm -rf /var/lib/apt/lists/*
+
+    
+# Install PySide6 for GUI applications
+RUN pip3 install \
+     pyside6
+
+
 # Network configuration for RTP streams
 RUN echo 'net.core.rmem_max = 134217728' >> /etc/sysctl.conf && \
     echo 'net.core.rmem_default = 65536' >> /etc/sysctl.conf
