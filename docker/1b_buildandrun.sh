@@ -3,10 +3,10 @@ xhost +local:root
 docker image build -t diegetic_gaze_control:latest -f docker/Dockerfile docker     
 
 docker run -it --env=DISPLAY=$DISPLAY \
-	--device=/dev/video0:/dev/video0 \
-	--env="QT_X11_NO_MITSHM=1" \ # TODO: Add user chmod thing
-	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 	--privileged \
+	--device=/dev/video0:/dev/video0 \
+	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+	--env="QT_X11_NO_MITSHM=1" \
 	--net=host \
 	--volume $(pwd):/root/ws/DiegeticGazeControl \
 	--volume /dev/shm:/dev/shm \
@@ -14,6 +14,8 @@ docker run -it --env=DISPLAY=$DISPLAY \
 	--cap-add=NET_RAW \
 	--env=ROS_DOMAIN_ID=7 \
 	diegetic_gaze_control:latest
+
+# TODO: Add user chmod thing
 
 	
 export containerId=$(docker ps -l -q)

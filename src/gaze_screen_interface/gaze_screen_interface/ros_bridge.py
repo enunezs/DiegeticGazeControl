@@ -7,49 +7,31 @@ and subscribing to button status updates and gaze data.
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
+
 from geometry_msgs.msg import PointStamped
 from std_msgs.msg import Header
+from diegetic_transform_engine.msg import DiegeticButton2DArray, DiegeticButton2D
+from gaze_interaction_manager.msg import ButtonStatus
+
+
 from PySide6.QtCore import QObject, Signal
 
-# You'll need to import your custom messages
-# from diegetic_transform_engine.msg import DiegeticButton2D, DiegeticButton2DArray
-# from your_package.msg import ButtonStatus
 
+"""
+Qt-friendly wrapper around ROS2 node.
+Emits Qt signals when ROS messages arrive.
 
-# Mock message classes for development (replace with actual imports)
-class DiegeticButton2D:
-    def __init__(self):
-        self.button_id = ""
-        self.center_x = 0.0
-        self.center_y = 0.0
-        self.x_points = [0.0, 0.0, 0.0, 0.0]
-        self.y_points = [0.0, 0.0, 0.0, 0.0]
+Outputs:
+The list of on-screen, interactive buttons as a DiegeticButton2DArray everytime there is a change.
+Changes are reported from the Screen Interface.
 
+Inputs:
+A ButtonStatus_msg message with the button status updates. 
 
-class DiegeticButton2DArray:
-    def __init__(self):
-        self.header = Header()
-        self.buttons = []
-
-
-class ButtonStatus:
-    BUTTON_INACTIVE = 0
-    BUTTON_ACTIVE = 1
-    BUTTON_HOVER = 2
-
-    def __init__(self):
-        self.header = Header()
-        self.button_id = ""
-        self.last_seen = 0
-        self.button_status = 0
-        self.percent = 0.0
+"""
 
 
 class RosBridge(QObject):
-    """
-    Qt-friendly wrapper around ROS2 node.
-    Emits Qt signals when ROS messages arrive.
-    """
 
     # Qt Signals
     button_status_received = Signal(str, int, float)  # button_id, status, percent
@@ -116,7 +98,9 @@ class RosBridge(QObject):
             msg.buttons.append(btn)
 
         self.button_array_pub.publish(msg)
-        self.node.get_logger().debug(f"Published {len(buttons_data)} buttons")
+        self.node.get_logger().info(
+            f"Menu updated. Published {len(buttons_data)} buttons"
+        )
 
     def _button_status_callback(self, msg):
         """Handle incoming button status updates."""

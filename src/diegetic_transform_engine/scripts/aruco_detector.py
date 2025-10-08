@@ -15,7 +15,7 @@ from std_msgs.msg import Header
 from diegetic_transform_engine.msg import (
     MarkerArray,
     Marker,
-)  # You might need to create this custom message
+)
 import tf_transformations
 
 import traceback
