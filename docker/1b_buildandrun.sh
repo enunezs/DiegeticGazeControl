@@ -4,7 +4,7 @@ docker image build -t diegetic_gaze_control:latest -f docker/Dockerfile docker
 
 docker run -it --env=DISPLAY=$DISPLAY \
 	--device=/dev/video0:/dev/video0 \
-	--env="QT_X11_NO_MITSHM=1" \
+	--env="QT_X11_NO_MITSHM=1" \ # TODO: Add user chmod thing
 	--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
 	--privileged \
 	--net=host \
