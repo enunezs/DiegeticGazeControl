@@ -1,6 +1,7 @@
 xhost +local:root
+docker pull ros:humble-ros-base
 
-docker image build -t diegetic_gaze_control:latest -f docker/Dockerfile docker     
+docker image build --no-cache  -t diegetic_gaze_control:latest -f docker/Dockerfile docker     
 
 docker run -it --env=DISPLAY=$DISPLAY \
 	--privileged \
