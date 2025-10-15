@@ -54,6 +54,43 @@ class ButtonDefinition:
         self.marker_parents[marker_id] = transform
 
 
+class ScreenDefinition:
+    def __init__(
+        self,
+        width_m: float = 45 + 7.7,
+        height_m: float = 29.7,
+        resolution: Tuple[int, int] = (1920, 1080),
+        marker_length: float = 0.044,
+    ):
+
+        self.dimensions = (width_m, height_m)
+        self.resolution = resolution
+
+        self.PX_TO_M = width_m / self.resolution[0]
+
+        self.marker_length = marker_length
+
+        self.marker_ids = [70, 71, 72, 73]  # IDs of the 4 ArUco markers on the screen
+
+        self.marker_names = [
+            "SCREEN_TOP_LEFT",
+            "SCREEN_TOP_RIGHT",
+            "SCREEN_BOTTOM_RIGHT",
+            "SCREEN_BOTTOM_LEFT",
+        ]
+        self.marker_corners = (
+            [  # Defined from top-left, clockwise. each has [x,y,z] in meters and id
+                [0 - self.marker_length, 0 - self.marker_length, 0],
+                [width_m + self.marker_length, 0 - self.marker_length, 0],
+                [width_m - self.marker_length, height_m - self.marker_length, 0],
+                [0 - self.marker_length, height_m - self.marker_length, 0],
+            ]
+        )
+        # self.marker_corners = {
+        #     name: corner for name, corner in zip(self.marker_names, self.marker_corners)
+        # }
+
+
 class DiegeticButtonPublisher(Node):
     """
     ROS2 node that tracks diegetic buttons relative to ArUco markers.
@@ -78,6 +115,9 @@ class DiegeticButtonPublisher(Node):
 
         # Load button definitions
         self.button_definitions = self._load_button_definitions()
+        # Screen
+        self.screen_active_buttons: List[DiegeticButton2D] = []
+        self.screen_3d_buttons: List[ButtonDefinition] = []
 
         # Camera calibration data
         self.camera_matrix = None
@@ -125,8 +165,6 @@ class DiegeticButtonPublisher(Node):
         self.declare_parameter("button_frame_id", "button_frame")
         self.button_frame_id = self.get_parameter("button_frame_id").value
 
-        # self.center_strategy = ButtonCenterStrategy.FIRST_FOUND
-
         self.get_logger().info(f"Using strategy: {self.center_strategy.value}")
         self.get_logger().info(f"Button map: {self.button_map_path}")
 
@@ -140,6 +178,13 @@ class DiegeticButtonPublisher(Node):
             CameraInfo,
             "/pupil_glasses/front_camera/camera_info",
             self._camera_info_callback,
+            10,
+        )
+
+        self.screen_button_subscriber = self.create_subscription(
+            DiegeticButton2DArray,
+            "/screen_buttons",
+            self._screen_button_callback,
             10,
         )
 
@@ -210,20 +255,94 @@ class DiegeticButtonPublisher(Node):
             self.get_logger().info("Camera calibration received")
             self._camera_info_logged = True
 
+    def _screen_button_callback(self, msg: DiegeticButton2DArray):
+        # TODO: Once received, the screen buttons position relative to the screen center will be inmmediately calculated (2D px to 3D m)
+        self.get_logger().info(
+            f"Received {len(self.screen_active_buttons)} screen buttons"
+        )
+
+        # Save
+        self.screen_active_buttons = msg.buttons
+
+        # Now we convert to the new format and 3D, relative to each marker
+        self.screen_3d_buttons = []
+
+        # TODO Load from settings
+        self.screen = ScreenDefinition(1600, 900)
+
+        for button in self.screen_active_buttons:
+            # Define button properties (internal units in meters)
+            screen_button = ButtonDefinition(
+                button.button_id,
+                [  # bounding box [x0, y0, x1, y1] in meters
+                    button.x_points[0] * self.screen.PX_TO_M,
+                    button.y_points[0] * self.screen.PX_TO_M,
+                    button.x_points[2] * self.screen.PX_TO_M,
+                    button.y_points[2] * self.screen.PX_TO_M,
+                ],
+            )
+
+            # Define marker parents (all 4 screen corners)
+            for corner_number in range(4):
+                marker_id = self.screen.marker_ids[corner_number]
+
+                # Load marker position
+                marker_pos = self.screen.marker_corners[corner_number]
+
+                # Compute button center relative to screen top-left in meters
+                button_center_x = button.center_x * self.screen.PX_TO_M
+                button_center_y = button.center_y * self.screen.PX_TO_M
+
+                # # Offset from marker to button center
+                # offset_x = button_center_x - marker_pos[0]
+                # offset_y = button_center_y - marker_pos[1]
+                # offset_z = 0 - marker_pos[2]  # Assuming screen is at z=0
+
+                # # No rotation offset for now
+                # transform = [offset_x, offset_y, offset_z, 0, 0, 0]
+                transform = [
+                    button_center_x,
+                    button_center_y,
+                    0,
+                    0,
+                    0,
+                    0,
+                ]
+                screen_button.add_marker_parent(marker_id, transform)
+            self.screen_3d_buttons.append(screen_button)
+
+    ################
+    ### Main code ##
+    ################
     def _marker_callback(self, msg: MarkerArray):
         """Process detected ArUco markers and compute button positions"""
         if not self.camera_info_received:
             self.get_logger().debug("Camera calibration not yet received, skipping")
             return
 
-        # Find active buttons based on visible markers
+        # Find active buttons (dictionary of button_id) based on visible markers
         active_buttons = self._find_active_buttons(msg.markers)
 
         if not active_buttons:
             return
 
-        # Compute 3D positions for active buttons
+        # TODO: If the screen is visible, we load our active markers and append it to the active_buttons list
+        # If one of the 4 aruco markers is found, screen is visible
+        if any(marker.id in self.screen_marker_ids for marker in msg.markers):
+            self.get_logger().debug("Screen is visible")
+            active_buttons.update(self._find_active_buttons(msg.markers))
+
+        # TODO: Compute the 3D position for the *screen* buttons
+        # for button in self.screen_buttons:
+        #     button_3d = self._compute_screen_button_3d_position(button)
+        #     if button_3d is not None:
+        #         self.screen_3d_buttons.append(button_3d)
+
+        # Compute 3D positions for active buttons, return a DiegeticButtonArray with all sorted
         button_3d_array = self._compute_3d_positions(active_buttons, msg.header)
+
+        # TODO: Screen
+        # Using the screen buffer, find the 3D positions of buttons on the screen
 
         # Project to 2D screen coordinates
         button_2d_array = self._project_to_2d(button_3d_array)
@@ -242,6 +361,8 @@ class DiegeticButtonPublisher(Node):
         # Trigger haptic feedback if needed
         self._trigger_haptic_feedback(active_buttons)
 
+    # From the visible/available markers, find the associated buttons,
+    # Return a mapping as a dictionary of button_id -> List[Marker]
     def _find_active_buttons(self, markers: List[Marker]) -> Dict[str, List[Marker]]:
         """Find which buttons are active based on visible markers"""
         active_buttons = {}
@@ -409,7 +530,9 @@ class DiegeticButtonPublisher(Node):
         """Project 3D button positions to 2D screen coordinates"""
         button_2d_array = DiegeticButton2DArray()
         button_2d_array.header = button_3d_array.header
-        button_2d_array.header.frame_id = self.camera_frame_id  # Changed to camera frame
+        button_2d_array.header.frame_id = (
+            self.camera_frame_id
+        )  # Changed to camera frame
 
         for button_3d in button_3d_array.buttons:
             # Create 2D button message
@@ -418,7 +541,7 @@ class DiegeticButtonPublisher(Node):
 
             # Get the 4 corners of the button in 3D world coordinates
             corner_points_3d = self._get_button_corner_points_3d(button_3d)
-            
+
             if corner_points_3d is not None:
                 # Project all 4 corner points to 2D camera coordinates
                 projected_corners, _ = cv2.projectPoints(
@@ -439,17 +562,21 @@ class DiegeticButtonPublisher(Node):
                 # float64[4] x_points
                 # float64[4] y_points
                 # For now, I'm assuming you still want the old format but will show both approaches
-                
+
                 # Store corner points as arrays of 4 points each
                 button_2d.x_points = x_coords.astype(float).tolist()
                 button_2d.y_points = y_coords.astype(float).tolist()
 
                 # Project button center to get screen-relative center coordinates
-                center_3d = np.array([[
-                    button_3d.button_transform.translation.x,
-                    button_3d.button_transform.translation.y,
-                    button_3d.button_transform.translation.z
-                ]])
+                center_3d = np.array(
+                    [
+                        [
+                            button_3d.button_transform.translation.x,
+                            button_3d.button_transform.translation.y,
+                            button_3d.button_transform.translation.z,
+                        ]
+                    ]
+                )
 
                 projected_center, _ = cv2.projectPoints(
                     center_3d,
@@ -461,14 +588,18 @@ class DiegeticButtonPublisher(Node):
 
                 button_2d.center_x = float(projected_center[0][0][0])
                 button_2d.center_y = float(projected_center[0][0][1])
-                
+
             else:
                 # Fallback: just project the center point
-                center_3d = np.array([[
-                    button_3d.button_transform.translation.x,
-                    button_3d.button_transform.translation.y,
-                    button_3d.button_transform.translation.z
-                ]])
+                center_3d = np.array(
+                    [
+                        [
+                            button_3d.button_transform.translation.x,
+                            button_3d.button_transform.translation.y,
+                            button_3d.button_transform.translation.z,
+                        ]
+                    ]
+                )
 
                 projected_center, _ = cv2.projectPoints(
                     center_3d,
@@ -480,20 +611,20 @@ class DiegeticButtonPublisher(Node):
 
                 button_2d.center_x = float(projected_center[0][0][0])
                 button_2d.center_y = float(projected_center[0][0][1])
-                
+
                 # Set default corner points around the center (as fallback)
                 default_size = 10.0
                 button_2d.x_points = [
                     button_2d.center_x - default_size,  # Bottom-left
-                    button_2d.center_x + default_size,  # Bottom-right  
+                    button_2d.center_x + default_size,  # Bottom-right
                     button_2d.center_x + default_size,  # Top-right
-                    button_2d.center_x - default_size   # Top-left
+                    button_2d.center_x - default_size,  # Top-left
                 ]
                 button_2d.y_points = [
                     button_2d.center_y + default_size,  # Bottom-left
                     button_2d.center_y + default_size,  # Bottom-right
                     button_2d.center_y - default_size,  # Top-right
-                    button_2d.center_y - default_size   # Top-left
+                    button_2d.center_y - default_size,  # Top-left
                 ]
 
             button_2d_array.buttons.append(button_2d)
@@ -506,26 +637,32 @@ class DiegeticButtonPublisher(Node):
         """Get the 4 corner points of the button in 3D world coordinates"""
         try:
             # Define the 4 corners of the button in local button coordinates
-            corners_local = np.array([
-                [button_3d.x0, button_3d.y0, 0.0],  # Bottom-left
-                [button_3d.x1, button_3d.y0, 0.0],  # Bottom-right
-                [button_3d.x1, button_3d.y1, 0.0],  # Top-right
-                [button_3d.x0, button_3d.y1, 0.0],  # Top-left
-            ])
+            corners_local = np.array(
+                [
+                    [button_3d.x0, button_3d.y0, 0.0],  # Bottom-left
+                    [button_3d.x1, button_3d.y0, 0.0],  # Bottom-right
+                    [button_3d.x1, button_3d.y1, 0.0],  # Top-right
+                    [button_3d.x0, button_3d.y1, 0.0],  # Top-left
+                ]
+            )
 
             # Get button transform (position and orientation in world coordinates)
-            position = np.array([
-                button_3d.button_transform.translation.x,
-                button_3d.button_transform.translation.y,
-                button_3d.button_transform.translation.z,
-            ])
+            position = np.array(
+                [
+                    button_3d.button_transform.translation.x,
+                    button_3d.button_transform.translation.y,
+                    button_3d.button_transform.translation.z,
+                ]
+            )
 
-            orientation = np.array([
-                button_3d.button_transform.rotation.x,
-                button_3d.button_transform.rotation.y,
-                button_3d.button_transform.rotation.z,
-                button_3d.button_transform.rotation.w,
-            ])
+            orientation = np.array(
+                [
+                    button_3d.button_transform.rotation.x,
+                    button_3d.button_transform.rotation.y,
+                    button_3d.button_transform.rotation.z,
+                    button_3d.button_transform.rotation.w,
+                ]
+            )
 
             # Create transformation matrix from button local coordinates to world coordinates
             transform_matrix = tf.quaternion_matrix(orientation)
