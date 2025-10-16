@@ -57,6 +57,7 @@ install(PROGRAMS
   scripts/dwell_time.py
   scripts/gaze_controller.py
   scripts/joy.py
+  scripts/input_parser.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -1,0 +1,178 @@
+# Extended button configuration for full system
+
+# Map your hardware inputs to semantic button names
+input_to_button_mappings:
+  # Buttons (from your InputStatusArray)
+  "A": "gripper_close"
+  "B": "gripper_open"
+  "X": "vel_x_pos"
+  "Y": "vel_x_neg"
+  "LB": "frame_switch_base"
+  "RB": "frame_switch_ee"
+  "Select": "reset"
+  "Start": "home"
+
+  # Stick inputs (from diegetic system, if mapped)
+  "S1X_1": "vel_y_pos" # Left stick right
+  "S1X_-1": "vel_y_neg" # Left stick left
+  "S1Y_1": "vel_z_pos" # Left stick up
+  "S1Y_-1": "vel_z_neg" # Left stick down
+
+  # Triggers
+  "TL": "rot_y_pos"
+  "TR": "rot_y_neg"
+
+  # D-pad
+  "DX_1": "rot_z_pos" # D-pad right
+  "DX_-1": "rot_z_neg" # D-pad left
+  "DY_1": "rot_x_pos" # D-pad up
+  "DY_-1": "rot_x_neg" # D-pad down
+
+# Reference frames available
+reference_frames:
+  - j2n6s300_link_base
+  - j2n6s300_end_effector
+  - camera_link
+
+# Control modes
+control_modes:
+  velocity_xyz: "Continuous linear velocity"
+  velocity_rot: "Discrete rotation steps"
+  gripper: "Gripper control"
+  system: "Non-robot commands"
+
+# Button action definitions
+button_mappings:
+  # Linear velocity - continuous
+  vel_x_pos:
+    mode: velocity_xyz
+    action: set_velocity
+    axis: x
+    direction: positive
+    magnitude: 0.1 # m/s
+    frame_ref: position
+
+  vel_x_neg:
+    mode: velocity_xyz
+    action: set_velocity
+    axis: x
+    direction: negative
+    magnitude: 0.1
+    frame_ref: position
+
+  vel_y_pos:
+    mode: velocity_xyz
+    action: set_velocity
+    axis: y
+    direction: positive
+    magnitude: 0.1
+    frame_ref: position
+
+  vel_y_neg:
+    mode: velocity_xyz
+    action: set_velocity
+    axis: y
+    direction: negative
+    magnitude: 0.1
+    frame_ref: position
+
+  vel_z_pos:
+    mode: velocity_xyz
+    action: set_velocity
+    axis: z
+    direction: positive
+    magnitude: 0.1
+    frame_ref: position
+
+  vel_z_neg:
+    mode: velocity_xyz
+    action: set_velocity
+    axis: z
+    direction: negative
+    magnitude: 0.1
+    frame_ref: position
+
+  # Rotation - discrete steps
+  rot_x_pos:
+    mode: velocity_rot
+    action: rotate
+    axis: x
+    delta_degrees: 30
+    frame_ref: rotation
+
+  rot_x_neg:
+    mode: velocity_rot
+    action: rotate
+    axis: x
+    delta_degrees: -30
+    frame_ref: rotation
+
+  rot_y_pos:
+    mode: velocity_rot
+    action: rotate
+    axis: y
+    delta_degrees: 30
+    frame_ref: rotation
+
+  rot_y_neg:
+    mode: velocity_rot
+    action: rotate
+    axis: y
+    delta_degrees: -30
+    frame_ref: rotation
+
+  rot_z_pos:
+    mode: velocity_rot
+    action: rotate
+    axis: z
+    delta_degrees: 30
+    frame_ref: rotation
+
+  rot_z_neg:
+    mode: velocity_rot
+    action: rotate
+    axis: z
+    delta_degrees: -30
+    frame_ref: rotation
+
+  # Gripper
+  gripper_open:
+    mode: gripper
+    action: gripper_command
+    direction: open
+    velocity: 2000.0
+
+  gripper_close:
+    mode: gripper
+    action: gripper_command
+    direction: close
+    velocity: 2000.0
+
+  # Reference frame switching
+  frame_switch_base:
+    mode: system
+    action: set_position_frame
+    frame: j2n6s300_link_base
+
+  frame_switch_ee:
+    mode: system
+    action: set_position_frame
+    frame: j2n6s300_end_effector
+
+  frame_switch_camera:
+    mode: system
+    action: set_position_frame
+    frame: camera_link
+
+  # System commands
+  home:
+    mode: system
+    action: home_robot
+
+  reset:
+    mode: system
+    action: reset_state
+
+  recalibrate:
+    mode: system
+    action: recalibrate_gaze
