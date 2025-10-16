@@ -92,4 +92,11 @@ def generate_launch_description():
     )
     launch_description.add_action(dwell_time_node)
 
+    controller_node = Node(
+        package="gaze_interaction_manager",
+        executable="gaze_controller.py",
+        name="controller_node",
+        parameters=[config],
+    )
+
     return launch_description

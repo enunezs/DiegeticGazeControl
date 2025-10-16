@@ -20,12 +20,17 @@ from pupil_neon_ros.msg import GazeData, GazeEvent  # <-- adjust if your msgs di
 # Custom output (you can replace with whatever you want)
 from geometry_msgs.msg import PointStamped
 
+# TODO: I should be able to switch between compensation on or off based on launch params
 
 class GazeControllerNode(Node):
     def __init__(self):
         super().__init__("gaze_controller_node")
 
-        # Parameters for modular logic
+        ### Parameters
+        # Use gaze compensation?
+        self.declare_parameter("use_gaze_compensation", True)
+        self.use_gaze_compensation = self.get_parameter("use_gaze_compensation").value
+
         self.declare_parameter("use_fixation_condition", True)
         self.declare_parameter("use_button_condition", True)
 
@@ -55,7 +60,12 @@ class GazeControllerNode(Node):
         # ROS interfaces
         qos = QoSProfile(depth=10)
 
-        # Subscribers
+        ### Subscriptions ###
+        # Subscribe to gaze data
+        self.sub_gaze = self.create_subscription(
+            GazeData, "pupil_glasses/gaze_data", self._gaze_cb, qos
+        )
+        # Subscribe to gaze events
         self.sub_saccade = self.create_subscription(
             GazeEvent,
             "pupil_glasses/event/saccade",
@@ -68,27 +78,27 @@ class GazeControllerNode(Node):
             self._fixation_end_cb,
             qos,
         )
+        # Subscribe to button status
         self.sub_buttons = self.create_subscription(
             ButtonStatus_msg,
             "/dwell_time/active_button",
             self._buttons_cb,
             qos,
         )
-        self.sub_gaze = self.create_subscription(
-            GazeData, "pupil_glasses/gaze_data", self._gaze_cb, qos
-        )
 
-        # Publisher for gaze error
-        self.error_pub = self.create_publisher(
-            PointStamped, "/gaze_controller/error", 10
-        )
+        ### Publications ###
+        # Publisher for corrected gaze
         self.corrected_gaze_pub = self.create_publisher(
             PointStamped, "/gaze_controller/corrected_gaze", 10
+        )
+        self.error_pub = self.create_publisher(
+            PointStamped, "/gaze_controller/error", 10
         )
         self.correction_offset = self.create_publisher(
             PointStamped, "/gaze_controller/correction_offset", 10
         )
 
+        ## Debug publishers
         # Repeat for dwell received (true/false)
         self.dwell_pub = self.create_publisher(
             Float32, "/gaze_controller/dwell_enabled", 10
@@ -104,36 +114,7 @@ class GazeControllerNode(Node):
 
         self.get_logger().info("Gaze Controller Node initialized.")
 
-    # ---------------- Callbacks ---------------- #
-
-    # Received saccade message, means fixation is starting
-    def _saccade_cb(self, msg: GazeEvent):
-        with self._lock:
-            # self.latest_saccade_end_ns = msg.end_time_ns
-            # if self.latest_saccade_end_ns > self.last_fixation_end_ns:
-            self.fixation_active = True
-            # self.get_logger().info("Fixation started.")
-
-    # Received fixation message, means fixation has ended
-    def _fixation_end_cb(self, msg: GazeEvent): 
-        with self._lock:
-            # self.last_fixation_end_ns = msg.end_time_ns
-            self.fixation_active = False
-            # self.get_logger().info("Fixation ended.")
-
-    def _buttons_cb(self, msg: ButtonStatus_msg):
-        with self._lock:    
-            if msg.button_status == ButtonStatus_msg.BUTTON_INACTIVE:  # INACTIVE
-                self.dwell_active = False
-                self.active_button_status = None
-            elif msg.button_status == ButtonStatus_msg.BUTTON_ACTIVE:  # ACTIVE
-                self.dwell_active = True
-                self.active_button_status = msg
-                # self.get_logger().info(f"Received button with center at: {self.active_button_status.center_x}, {self.active_button_status.center_y}")
-            else:
-                # Hovered or undefined
-                self.dwell_active = False
-
+    # ---------------- Main Callback ---------------- #
 
     def _gaze_cb(self, gaze_msg: GazeData):
         with self._lock:
@@ -144,7 +125,7 @@ class GazeControllerNode(Node):
 
             # 1. Activate compensation?
             self.intersection_active = self._check_event_active()
-            if self.intersection_active and self.active_button_status is not None:
+            if self.use_gaze_compensation and self.intersection_active and self.active_button_status is not None:
                 try:
                     # 2. Compute error with active button
                     err_x = gaze_msg.x - self.active_button_status.button.center_x
@@ -210,6 +191,36 @@ class GazeControllerNode(Node):
         # Repeat for intersection received (true/false)
         self.intersection_pub.publish(Float32(data=float(self.intersection_active)-2.0))
 
+
+    # ---------------- OtherCallbacks ---------------- #
+
+    # Received saccade message, means fixation is starting
+    def _saccade_cb(self, msg: GazeEvent):
+        with self._lock:
+            # self.latest_saccade_end_ns = msg.end_time_ns
+            # if self.latest_saccade_end_ns > self.last_fixation_end_ns:
+            self.fixation_active = True
+            # self.get_logger().info("Fixation started.")
+
+    # Received fixation message, means fixation has ended
+    def _fixation_end_cb(self, msg: GazeEvent): 
+        with self._lock:
+            # self.last_fixation_end_ns = msg.end_time_ns
+            self.fixation_active = False
+            # self.get_logger().info("Fixation ended.")
+
+    def _buttons_cb(self, msg: ButtonStatus_msg):
+        with self._lock:    
+            if msg.button_status == ButtonStatus_msg.BUTTON_INACTIVE:  # INACTIVE
+                self.dwell_active = False
+                self.active_button_status = None
+            elif msg.button_status == ButtonStatus_msg.BUTTON_ACTIVE:  # ACTIVE
+                self.dwell_active = True
+                self.active_button_status = msg
+                # self.get_logger().info(f"Received button with center at: {self.active_button_status.center_x}, {self.active_button_status.center_y}")
+            else:
+                # Hovered or undefined
+                self.dwell_active = False
 
 
     # ---------------- Helpers ---------------- #
