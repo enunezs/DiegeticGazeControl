@@ -27,6 +27,7 @@ find_package(rosidl_default_generators REQUIRED)
 install(PROGRAMS
   scripts/2D_visuals.py
   scripts/3D_visuals.py
+  scripts/button_visualizer.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

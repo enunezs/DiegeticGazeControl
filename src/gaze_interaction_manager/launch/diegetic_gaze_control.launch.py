@@ -75,7 +75,7 @@ def generate_launch_description():
     launch_description.add_action(button_finder_node)
 
     button_visualizer_node = Node(
-        package="diegetic_transform_engine",
+        package="visualization_tools",
         executable="button_visualizer.py",
         name="button_visualizer",
         arguments=["__log_level:=debug"],

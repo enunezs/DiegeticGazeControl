@@ -47,7 +47,7 @@ install(PROGRAMS
   scripts/aruco_detector.py
   scripts/aruco_visualizer.py
   scripts/button_finder.py
-  scripts/button_visualizer.py
+  # scripts/button_visualizer.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

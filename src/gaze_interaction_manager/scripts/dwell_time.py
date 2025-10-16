@@ -535,6 +535,7 @@ class GazeInteractionNode(Node):
     def _publish_active_button(
         self, active_buttons: List[ButtonStatus], timestamp: float
     ):
+        # TODO 
         """Publish information about active buttons using ButtonStatusArray_msg"""
         status_msg = ButtonStatus_msg()
 
