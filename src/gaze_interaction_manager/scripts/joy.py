@@ -6,7 +6,7 @@ from rclpy.node import Node
 from cv2 import destroyAllWindows
 
 # Import messages
-from diegetic_button_pkg.msg import InputStatusArray
+from gaze_interaction_manager.msg import ButtonStatus as ButtonStatus_msg
 from sensor_msgs.msg import Joy
 
 
@@ -18,7 +18,7 @@ class ControllerPublisher(Node):
 
         # Subscribers
         self.subscriber_input_listener = self.create_subscription(
-            InputStatusArray, "diegetic/inputs", self.update_controller, 1
+            ButtonStatus_msg, "/dwell_time/active_button", self.update_controller, 1
         )
 
         # Publishers
@@ -51,10 +51,10 @@ class ControllerPublisher(Node):
 
         self.get_logger().info("Ready to publish joystick messages.")
 
-    def update_controller(self, InputStatusArray_msg):
+    def update_controller(self, InputStatus_msg):
 
         # Unpack InputStatusArray_msg
-        inputs = InputStatusArray_msg.inputs
+        input = InputStatus_msg
 
         joy_msg = Joy()
         joy_msg.header.stamp = self.get_clock().now().to_msg()
@@ -63,31 +63,30 @@ class ControllerPublisher(Node):
         joy_msg.axes = [0.0] * 8
         joy_msg.buttons = [0] * 11
 
-        for input in inputs:
 
-            # Buttons
-            if input.input_id in self.button:
-                # Only do if status == active
-                if input.status == "active":
-                    joy_msg.buttons[self.button[input.input_id]] = int(input.percent)
-                else:
-                    joy_msg.buttons[self.button[input.input_id]] = 0
+        # Buttons
+        if input.button_id in self.button:
+            # Only do if status == active
+            if input.button_status == ButtonStatus_msg.BUTTON_ACTIVE:
+                joy_msg.buttons[self.button[input.button_id]] = int(input.percent)
+            else:
+                joy_msg.buttons[self.button[input.button_id]] = 0
 
-            # Axes
-            axes_params = input.input_id.split("_")
-            # Axes (with arguments)
-            if len(axes_params) == 2 and axes_params[0] in self.axis_list:
-                if input.status == "active":
-                    joy_msg.axes[self.axis_list[axes_params[0]]] += float(
-                        input.percent * int(axes_params[1])
-                    )
+        # Axes
+        axes_params = input.button_id.split("_")
+        # Axes (with arguments)
+        if len(axes_params) == 2 and axes_params[0] in self.axis_list:
+            if input.button_status == ButtonStatus_msg.BUTTON_ACTIVE:
+                joy_msg.axes[self.axis_list[axes_params[0]]] += float(
+                    input.percent * int(axes_params[1])
+                )
 
-            # Axes (no arguments /i.e. triggers)
-            if input.input_id in self.axis_list:
-                if input.status == "active":
-                    joy_msg.axes[self.axis_list[input.input_id]] = float(input.percent)
-                else:
-                    joy_msg.axes[self.axis_list[input.input_id]] = 0
+        # Axes (no arguments /i.e. triggers)
+        if input.button_id in self.axis_list:
+            if input.button_status == ButtonStatus_msg.BUTTON_ACTIVE:
+                joy_msg.axes[self.axis_list[input.button_id]] = float(input.percent)
+            else:
+                joy_msg.axes[self.axis_list[input.button_id]] = 0
 
         # Publish
         # joy_msg.header.stamp = InputStatusArray_msg.header.stamp

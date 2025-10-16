@@ -84,10 +84,13 @@ def generate_launch_description():
     )
     launch_description.add_action(button_visualizer_node)
 
+    ## Gaze Interaction Manager
     dwell_time_node = Node(
         package="gaze_interaction_manager",
         executable="dwell_time.py",
         name="dwell_time_node",
+        arguments=["__log_level:=debug"],
+        output="screen",
         parameters=[config],
     )
     launch_description.add_action(dwell_time_node)
@@ -98,5 +101,16 @@ def generate_launch_description():
         name="controller_node",
         parameters=[config],
     )
+    launch_description.add_action(controller_node)
+
+    # ## Visualization tools
+    # visuals_2d_visualizer_node = Node(
+    #     package="visualization_tools",
+    #     executable="2D_visuals.py",
+    #     name="gaze_2d_visualizer_node",
+    #     arguments=["__log_level:=debug"],
+    #     output="screen",
+    # )
+    # launch_description.add_action(visuals_2d_visualizer_node)
 
     return launch_description

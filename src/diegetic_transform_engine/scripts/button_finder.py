@@ -328,9 +328,9 @@ class DiegeticButtonPublisher(Node):
 
         # TODO: If the screen is visible, we load our active markers and append it to the active_buttons list
         # If one of the 4 aruco markers is found, screen is visible
-        if any(marker.id in self.screen_marker_ids for marker in msg.markers):
-            self.get_logger().debug("Screen is visible")
-            active_buttons.update(self._find_active_buttons(msg.markers))
+        # if any(marker.id in self.screen_marker_ids for marker in msg.markers):
+        #     self.get_logger().debug("Screen is visible")
+        #     active_buttons.update(self._find_active_buttons(msg.markers))
 
         # TODO: Compute the 3D position for the *screen* buttons
         # for button in self.screen_buttons:

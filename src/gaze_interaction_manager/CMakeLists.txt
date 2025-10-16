@@ -56,6 +56,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 install(PROGRAMS
   scripts/dwell_time.py
   scripts/gaze_controller.py
+  scripts/joy.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
