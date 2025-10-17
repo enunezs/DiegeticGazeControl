@@ -108,6 +108,9 @@ class CommandMapper(Node):
             # self.get_logger().info(f"[ACTION] Publishing velocity for {button_id}")
             self.publish_velocity(params)
             return
+        if action_type == "rotate_step":
+            self.publish_rotate_step(params)
+            return
         
         # Debounce logic: only trigger on NEW press (transition from inactive to active)
         if prev_status != BUTTON_ACTIVE:
@@ -126,9 +129,8 @@ class CommandMapper(Node):
             self.last_trigger_time[button_id] = now
             self.get_logger().info(f"[ACTION] Triggering {action_type} for {button_id}")
             
-            if action_type == "rotate_step":
-                self.publish_rotate_step(params)
-            elif action_type == "system":
+
+            if action_type == "system":
                 self.publish_system(params)
             elif action_type == "mode":
                 self.publish_mode_command(params)
