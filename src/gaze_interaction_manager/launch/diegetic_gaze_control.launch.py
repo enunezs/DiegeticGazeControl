@@ -88,21 +88,23 @@ def generate_launch_description():
     button_visualizer_node = Node(
         package="visualization_tools",
         executable="3D_visuals.py",
-        name="button_visualizer_3D",
+        name="button_3D_visualizer",
         arguments=["__log_level:=debug"],
         output="screen",
         parameters=[config],
     )
     launch_description.add_action(button_visualizer_node)
 
-    # ## Visualization tools
-    # visuals_2d_visualizer_node = Node(
-    #     package="visualization_tools",
-    #     executable="2D_visuals.py",
-    #     name="gaze_2d_visualizer_node",
-    #     arguments=["__log_level:=debug"],
-    #     output="screen",
-    # )
-    # launch_description.add_action(visuals_2d_visualizer_node)
+
+    button_visualizer_node = Node(
+        package="visualization_tools",
+        executable="2D_visuals.py",
+        name="button_2D_visualizer",
+        arguments=["__log_level:=debug"],
+        output="screen",
+        parameters=[config],
+    )
+    launch_description.add_action(button_visualizer_node)
+
 
     return launch_description
