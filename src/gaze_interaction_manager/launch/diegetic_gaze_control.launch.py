@@ -16,6 +16,7 @@ def generate_launch_description():
         get_package_share_directory("pupil_neon_ros"), "config", "params.yaml"
     )
 
+    ### Pupil Glasses ###
     pupil_node = Node(
         package="pupil_neon_ros",
         executable="async_pupil_publisher.py",
@@ -42,7 +43,7 @@ def generate_launch_description():
         "params.yaml",
     )
 
-    # Aruco detector
+    ### Transform Engine ###
     aruco_detector_node = Node(
         package="diegetic_transform_engine",
         executable="aruco_detector.py",
@@ -53,17 +54,6 @@ def generate_launch_description():
     )
     launch_description.add_action(aruco_detector_node)
 
-    aruco_visualizer_node = Node(
-        package="diegetic_transform_engine",
-        executable="aruco_visualizer.py",
-        name="aruco_visualizer",
-        arguments=["__log_level:=debug"],
-        output="screen",
-        parameters=[config],
-    )
-    launch_description.add_action(aruco_visualizer_node)
-
-    # Diegetic Button
     button_finder_node = Node(
         package="diegetic_transform_engine",
         executable="button_finder.py",
@@ -74,17 +64,7 @@ def generate_launch_description():
     )
     launch_description.add_action(button_finder_node)
 
-    button_visualizer_node = Node(
-        package="visualization_tools",
-        executable="button_visualizer.py",
-        name="button_visualizer",
-        arguments=["__log_level:=debug"],
-        output="screen",
-        parameters=[config],
-    )
-    launch_description.add_action(button_visualizer_node)
-
-    ## Gaze Interaction Manager
+    ### Gaze Interaction Manager
     dwell_time_node = Node(
         package="gaze_interaction_manager",
         executable="dwell_time.py",
@@ -104,7 +84,17 @@ def generate_launch_description():
     launch_description.add_action(controller_node)
 
 
-    
+    ### Visuals ###
+    button_visualizer_node = Node(
+        package="visualization_tools",
+        executable="3D_visuals.py",
+        name="button_visualizer_3D",
+        arguments=["__log_level:=debug"],
+        output="screen",
+        parameters=[config],
+    )
+    launch_description.add_action(button_visualizer_node)
+
     # ## Visualization tools
     # visuals_2d_visualizer_node = Node(
     #     package="visualization_tools",

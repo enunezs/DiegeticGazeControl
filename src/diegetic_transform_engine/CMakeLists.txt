@@ -45,8 +45,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 #Path to scripts
 install(PROGRAMS
   scripts/aruco_detector.py
-  scripts/aruco_visualizer.py
   scripts/button_finder.py
+  scripts/rviz_visuals.py
   # scripts/button_visualizer.py
   DESTINATION lib/${PROJECT_NAME}
 )
