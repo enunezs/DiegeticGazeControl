@@ -15,9 +15,9 @@ Minimal mapping node:
 - Subscribes to /dwell_time/active_button (ButtonStatus)
 - Subscribes to /teleop/current_mode (String)
 - Publishes:
-    /teleop/cartesian_velocity -> TwistStamped
-    /teleop/discrete_pose   -> PoseStamped
-    /teleop/system          -> String
+    /teleop/cartesian_velocity -> TwistStamped (continuous)
+    /teleop/discrete_pose   -> PoseStamped (on command)
+    /teleop/system          -> String (on command)
     /teleop/mode_command    -> String (used to ask ModeManager to switch)
 """
 class CommandMapper(Node):
@@ -63,6 +63,13 @@ class CommandMapper(Node):
         self.debounce_time = 0.3  # seconds
         self.last_trigger_time = {}  # store last trigger per button
 
+        # Velocity state tracking
+        self.held_velocity_buttons = set()  # buttons currently held that produce velocity
+        self.current_velocity_params = {}  # params of the "active" velocity command (last one pressed)
+
+        # Timer to publish velocity continuously at 50 Hz
+        self.vel_publish_timer = self.create_timer(0.02, self.publish_velocity_tick)
+
 
     def mode_callback(self, msg: String):
         self.current_mode = msg.data
@@ -81,9 +88,9 @@ class CommandMapper(Node):
         
         # Empty button_id means all buttons are released
         if button_id == "":
-            # self.get_logger().info(f"[RELEASE_ALL] All buttons released at {now}")
-            # Clear all held states on empty message
-            self.last_button_state.clear()
+            self.get_logger().info(f"[RELEASE_ALL] All buttons released at {now}")
+            self.held_velocity_buttons.clear()
+            self.current_velocity_params = {}
             return
         
         if button_id not in self.mapping:
@@ -96,18 +103,23 @@ class CommandMapper(Node):
         
         BUTTON_ACTIVE = getattr(msg, "BUTTON_ACTIVE", 1)
         
-        # self.get_logger().info(f"[STATE] Button {button_id}: prev={prev_status}, curr={status}, ACTIVE={BUTTON_ACTIVE}")
-        
         # Only process active signals
         if status != BUTTON_ACTIVE:
-            # self.get_logger().info(f"[INACTIVE] Button {button_id} is inactive.")
+            # Button released
+            if action_type == "velocity":
+                self.held_velocity_buttons.discard(button_id)
+                if not self.held_velocity_buttons:
+                    self.current_velocity_params = {}
             return
         
-        # Handle velocity separately (bypass debounce)
+        # Button is now active
         if action_type == "velocity":
-            # self.get_logger().info(f"[ACTION] Publishing velocity for {button_id}")
-            self.publish_velocity(params)
+            # Track this velocity button as held
+            self.held_velocity_buttons.add(button_id)
+            self.current_velocity_params = params
+            self.get_logger().info(f"[VELOCITY_HOLD] Button {button_id} held: {params}")
             return
+        
         if action_type == "rotate_step":
             self.publish_rotate_step(params)
             return
@@ -122,52 +134,64 @@ class CommandMapper(Node):
             
             # Apply debounce only to new presses
             if time_since_trigger < self.debounce_time:
-                # self.get_logger().info(f"[DEBOUNCE_BLOCK] Button {button_id} triggered too soon ({time_since_trigger:.3f}s < {self.debounce_time}s)")
                 return
             
             # Passed debounce - trigger the action
             self.last_trigger_time[button_id] = now
             self.get_logger().info(f"[ACTION] Triggering {action_type} for {button_id}")
             
-
             if action_type == "system":
                 self.publish_system(params)
             elif action_type == "mode":
                 self.publish_mode_command(params)
         else:
             # Button was already active, still active - ignore (hold)
-            # self.get_logger().info(f"[HELD] Button {button_id} still held, ignoring.")
             return
 
-    def publish_velocity(self, params):
-        axis = params.get("axis", "x")
-        speed = float(params.get("speed", 0.0))
-        twist = TwistStamped()
-        twist.header.stamp = self.get_clock().now().to_msg()
-        twist.header.frame_id = "base_link"
-        # zero by default
-        twist.twist.linear.x = 0.0
-        twist.twist.linear.y = 0.0
-        twist.twist.linear.z = 0.0
-        twist.twist.angular.x = 0.0
-        twist.twist.angular.y = 0.0
-        twist.twist.angular.z = 0.0
+    def publish_velocity_tick(self):
+        """Called periodically (50 Hz) to publish current velocity state."""
+        if self.current_velocity_params:
+            params = self.current_velocity_params
+            axis = params.get("axis", "x")
+            speed = float(params.get("speed", 0.0))
+            
+            twist = TwistStamped()
+            twist.header.stamp = self.get_clock().now().to_msg()
+            twist.header.frame_id = "base_link"
+            # zero by default
+            twist.twist.linear.x = 0.0
+            twist.twist.linear.y = 0.0
+            twist.twist.linear.z = 0.0
+            twist.twist.angular.x = 0.0
+            twist.twist.angular.y = 0.0
+            twist.twist.angular.z = 0.0
 
-        if axis == "x":
-            twist.twist.linear.x = speed
-        elif axis == "y":
-            twist.twist.linear.y = speed
-        elif axis == "z":
-            twist.twist.linear.z = speed
-        elif axis == "rx":
-            twist.twist.angular.x = speed
-        elif axis == "ry":
-            twist.twist.angular.y = speed
-        elif axis == "rz":
-            twist.twist.angular.z = speed
+            if axis == "x":
+                twist.twist.linear.x = speed
+            elif axis == "y":
+                twist.twist.linear.y = speed
+            elif axis == "z":
+                twist.twist.linear.z = speed
+            elif axis == "rx":
+                twist.twist.angular.x = speed
+            elif axis == "ry":
+                twist.twist.angular.y = speed
+            elif axis == "rz":
+                twist.twist.angular.z = speed
 
-        self.vel_pub.publish(twist)
-        self.get_logger().info(f"Published velocity: axis={axis}, speed={speed}")
+            self.vel_pub.publish(twist)
+        else:
+            # Publish zero velocity if no buttons held
+            twist = TwistStamped()
+            twist.header.stamp = self.get_clock().now().to_msg()
+            twist.header.frame_id = "base_link"
+            twist.twist.linear.x = 0.0
+            twist.twist.linear.y = 0.0
+            twist.twist.linear.z = 0.0
+            twist.twist.angular.x = 0.0
+            twist.twist.angular.y = 0.0
+            twist.twist.angular.z = 0.0
+            self.vel_pub.publish(twist)
 
     def publish_rotate_step(self, params):
         # publish a PoseStamped containing a rotation delta (relative)
@@ -213,8 +237,8 @@ class CommandMapper(Node):
     def publish_mode_command(self, params):
         # Mode change request to ModeManager
         cmd = String()
-        # cmd.data = params.get("mode_cmd", "noop")
         cmd.data = params["mode_cmd"]
+        
         # send mode change request to ModeManager
         self.mode_cmd_pub.publish(cmd)
         self.get_logger().info(f"Published mode_command: {cmd.data}")

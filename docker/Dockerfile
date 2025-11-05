@@ -140,6 +140,17 @@ RUN apt-get update && apt-get install -y \
 RUN pip3 install \
      pyside6
 
+# Install sound and text-to-speech engine
+RUN apt-get update && apt-get install -y \
+    alsa-utils \
+    espeak-ng \
+    libespeak1
+
+
+RUN pip3 install \
+    pyttsx3 \
+    simpleaudio
+
 
 # Network configuration for RTP streams
 RUN echo 'net.core.rmem_max = 134217728' >> /etc/sysctl.conf && \
