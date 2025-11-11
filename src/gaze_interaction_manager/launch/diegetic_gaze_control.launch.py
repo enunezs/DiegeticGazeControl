@@ -83,8 +83,17 @@ def generate_launch_description():
     )
     launch_description.add_action(controller_node)
 
-
     ### Visuals ###
+    # button_visualizer_node = Node(
+    #     package="feedback_tools",
+    #     executable="2D_visuals.py",
+    #     name="button_2D_visualizer",
+    #     arguments=["__log_level:=debug"],
+    #     output="screen",
+    #     parameters=[config],
+    # )
+    # launch_description.add_action(button_visualizer_node)
+
     button_visualizer_node = Node(
         package="feedback_tools",
         executable="3D_visuals.py",
@@ -95,16 +104,16 @@ def generate_launch_description():
     )
     launch_description.add_action(button_visualizer_node)
 
+    audio_feedback_node = Node(
+        package="feedback_tools",
+        executable="audio_feedback.py",
+        name="audio_feedback_node",
+        arguments=["__log_level:=debug"],
+        output="screen",
+        parameters=[config],
+    )
+    launch_description.add_action(audio_feedback_node)
 
-    # button_visualizer_node = Node(
-    #     package="feedback_tools",
-    #     executable="2D_visuals.py",
-    #     name="button_2D_visualizer",
-    #     arguments=["__log_level:=debug"],
-    #     output="screen",
-    #     parameters=[config],
-    # )
-    # launch_description.add_action(button_visualizer_node)
 
 
     return launch_description
