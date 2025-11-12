@@ -245,7 +245,7 @@ class ArucoDetectorNode(Node):
         """Broadcast transform for detected marker"""
         # Get marker configuration
         marker_config = self.config.get("markers", {}).get(str(marker_id), {})
-        frame_id = marker_config.get("frame_id", f"aruco_marker_{marker_id}")
+        frame_id = marker_config.get("frame_id", f"aruco_{marker_id}")
         relative_to = marker_config.get("relative_to", "transient")
 
         # Create transform

@@ -84,15 +84,6 @@ def generate_launch_description():
     launch_description.add_action(controller_node)
 
     ### Visuals ###
-    # button_visualizer_node = Node(
-    #     package="feedback_tools",
-    #     executable="2D_visuals.py",
-    #     name="button_2D_visualizer",
-    #     arguments=["__log_level:=debug"],
-    #     output="screen",
-    #     parameters=[config],
-    # )
-    # launch_description.add_action(button_visualizer_node)
 
     button_visualizer_node = Node(
         package="feedback_tools",
@@ -114,6 +105,25 @@ def generate_launch_description():
     )
     launch_description.add_action(audio_feedback_node)
 
+    # button_visualizer_node = Node(
+    #     package="feedback_tools",
+    #     executable="2D_visuals.py",
+    #     name="button_2D_visualizer",
+    #     arguments=["__log_level:=debug"],
+    #     output="screen",
+    #     parameters=[config],
+    # )
+    # launch_description.add_action(button_visualizer_node)
 
+    ### Robot Parser ###
+    robot_parser_node = Node(
+        package="gaze_interaction_manager",
+        executable="robot_command_mapper.py",
+        name="robot_parser_node",
+        arguments=["__log_level:=debug"],
+        output="screen",
+        parameters=[config],
+    )
+    launch_description.add_action(robot_parser_node)
 
     return launch_description

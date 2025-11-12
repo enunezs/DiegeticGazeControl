@@ -696,7 +696,7 @@ class DiegeticButtonPublisher(Node):
             transform_stamped = TransformStamped()
             transform_stamped.header = button_3d_array.header
             transform_stamped.header.frame_id = "camera_optical_frame"  # Parent frame
-            transform_stamped.child_frame_id = f"button_{button.button_id}"
+            transform_stamped.child_frame_id = f"bt_{button.button_id}"
             transform_stamped.transform = button.button_transform
 
             self.tf_broadcaster.sendTransform(transform_stamped)
