@@ -154,7 +154,7 @@ class DiegeticButtonPublisher(Node):
         # Button map file path
         self.declare_parameter(
             "button_map_path",
-            "src/diegetic_transform_engine/button_maps/ButtonMap - O-Joy V2.1.csv",
+            "src/diegetic_transform_engine/button_maps/ButtonMap - O-Joy V3.csv",
         )
         self.button_map_path = self.get_parameter("button_map_path").value
 

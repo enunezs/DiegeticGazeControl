@@ -20,6 +20,7 @@ Minimal mapping node:
     /teleop/system          -> String (on command)
     /teleop/mode_command    -> String (used to ask ModeManager to switch)
 """
+
 class CommandMapper(Node):
 
     def __init__(self):
