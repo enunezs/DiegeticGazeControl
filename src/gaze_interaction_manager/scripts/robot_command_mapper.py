@@ -130,15 +130,23 @@ class CommandMapper(Node):
                 }
             },
             "SwitchRef1": {
-                "*": {
+                "translation": {
                     "action_type": "mode",
-                    "mode_cmd": "toggle_next"
+                    "mode_cmd": "rotation"
+                },
+                "rotation": {
+                    "action_type": "mode",
+                    "mode_cmd": "translation"
                 }
             },
             "SwitchRef2": {
-                "*": {
+                "translation": {
                     "action_type": "mode",
-                    "mode_cmd": "toggle_next"
+                    "mode_cmd": "rotation"
+                },
+                "rotation": {
+                    "action_type": "mode",
+                    "mode_cmd": "translation"
                 }
             },
             # Mode-independent buttons (always use velocity, continuous)
@@ -271,79 +279,106 @@ class CommandMapper(Node):
         return None, None
 
     def button_callback(self, msg):
+        # msg will contain a buttonStatus message or be empty
         button_id = msg.button_id
         status = msg.button_status
         now = self.get_clock().now().nanoseconds / 1e9
         
         # self.get_logger().info(f"[RECV] Button '{button_id}', status={status}")
-        
+
+        # Sanity check        
         if status is None or button_id is None:
             self.get_logger().warn("Received button msg without expected fields.")
             return
-        
-        # Empty button_id means all buttons are released
-        if button_id == "":
-            # self.get_logger().debug(f"[RELEASE_ALL] All buttons released at {now}")
-            self.held_velocity_buttons.clear()
-            self.current_velocity_params = {}
-            return
-        
+     
         # Look up action for this button in current mode
         action_type, params = self.get_action_for_button(button_id)
-        
-        if action_type is None:
-            self.get_logger().info(f"No mapping defined for {button_id} in mode {self.current_mode}")
-            return
-        
-        prev_status = self.last_button_state.get(button_id, 0)
-        self.last_button_state[button_id] = status
-        
+
+        # if action_type is None:
+        #     self.get_logger().info(f"No mapping defined for {button_id} in mode {self.current_mode}")
+        #     # return
+        # else:
+        #     self.get_logger().info(f"[MAPPING] Button {button_id} -> action_type={action_type}, params={params}")
+
         BUTTON_ACTIVE = getattr(msg, "BUTTON_ACTIVE", 1)
         
-        # Handle button release
-        if status != BUTTON_ACTIVE:
-            # Button released
-            if action_type == "velocity":
-                self.held_velocity_buttons.discard(button_id)
-                # If this was the active velocity button, clear params
-                if button_id in self.held_velocity_buttons or not self.held_velocity_buttons:
-                    self.current_velocity_params = {}
-            return
-        
-        # Button is now active
-        if action_type == "velocity":
+        ### CONTINUOUS BEHAVIOUR HANDLING ###
+        # Updated constantly
+        # Continuous actions for velocity buttons
+        if action_type == "velocity" and status == BUTTON_ACTIVE:
             # Track this velocity button as held (continuous command)
             self.held_velocity_buttons.add(button_id)
             self.current_velocity_params = params
             self.get_logger().info(f"[VELOCITY_HOLD] Button {button_id} held: {params}")
-            return
-        
-        # For discrete, system, and mode commands: debounce and trigger on new press only
-        if prev_status != BUTTON_ACTIVE:
-            # This is a new press (prev was inactive, now active)
-            last_trigger_time = self.last_trigger_time.get(button_id, 0)
+        else:     
+            # No signal, assume not active and clear params
+            # self.held_velocity_buttons.discard(button_id)
+            if button_id in self.held_velocity_buttons or not self.held_velocity_buttons:
+                self.current_velocity_params = {}
+            self.held_velocity_buttons.clear()
+            self.current_velocity_params = {}
+
+        ### DISCRETE BEHAVIOUR HANDLING ###
+
+        ## GENERAL DEBOUNCE LOGIC ##      
+        # Since we only receive buttons when they are active, we need to check all other buttons to clear debouncing. 
+        # If a button has been inactive for longer than debounce time, we consider it released.
+        for other_button in list(self.last_button_state.keys()):
+            if other_button == button_id:
+                continue
+            other_status = self.last_button_state[other_button]
+            
+            ## FALLING EDGE ##
+            if other_status == BUTTON_ACTIVE:
+                self.get_logger().info(f"[FALLING_EDGE] Button {other_button} released")
+                self.last_button_state[other_button] = 0
+            
+            # Check time since last trigger
+            last_trigger_time = self.last_trigger_time.get(other_button, 0)
             time_since_trigger = now - last_trigger_time
+            if time_since_trigger > self.debounce_time:
+                # Ready for new press
+                self.last_trigger_time[other_button] = 0
+                # self.last_button_state[other_button] = 0
+                self.get_logger().info(f"[RELEASE] Button {other_button} auto-released after debounce time.")
+
+        # Get previous status for debouncing
+        prev_status = self.last_button_state.get(button_id, 0)
+        self.last_button_state[button_id] = status
+
+        # For discrete, system, and mode commands: debounce and trigger on new press only
+        if action_type in ["discrete", "system", "mode"] and status == BUTTON_ACTIVE:
+            ## RISING EDGE ##
+            if prev_status != BUTTON_ACTIVE:
+                if action_type == "discrete":
+                    self.publish_discrete(params)
+                elif action_type == "system":
+                    self.publish_system(params)
+                elif action_type == "mode":
+                    self.publish_mode_command(params)
+                pass
+                self.get_logger().info(f"[NEW_PRESS] Button {button_id}: {time_since_trigger:.3f}s since last trigger")
+
+            # last_trigger_time = self.last_trigger_time.get(button_id, 0)
+            # time_since_trigger = now - last_trigger_time
             
-            self.get_logger().info(f"[NEW_PRESS] Button {button_id}: {time_since_trigger:.3f}s since last trigger")
             
-            # Apply debounce only to new presses
-            if time_since_trigger < self.debounce_time:
-                self.get_logger().info(f"[DEBOUNCE] Ignoring press (too soon)")
-                return
+            # # Apply debounce only to new presses
+            # if time_since_trigger < self.debounce_time:
+            #     self.get_logger().info(f"[DEBOUNCE] Ignoring press (too soon)")
+            #     return
             
             # Passed debounce - trigger the action
             self.last_trigger_time[button_id] = now
-            self.get_logger().info(f"[ACTION] Triggering {action_type} for {button_id}")
+            # self.get_logger().info(f"[ACTION] Triggering {action_type} for {button_id}")
             
-            if action_type == "discrete":
-                self.publish_discrete(params)
-            elif action_type == "system":
-                self.publish_system(params)
-            elif action_type == "mode":
-                self.publish_mode_command(params)
-        else:
-            # Button was already active, still active - ignore (hold state, already handled for velocity)
-            return
+
+        # elif prev_status == BUTTON_ACTIVE:
+
+
+            # Check for debounce on hold (ignore)
+        #     # Button was already active, still active - ignore (hold state, already handled for velocity)
+        #     return
 
     def publish_velocity_tick(self):
         """Called periodically (50 Hz) to publish current velocity state."""

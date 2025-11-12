@@ -576,12 +576,6 @@ class GazeInteractionNode(Node):
         self.active_button_publisher.publish(status_msg)
 
 
-        # Create and publish array message
-        status_msg.header.stamp = self.get_clock().now().to_msg()
-        status_msg.header.frame_id = "active_buttons"
-
-        self.active_button_publisher.publish(status_msg)
-
     def _generate_debug_image(self, gaze_x: float, gaze_y: float):
         """Generate debug visualization image"""
         # Create black image

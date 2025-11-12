@@ -54,7 +54,9 @@ class AudioFeedbackNode(Node):
         self.audio_lock = threading.Lock()
 
         # Subscribers
-        self.create_subscription(String, '/mode_manager/mode_state', self.mode_callback, 10)
+        # self.mode_sub = self.create_subscription(String, '/teleop/current_mode', self.mode_callback, 10)
+
+        self.create_subscription(String, '/teleop/current_mode', self.mode_callback, 10)
         self.create_subscription(String, '/controller/action_status', self.action_callback, 10)
         self.create_subscription(String, '/safety/status', self.safety_callback, 10)
         self.create_subscription(Int32, '/button_events', self.button_callback, 10)
@@ -81,7 +83,7 @@ class AudioFeedbackNode(Node):
         new_mode = msg.data.strip()
         if new_mode != self.last_mode:
             self.last_mode = new_mode
-            self.say(f"{new_mode} mode")
+            self.say(f"Switched to {new_mode} mode")
 
     # === Playback ===
     def play_beep(self, name):
