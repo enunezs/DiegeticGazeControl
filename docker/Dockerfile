@@ -144,10 +144,15 @@ RUN pip3 install \
 RUN apt-get update && apt-get install -y \
     alsa-utils \
     espeak-ng \
-    libespeak1
+    libespeak1 \
+    ffmpeg
 
 
 RUN pip3 install \
+    pyttsx3 \
+    gTTS \
+    pydub \ 
+    playsound==1.2.2 \
     pyttsx3 \
     simpleaudio
 

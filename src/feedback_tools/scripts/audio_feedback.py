@@ -80,7 +80,7 @@ class AudioFeedbackNode(Node):
         new_mode = msg.data.strip()
         if new_mode != self.last_mode:
             self.last_mode = new_mode
-            self.say(f"Switched to {new_mode} mode")
+            self.say(f"Switched to {new_mode}")
 
     # === Playback ===
     def play_beep(self, name):
