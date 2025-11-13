@@ -2,16 +2,18 @@
 # command_mapper.py
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
+from std_msgs.msg import String, Int32
 from geometry_msgs.msg import TwistStamped, PoseStamped
 from builtin_interfaces.msg import Time
 
 from gaze_interaction_manager.msg import ButtonStatus as ButtonStatusMsg
 
 import math
+from typing import Dict, Optional, Tuple, Set
+from scipy.spatial.transform import Rotation
 
 """
-Minimal mapping node:
+Command mapping node:
 - Subscribes to /dwell_time/active_button (ButtonStatus)
 - Subscribes to /teleop/current_mode (String)
 - Publishes:
@@ -21,28 +23,170 @@ Minimal mapping node:
     /teleop/mode_command    -> String (used to ask ModeManager to switch)
 """
 
+
+class ButtonStateManager:
+    """
+    Manages button state tracking, debouncing, and edge detection.
+    """
+    
+    def __init__(self, debounce_time: float = 0.3):
+        self.debounce_time = debounce_time
+        self.last_state: Dict[str, int] = {}
+        self.last_trigger_time: Dict[str, float] = {}
+        self.held_buttons: Set[str] = set()
+    
+    def update_button(self, button_id: str, status: int, current_time: float) -> Optional[str]:
+        """
+        Update state for a single button and detect edges.
+        
+        Args:
+            button_id: Button identifier
+            status: Current status (1 for active, 0 for inactive)
+            current_time: Current timestamp in seconds
+            
+        Returns:
+            Edge type: 'rising', 'falling', 'hold', or None
+        """
+        prev_status = self.last_state.get(button_id, 0)
+        self.last_state[button_id] = status
+        
+        # Rising edge detection (button pressed)
+        if status == 1 and prev_status != 1:
+            if self._can_trigger(button_id, current_time):
+                self.last_trigger_time[button_id] = current_time
+                self.held_buttons.add(button_id)
+                return 'rising'
+            return None
+        
+        # Falling edge detection (button released)
+        elif status == 0 and prev_status == 1:
+            self.held_buttons.discard(button_id)
+            return 'falling'
+        
+        # Hold state
+        elif status == 1 and prev_status == 1:
+            return 'hold'
+        
+        return None
+    
+    def update_all_buttons(self, active_button_id: Optional[str], active_status: int, current_time: float) -> Dict[str, str]:
+        """
+        Update all tracked buttons, marking non-active ones as released.
+        
+        Args:
+            active_button_id: The currently active button (or None if no button active)
+            active_status: Status of the active button
+            current_time: Current timestamp in seconds
+            
+        Returns:
+            Dictionary mapping button_id to edge type for all buttons that changed
+        """
+        edges = {}
+        
+        # Update the active button if provided
+        if active_button_id:
+            edge = self.update_button(active_button_id, active_status, current_time)
+            if edge:
+                edges[active_button_id] = edge
+        
+        # Check all other tracked buttons for auto-release
+        for button_id in list(self.last_state.keys()):
+            if button_id == active_button_id:
+                continue
+            
+            prev_status = self.last_state.get(button_id, 0)
+            
+            # If button was active but not in current message, mark as released
+            if prev_status == 1:
+                edge = self.update_button(button_id, 0, current_time)
+                if edge:
+                    edges[button_id] = edge
+        
+        return edges
+    
+    def _can_trigger(self, button_id: str, current_time: float) -> bool:
+        """Check if enough time has passed since last trigger (debouncing)."""
+        last_trigger = self.last_trigger_time.get(button_id, 0)
+        return (current_time - last_trigger) >= self.debounce_time
+    
+    def is_held(self, button_id: str) -> bool:
+        """Check if a button is currently held down."""
+        return button_id in self.held_buttons
+    
+    def get_all_held_buttons(self) -> Set[str]:
+        """Get all currently held buttons."""
+        return self.held_buttons.copy()
+
+
 class CommandMapper(Node):
+    """
+    Maps gaze-based button interactions to robot control commands.
+    Supports multiple control modes with different button behaviors.
+    """
+    
+    # Button status constants
+    BUTTON_INACTIVE = 0
+    BUTTON_ACTIVE = 1
 
     def __init__(self):
         super().__init__('command_mapper')
         self.get_logger().info("CommandMapper starting...")
+        
+        # Current control mode
         self.current_mode = "translation"
+        
+        # Button state management
+        self.button_state_mgr = ButtonStateManager(debounce_time=0.3)
+        
+        # Velocity tracking
+        self.current_velocity_params: Dict = {}
+        
+        self._init_publishers()
+        self._init_subscribers()
+        
+        # TODO: Load mode mappings (move to YAML config)
+        self._init_mode_mappings()
+        
+        # Timer to publish velocity continuously at 100 Hz
+        self.vel_publish_timer = self.create_timer(0.01, self._publish_velocity_tick)
 
-        # Publishers
+    def _init_publishers(self):
+        """Initialize all ROS publishers."""
         self.vel_pub = self.create_publisher(TwistStamped, '/teleop/cartesian_velocity', 10)
         self.pose_pub = self.create_publisher(PoseStamped, '/teleop/discrete_pose', 10)
+        
         self.sys_pub = self.create_publisher(String, '/teleop/system', 10)
         self.mode_cmd_pub = self.create_publisher(String, '/teleop/mode_command', 10)
+        
+        # Publisher for button sound events
+        self.button_sound_pub = self.create_publisher(Int32, '/button_events', 10)
 
-        # Subscribers
-        self.button_sub = self.create_subscription(ButtonStatusMsg, '/dwell_time/active_button', self.button_callback, 10)
-        self.mode_sub = self.create_subscription(String, '/teleop/current_mode', self.mode_callback, 10)
+    def _init_subscribers(self):
+        """Initialize all ROS subscribers."""
+        self.button_sub = self.create_subscription(
+            ButtonStatusMsg, 
+            '/dwell_time/active_button', 
+            self.button_callback, 
+            10
+        )
+        self.mode_sub = self.create_subscription(
+            String, 
+            '/teleop/current_mode', 
+            self.mode_callback, 
+            10
+        )
 
-        ### TODO: Mode-aware mapping for testing. (Later: load from YAML)
-        # Structure: button_id -> mode -> action_params
-        # Use "*" as wildcard for mode-independent buttons
-        # action_type: "velocity" (continuous, hold-based) or "discrete" (one-shot pose/rotation)
-        # axis: x,y,z for linear, rx,ry,rz for angular
+    def _init_mode_mappings(self):
+        """
+        Initialize mode-aware button mappings.
+        
+        Structure: button_id -> mode -> action_params
+        - Use "*" as wildcard for mode-independent buttons
+        - action_type: "velocity" (continuous), "discrete" (one-shot), "system", or "mode"
+        - axis: x,y,z for linear, rx,ry,rz for angular
+        
+        TODO: Load from YAML configuration file
+        """
         self.mode_mappings = {
             # Mode-specific hybrid buttons (different behavior per mode)
             "UpHybrid": {
@@ -55,7 +199,7 @@ class CommandMapper(Node):
                 "rotation": {
                     "action_type": "velocity",
                     "axis": "rx",
-                    "speed": 0.3,  # rad/s
+                    "speed": 0.3,
                     "reference_frame": "base_link"
                 }
             },
@@ -101,7 +245,7 @@ class CommandMapper(Node):
                     "reference_frame": "base_link"
                 }
             },
-            "CloserHybrid"  : {
+            "CloserHybrid": {
                 "translation": {
                     "action_type": "velocity",
                     "axis": "z",
@@ -236,28 +380,21 @@ class CommandMapper(Node):
             },
         }
 
-        # Debouncing
-        self.last_button_state = {}  # store last seen status per button
-        self.debounce_time = 0.3  # seconds
-        self.last_trigger_time = {}  # store last trigger per button
-
-        # Velocity state tracking
-        self.held_velocity_buttons = set()  # buttons currently held that produce velocity
-        self.current_velocity_params = {}  # params of the "active" velocity command (last one pressed)
-
-        # Timer to publish velocity continuously at 50 Hz
-        self.vel_publish_timer = self.create_timer(0.02, self.publish_velocity_tick)
-
-
     def mode_callback(self, msg: String):
+        """Handle mode change notifications."""
         self.current_mode = msg.data
         self.get_logger().info(f"CommandMapper: current_mode = {self.current_mode}")
 
-    def get_action_for_button(self, button_id):
+    def get_action_for_button(self, button_id: str) -> Tuple[Optional[str], Optional[Dict]]:
         """
         Look up action parameters for a button in the current mode.
-        Returns (action_type, params) or (None, None) if not found.
         Supports wildcard "*" for mode-independent buttons.
+        
+        Args:
+            button_id: Button identifier
+            
+        Returns:
+            Tuple of (action_type, params) or (None, None) if not found
         """
         if button_id not in self.mode_mappings:
             return None, None
@@ -278,110 +415,88 @@ class CommandMapper(Node):
         self.get_logger().warn(f"Button {button_id} has no mapping for mode '{self.current_mode}'")
         return None, None
 
-    def button_callback(self, msg):
-        # msg will contain a buttonStatus message or be empty
-        button_id = msg.button_id
-        status = msg.button_status
+    def button_callback(self, msg: ButtonStatusMsg):
+        """
+        Process incoming button status messages.
+        Updates all button states and triggers appropriate actions.
+        
+        Note: Active button can arrive empty, so we independently update
+        and debounce all existing buttons each cycle.
+        """
+
+        button_id = msg.button_id if msg.button_id else None
+        status = msg.button_status if msg.button_status is not None else self.BUTTON_INACTIVE
         now = self.get_clock().now().nanoseconds / 1e9
         
-        # self.get_logger().info(f"[RECV] Button '{button_id}', status={status}")
-
-        # Sanity check        
-        if status is None or button_id is None:
-            self.get_logger().warn("Received button msg without expected fields.")
-            return
-     
-        # Look up action for this button in current mode
-        action_type, params = self.get_action_for_button(button_id)
-
-        # if action_type is None:
-        #     self.get_logger().info(f"No mapping defined for {button_id} in mode {self.current_mode}")
-        #     # return
-        # else:
-        #     self.get_logger().info(f"[MAPPING] Button {button_id} -> action_type={action_type}, params={params}")
-
-        BUTTON_ACTIVE = getattr(msg, "BUTTON_ACTIVE", 1)
+        # Update all button states (active button + auto-release others)
+        edges = self.button_state_mgr.update_all_buttons(button_id, status, now)
         
-        ### CONTINUOUS BEHAVIOUR HANDLING ###
-        # Updated constantly
-        # Continuous actions for velocity buttons
-        if action_type == "velocity" and status == BUTTON_ACTIVE:
-            # Track this velocity button as held (continuous command)
-            self.held_velocity_buttons.add(button_id)
-            self.current_velocity_params = params
-            self.get_logger().info(f"[VELOCITY_HOLD] Button {button_id} held: {params}")
-        else:     
-            # No signal, assume not active and clear params
-            # self.held_velocity_buttons.discard(button_id)
-            if button_id in self.held_velocity_buttons or not self.held_velocity_buttons:
-                self.current_velocity_params = {}
-            self.held_velocity_buttons.clear()
+        # Process edges for all buttons that changed
+        for btn_id, edge in edges.items():
+            self._process_button_edge(btn_id, edge, now)
+        
+        # Update continuous velocity commands based on currently held buttons
+        self._update_velocity_commands()
+
+    def _process_button_edge(self, button_id: str, edge: str, current_time: float):
+        """
+        Process a button edge event (rising, falling, hold).
+        
+        Args:
+            button_id: Button identifier
+            edge: Edge type ('rising', 'falling', 'hold')
+            current_time: Current timestamp
+        """
+        action_type, params = self.get_action_for_button(button_id)
+        
+        if not action_type:
+            return
+        
+        # Handle rising edge events (button press)
+        if edge == 'rising':
+            self.get_logger().info(f"[RISING_EDGE] Button {button_id}: action_type={action_type}")
+            
+            # Publish button press sound
+            self.button_sound_pub.publish(Int32(data=1))
+            
+            # Trigger discrete actions
+            if action_type == "discrete":
+                self._publish_discrete_command(params)
+            elif action_type == "system":
+                self._publish_system_command(params)
+            elif action_type == "mode":
+                self._publish_mode_command(params)
+        
+        # Handle falling edge events (button release)
+        elif edge == 'falling':
+            self.get_logger().info(f"[FALLING_EDGE] Button {button_id} released")
+            self.button_sound_pub.publish(Int32(data=2))
+
+
+    def _update_velocity_commands(self):
+        """
+        Update continuous velocity commands based on currently held buttons.
+        Priority: last held velocity button wins.
+        """
+        held_buttons = self.button_state_mgr.get_all_held_buttons()
+        
+        # Find the last held velocity button
+        velocity_button = None
+        for button_id in held_buttons:
+            action_type, params = self.get_action_for_button(button_id)
+            if action_type == "velocity":
+                velocity_button = button_id
+                self.current_velocity_params = params
+        
+        # If no velocity buttons held, clear velocity
+        if velocity_button is None:
             self.current_velocity_params = {}
 
-        ### DISCRETE BEHAVIOUR HANDLING ###
-
-        ## GENERAL DEBOUNCE LOGIC ##      
-        # Since we only receive buttons when they are active, we need to check all other buttons to clear debouncing. 
-        # If a button has been inactive for longer than debounce time, we consider it released.
-        for other_button in list(self.last_button_state.keys()):
-            if other_button == button_id:
-                continue
-            other_status = self.last_button_state[other_button]
-            
-            ## FALLING EDGE ##
-            if other_status == BUTTON_ACTIVE:
-                self.get_logger().info(f"[FALLING_EDGE] Button {other_button} released")
-                self.last_button_state[other_button] = 0
-            
-            # Check time since last trigger
-            last_trigger_time = self.last_trigger_time.get(other_button, 0)
-            time_since_trigger = now - last_trigger_time
-            if time_since_trigger > self.debounce_time:
-                # Ready for new press
-                self.last_trigger_time[other_button] = 0
-                # self.last_button_state[other_button] = 0
-                self.get_logger().info(f"[RELEASE] Button {other_button} auto-released after debounce time.")
-
-        # Get previous status for debouncing
-        prev_status = self.last_button_state.get(button_id, 0)
-        self.last_button_state[button_id] = status
-
-        # For discrete, system, and mode commands: debounce and trigger on new press only
-        if action_type in ["discrete", "system", "mode"] and status == BUTTON_ACTIVE:
-            ## RISING EDGE ##
-            if prev_status != BUTTON_ACTIVE:
-                if action_type == "discrete":
-                    self.publish_discrete(params)
-                elif action_type == "system":
-                    self.publish_system(params)
-                elif action_type == "mode":
-                    self.publish_mode_command(params)
-                pass
-                self.get_logger().info(f"[NEW_PRESS] Button {button_id}: {time_since_trigger:.3f}s since last trigger")
-
-            # last_trigger_time = self.last_trigger_time.get(button_id, 0)
-            # time_since_trigger = now - last_trigger_time
-            
-            
-            # # Apply debounce only to new presses
-            # if time_since_trigger < self.debounce_time:
-            #     self.get_logger().info(f"[DEBOUNCE] Ignoring press (too soon)")
-            #     return
-            
-            # Passed debounce - trigger the action
-            self.last_trigger_time[button_id] = now
-            # self.get_logger().info(f"[ACTION] Triggering {action_type} for {button_id}")
-            
-
-        # elif prev_status == BUTTON_ACTIVE:
-
-
-            # Check for debounce on hold (ignore)
-        #     # Button was already active, still active - ignore (hold state, already handled for velocity)
-        #     return
-
-    def publish_velocity_tick(self):
-        """Called periodically (50 Hz) to publish current velocity state."""
+    def _publish_velocity_tick(self):
+        """
+        Periodically publish velocity commands at 100 Hz.
+        Called by timer callback.
+        """
         twist = TwistStamped()
         twist.header.stamp = self.get_clock().now().to_msg()
         
@@ -391,18 +506,17 @@ class CommandMapper(Node):
             speed = float(params.get("speed", 0.0))
             reference_frame = params.get("reference_frame", "base_link")
             
-            # Use the reference frame from params (BUG FIX)
             twist.header.frame_id = reference_frame
             
-            # Initialize all to zero
+            # Initialize all velocities to zero
             twist.twist.linear.x = 0.0
             twist.twist.linear.y = 0.0
             twist.twist.linear.z = 0.0
             twist.twist.angular.x = 0.0
             twist.twist.angular.y = 0.0
             twist.twist.angular.z = 0.0
-
-            # Set the appropriate axis (merged linear and angular)
+            
+            # Set the appropriate axis
             if axis == "x":
                 twist.twist.linear.x = speed
             elif axis == "y":
@@ -427,26 +541,27 @@ class CommandMapper(Node):
         
         self.vel_pub.publish(twist)
 
-    def publish_discrete(self, params):
+    def _publish_discrete_command(self, params: Dict):
         """
         Publish a discrete pose/rotation command.
+        
         For rotations: sends a relative rotation as a quaternion.
         For translations: sends a relative position delta.
+        
+        Args:
+            params: Action parameters containing axis, step size, and reference frame
         """
         axis = params.get("axis", "z")
         reference_frame = params.get("reference_frame", "base_link")
         
         pose = PoseStamped()
         pose.header.stamp = self.get_clock().now().to_msg()
-        pose.header.frame_id = reference_frame  # Use reference frame from params (BUG FIX)
+        pose.header.frame_id = reference_frame
         
         # Check if this is a rotation (rx, ry, rz) or translation (x, y, z)
         if axis.startswith("r"):
             # Discrete rotation
             step_deg = float(params.get("step_deg", 30.0))
-            
-            # Represent rotation as quaternion
-            from scipy.spatial.transform import Rotation
             rads = math.radians(step_deg)
             
             if axis == "rx":
@@ -455,7 +570,7 @@ class CommandMapper(Node):
                 r = Rotation.from_euler('y', rads, degrees=False)
             else:  # rz
                 r = Rotation.from_euler('z', rads, degrees=False)
-
+            
             q = r.as_quat()  # x, y, z, w
             pose.pose.orientation.x = float(q[0])
             pose.pose.orientation.y = float(q[1])
@@ -467,7 +582,9 @@ class CommandMapper(Node):
             pose.pose.position.y = 0.0
             pose.pose.position.z = 0.0
             
-            self.get_logger().info(f"Published discrete rotation: axis={axis} step_deg={step_deg} frame={reference_frame}")
+            self.get_logger().info(
+                f"Published discrete rotation: axis={axis} step_deg={step_deg} frame={reference_frame}"
+            )
         else:
             # Discrete translation
             step_m = float(params.get("step_m", 0.05))
@@ -483,23 +600,34 @@ class CommandMapper(Node):
             pose.pose.orientation.z = 0.0
             pose.pose.orientation.w = 1.0
             
-            self.get_logger().info(f"Published discrete translation: axis={axis} step_m={step_m} frame={reference_frame}")
-
+            self.get_logger().info(
+                f"Published discrete translation: axis={axis} step_m={step_m} frame={reference_frame}"
+            )
+        
         self.pose_pub.publish(pose)
 
-    def publish_system(self, params):
+    def _publish_system_command(self, params: Dict):
+        """
+        Publish a system command.
+        
+        Args:
+            params: Action parameters containing the system command
+        """
         cmd = params.get("cmd", "noop")
         msg = String()
         msg.data = cmd
         self.sys_pub.publish(msg)
         self.get_logger().info(f"Published system command: {cmd}")
 
-    def publish_mode_command(self, params):
-        # Mode change request to ModeManager
+    def _publish_mode_command(self, params: Dict):
+        """
+        Publish a mode change request to ModeManager.
+        
+        Args:
+            params: Action parameters containing the mode command
+        """
         cmd = String()
         cmd.data = params["mode_cmd"]
-        
-        # send mode change request to ModeManager
         self.mode_cmd_pub.publish(cmd)
         self.get_logger().info(f"Published mode_command: {cmd.data}")
 
