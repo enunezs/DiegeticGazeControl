@@ -194,13 +194,13 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "x",
                     "speed": 0.05,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
                     "axis": "rx",
                     "speed": 0.3,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "DownHybrid": {
@@ -208,13 +208,13 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "x",
                     "speed": -0.05,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
                     "axis": "rx",
                     "speed": -0.3,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "LeftHybrid": {
@@ -222,13 +222,13 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "y",
                     "speed": 0.03,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
                     "axis": "ry",
                     "speed": 0.3,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "RightHybrid": {
@@ -236,13 +236,13 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "y",
                     "speed": -0.03,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
                     "axis": "ry",
                     "speed": -0.3,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "CloserHybrid": {
@@ -250,13 +250,13 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "z",
                     "speed": -0.03,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
                     "axis": "rz",
                     "speed": -0.3,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "FartherHybrid": {
@@ -264,13 +264,13 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "z",
                     "speed": 0.03,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
                     "axis": "rz",
                     "speed": 0.3,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "SwitchRef1": {
@@ -299,7 +299,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "x",
                     "speed": 0.05,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "S1X_-1": {
@@ -307,7 +307,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "x",
                     "speed": -0.05,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "S1Y_+1": {
@@ -315,7 +315,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "y",
                     "speed": 0.03,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "S1Y_-1": {
@@ -323,7 +323,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "y",
                     "speed": -0.03,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "TR": {
@@ -331,7 +331,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "z",
                     "speed": 0.03,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "TL": {
@@ -339,7 +339,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "z",
                     "speed": -0.03,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             # Discrete rotation buttons (step-based, one-shot)
@@ -348,7 +348,7 @@ class CommandMapper(Node):
                     "action_type": "discrete",
                     "axis": "rz",
                     "step_deg": 30.0,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "S1RotZ_-1": {
@@ -356,7 +356,7 @@ class CommandMapper(Node):
                     "action_type": "discrete",
                     "axis": "rz",
                     "step_deg": -30.0,
-                    "reference_frame": "base_link"
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             # System commands
@@ -454,7 +454,7 @@ class CommandMapper(Node):
         
         # Handle rising edge events (button press)
         if edge == 'rising':
-            self.get_logger().info(f"[RISING_EDGE] Button {button_id}: action_type={action_type}")
+            # self.get_logger().debug(f"[RISING_EDGE] Button {button_id}: action_type={action_type}")
             
             # Publish button press sound
             self.button_sound_pub.publish(Int32(data=1))
@@ -469,7 +469,7 @@ class CommandMapper(Node):
         
         # Handle falling edge events (button release)
         elif edge == 'falling':
-            self.get_logger().info(f"[FALLING_EDGE] Button {button_id} released")
+            # self.get_logger().info(f"[FALLING_EDGE] Button {button_id} released")
             self.button_sound_pub.publish(Int32(data=2))
 
 
@@ -504,7 +504,7 @@ class CommandMapper(Node):
             params = self.current_velocity_params
             axis = params.get("axis", "x")
             speed = float(params.get("speed", 0.0))
-            reference_frame = params.get("reference_frame", "base_link")
+            reference_frame = params.get("reference_frame", "j2n6s300_link_base")
             
             twist.header.frame_id = reference_frame
             
@@ -531,7 +531,7 @@ class CommandMapper(Node):
                 twist.twist.angular.z = speed
         else:
             # Publish zero velocity if no buttons held
-            twist.header.frame_id = "base_link"
+            twist.header.frame_id = "j2n6s300_link_base"
             twist.twist.linear.x = 0.0
             twist.twist.linear.y = 0.0
             twist.twist.linear.z = 0.0
@@ -552,7 +552,7 @@ class CommandMapper(Node):
             params: Action parameters containing axis, step size, and reference frame
         """
         axis = params.get("axis", "z")
-        reference_frame = params.get("reference_frame", "base_link")
+        reference_frame = params.get("reference_frame", "j2n6s300_link_base")
         
         pose = PoseStamped()
         pose.header.stamp = self.get_clock().now().to_msg()
