@@ -187,89 +187,92 @@ class CommandMapper(Node):
         
         TODO: Load from YAML configuration file
         """
+        
+        """ 
+        # Marcela strategy
         self.mode_mappings = {
             # Mode-specific hybrid buttons (different behavior per mode)
             "UpHybrid": {
                 "translation": {
                     "action_type": "velocity",
-                    "axis": "x",
-                    "speed": 0.05,
+                    "axis": "z",
+                    "speed": 1.0,
                     "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
-                    "axis": "rx",
-                    "speed": 0.3,
+                    "axis": "rz",
+                    "speed": 1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
             "DownHybrid": {
                 "translation": {
                     "action_type": "velocity",
-                    "axis": "x",
-                    "speed": -0.05,
+                    "axis": "z",
+                    "speed": -1.0,
                     "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
-                    "axis": "rx",
-                    "speed": -0.3,
+                    "axis": "rz",
+                    "speed": -1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
             "LeftHybrid": {
                 "translation": {
                     "action_type": "velocity",
-                    "axis": "y",
-                    "speed": 0.03,
+                    "axis": "x",
+                    "speed": 1.0,
                     "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
-                    "axis": "ry",
-                    "speed": 0.3,
+                    "axis": "rx",
+                    "speed": 1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
             "RightHybrid": {
                 "translation": {
                     "action_type": "velocity",
-                    "axis": "y",
-                    "speed": -0.03,
+                    "axis": "x",
+                    "speed": -1.0,
                     "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
-                    "axis": "ry",
-                    "speed": -0.3,
+                    "axis": "rx",
+                    "speed": -1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
             "CloserHybrid": {
                 "translation": {
                     "action_type": "velocity",
-                    "axis": "z",
-                    "speed": -0.03,
+                    "axis": "y",
+                    "speed": 1.0,
                     "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
-                    "axis": "rz",
-                    "speed": -0.3,
+                    "axis": "ry",
+                    "speed": -1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
             "FartherHybrid": {
                 "translation": {
                     "action_type": "velocity",
-                    "axis": "z",
-                    "speed": 0.03,
+                    "axis": "y",
+                    "speed": -1.0,
                     "reference_frame": "j2n6s300_link_base"
                 },
                 "rotation": {
                     "action_type": "velocity",
-                    "axis": "rz",
-                    "speed": 0.3,
+                    "axis": "ry",
+                    "speed": 1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
@@ -298,7 +301,7 @@ class CommandMapper(Node):
                 "*": {
                     "action_type": "velocity",
                     "axis": "x",
-                    "speed": 0.05,
+                    "speed": 1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
@@ -306,7 +309,7 @@ class CommandMapper(Node):
                 "*": {
                     "action_type": "velocity",
                     "axis": "x",
-                    "speed": -0.05,
+                    "speed": -1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
@@ -314,7 +317,7 @@ class CommandMapper(Node):
                 "*": {
                     "action_type": "velocity",
                     "axis": "y",
-                    "speed": 0.03,
+                    "speed": 1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
@@ -322,7 +325,7 @@ class CommandMapper(Node):
                 "*": {
                     "action_type": "velocity",
                     "axis": "y",
-                    "speed": -0.03,
+                    "speed": -1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
@@ -330,7 +333,7 @@ class CommandMapper(Node):
                 "*": {
                     "action_type": "velocity",
                     "axis": "z",
-                    "speed": 0.03,
+                    "speed": 1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
@@ -338,7 +341,7 @@ class CommandMapper(Node):
                 "*": {
                     "action_type": "velocity",
                     "axis": "z",
-                    "speed": -0.03,
+                    "speed": -1.0,
                     "reference_frame": "j2n6s300_link_base"
                 }
             },
@@ -379,6 +382,203 @@ class CommandMapper(Node):
                 }
             },
         }
+
+        """ 
+
+        # Emanuel strategy
+        self.mode_mappings = {
+            # Mode-specific hybrid buttons (different behavior per mode)
+            "UpHybrid": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "z",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "rx",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "DownHybrid": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "z",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "rx",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "LeftHybrid": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "x",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "rz",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "RightHybrid": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "x",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "rz",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "CloserHybrid": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "y",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "ry",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "FartherHybrid": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "y",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "ry",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "SwitchRef1": {
+                "translation": {
+                    "action_type": "mode",
+                    "mode_cmd": "rotation"
+                },
+                "rotation": {
+                    "action_type": "mode",
+                    "mode_cmd": "translation"
+                }
+            },
+            "SwitchRef2": {
+                "translation": {
+                    "action_type": "mode",
+                    "mode_cmd": "rotation"
+                },
+                "rotation": {
+                    "action_type": "mode",
+                    "mode_cmd": "translation"
+                }
+            },
+            # Mode-independent buttons (always use velocity, continuous)
+            "S1X_+1": {
+                "*": {
+                    "action_type": "velocity",
+                    "axis": "x",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "S1X_-1": {
+                "*": {
+                    "action_type": "velocity",
+                    "axis": "x",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "S1Y_+1": {
+                "*": {
+                    "action_type": "velocity",
+                    "axis": "y",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "S1Y_-1": {
+                "*": {
+                    "action_type": "velocity",
+                    "axis": "y",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "TR": {
+                "*": {
+                    "action_type": "velocity",
+                    "axis": "z",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "TL": {
+                "*": {
+                    "action_type": "velocity",
+                    "axis": "z",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            # Discrete rotation buttons (step-based, one-shot)
+            "S1RotZ_+1": {
+                "*": {
+                    "action_type": "discrete",
+                    "axis": "rz",
+                    "step_deg": 30.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            "S1RotZ_-1": {
+                "*": {
+                    "action_type": "discrete",
+                    "axis": "rz",
+                    "step_deg": -30.0,
+                    "reference_frame": "j2n6s300_link_base"
+                }
+            },
+            # System commands
+            "S1Reset": {
+                "*": {
+                    "action_type": "system",
+                    "cmd": "reset_pose"
+                }
+            },
+            "A": {
+                "*": {
+                    "action_type": "mode",
+                    "mode_cmd": "toggle_next"
+                }
+            },
+            "B": {
+                "*": {
+                    "action_type": "mode",
+                    "mode_cmd": "toggle_next"
+                }
+            },
+        }
+
 
     def mode_callback(self, msg: String):
         """Handle mode change notifications."""
