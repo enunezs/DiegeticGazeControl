@@ -32,10 +32,10 @@ class JoyCommandMapper(CommandMapper):
         # Mapping joystick buttons to button IDs
         # Only mode changes remain; others commented
         self.joy_to_button_id = {
+            0: "ContinueWaypoints",          # A button
+            1: "PauseWaypoints",          # B button
             2: "SwitchRef1",  # X button -> Mode change
-            3: "SwitchRef2",  # Y button -> Mode change
-            # 0: "A",          # A button
-            # 1: "B",          # B button
+            3: "WaypointDemo",  # Y button -> Mode change
             # 4: "TL",         # LB
             # 5: "TR",         # RB
             # 6: "S1RotZ_+1",  # Back

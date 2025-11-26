@@ -4,13 +4,20 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Int32
 from geometry_msgs.msg import TwistStamped, PoseStamped
-from builtin_interfaces.msg import Time
+# from builtin_interfaces.msg import Time
+
+from rclpy.time import Time, Duration
 
 from gaze_interaction_manager.msg import ButtonStatus as ButtonStatusMsg
 
 import math
 from typing import Dict, Optional, Tuple, Set
 from scipy.spatial.transform import Rotation
+
+
+# from geometry_msgs.msg import PoseArray
+from nav_msgs.msg import Path   # Also prefer this
+
 
 """
 Command mapping node:
@@ -157,6 +164,8 @@ class CommandMapper(Node):
         
         self.sys_pub = self.create_publisher(String, '/teleop/system', 10)
         self.mode_cmd_pub = self.create_publisher(String, '/teleop/mode_command', 10)
+        self.pose_pub = self.create_publisher(Path, '/teleop/waypoint_path', 10)
+
         
         # Publisher for button sound events
         self.button_sound_pub = self.create_publisher(Int32, '/button_events', 10)
@@ -387,6 +396,28 @@ class CommandMapper(Node):
 
         # Emanuel strategy
         self.mode_mappings = {
+            "WaypointDemo": { # ! TODO
+                "*": {
+                    "action_type": "waypoint_demo",  # special handler
+                    "waypoints": [  # hardcoded demo for now
+                        {"x": 0.3, "y": 0.0, "z": 0.3, "roll": 0, "pitch": 0, "yaw": 0, "time": 5.0},
+                        # {"x": 0.3, "y": 0.1, "z": 0.3, "roll": 0, "pitch": 0, "yaw": 30, "time": 5.0},
+                        # {"x": 0.3, "y": 0.1, "z": 0.4, "roll": 0, "pitch": 0, "yaw": 60, "time": 5.0},
+                    ]
+                }
+            },
+            "PauseWaypoints": {
+                "*": {
+                    "action_type": "system",
+                    "cmd": "pause_waypoints"
+                }
+            },
+            "StopWaypoints": {
+                "*": {
+                    "action_type": "system",
+                    "cmd": "stop_waypoints"
+                }
+            },
             # Mode-specific hybrid buttons (different behavior per mode)
             "UpHybrid": {
                 "translation": {
@@ -399,7 +430,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "rx",
                     "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
+                    "reference_frame": "j2n6s300_link_6"
                 }
             },
             "DownHybrid": {
@@ -413,7 +444,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "rx",
                     "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
+                    "reference_frame": "j2n6s300_link_6"
                 }
             },
             "LeftHybrid": {
@@ -427,7 +458,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "rz",
                     "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
+                    "reference_frame": "j2n6s300_link_6"
                 }
             },
             "RightHybrid": {
@@ -441,7 +472,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "rz",
                     "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
+                    "reference_frame": "j2n6s300_link_6"
                 }
             },
             "CloserHybrid": {
@@ -455,7 +486,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "ry",
                     "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
+                    "reference_frame": "j2n6s300_link_6"
                 }
             },
             "FartherHybrid": {
@@ -469,7 +500,7 @@ class CommandMapper(Node):
                     "action_type": "velocity",
                     "axis": "ry",
                     "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
+                    "reference_frame": "j2n6s300_link_6"
                 }
             },
             "SwitchRef1": {
@@ -577,6 +608,91 @@ class CommandMapper(Node):
                     "mode_cmd": "toggle_next"
                 }
             },
+            # Mode-specific hybrid buttons (different behavior per mode)
+            "UpHybridRe": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "z",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "rx",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_6"
+                }
+            },
+            "DownHybridRe": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "z",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "rx",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_6"
+                }
+            },
+            "LeftHybridRe": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "x",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "rz",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_6"
+                }
+            },
+            "RightHybridRe": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "x",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "rz",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_6"
+                }
+            },
+            "CloserHybridRe": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "y",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "ry",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_6"
+                }
+            },
+            "FartherHybridRe": {
+                "translation": {
+                    "action_type": "velocity",
+                    "axis": "y",
+                    "speed": -1.0,
+                    "reference_frame": "j2n6s300_link_base"
+                },
+                "rotation": {
+                    "action_type": "velocity",
+                    "axis": "ry",
+                    "speed": 1.0,
+                    "reference_frame": "j2n6s300_link_6"
+                }
+            },
         }
 
 
@@ -666,7 +782,8 @@ class CommandMapper(Node):
                 self._publish_system_command(params)
             elif action_type == "mode":
                 self._publish_mode_command(params)
-        
+            elif action_type == "waypoint_demo":
+                self._publish_waypoint_list(params) 
         # Handle falling edge events (button release)
         elif edge == 'falling':
             # self.get_logger().info(f"[FALLING_EDGE] Button {button_id} released")
@@ -831,6 +948,50 @@ class CommandMapper(Node):
         self.mode_cmd_pub.publish(cmd)
         self.get_logger().info(f"Published mode_command: {cmd.data}")
 
+    def _publish_waypoint_list(self, params: Dict):
+        """
+        Publish a list of waypoints as a Path message.
+        
+        Args:
+            params: Action parameters containing the waypoint list
+        """
+        waypoints = params.get("waypoints", [])
+        path_msg = Path()
+        path_msg.header.stamp = self.get_clock().now().to_msg()
+        path_msg.header.frame_id = "j2n6s300_link_base"  # or other appropriate frame
+        
+        target_time = self.get_clock().now().to_msg()
+        target_time = Time.from_msg(target_time)
+
+        for wp in waypoints:
+            pose_stamped = PoseStamped()
+            # TODO: Technically this should be in the future
+            # target_time+= rclpy.time.Duration(seconds=wp.get("time", 5.0)).to_msg()
+            extra = wp.get("time", 5.0)   # default 5 seconds
+            target_time = target_time + Duration(seconds=extra)
+            pose_stamped.header.stamp = target_time.to_msg()
+
+            pose_stamped.header.frame_id = path_msg.header.frame_id
+            
+            pose_stamped.pose.position.x = wp.get("x", 0.0)
+            pose_stamped.pose.position.y = wp.get("y", 0.0)
+            pose_stamped.pose.position.z = wp.get("z", 0.0)
+            
+            roll = math.radians(wp.get("roll", 0.0))
+            pitch = math.radians(wp.get("pitch", 0.0))
+            yaw = math.radians(wp.get("yaw", 0.0))
+            r = Rotation.from_euler('xyz', [roll, pitch, yaw], degrees=False)
+            q = r.as_quat()  # x, y, z, w
+            
+            pose_stamped.pose.orientation.x = float(q[0])
+            pose_stamped.pose.orientation.y = float(q[1])
+            pose_stamped.pose.orientation.z = float(q[2])
+            pose_stamped.pose.orientation.w = float(q[3])
+            
+            path_msg.poses.append(pose_stamped)
+        
+        self.pose_pub.publish(path_msg)
+        self.get_logger().info(f"Published waypoint demo with {len(waypoints)} waypoints.")
 
 def main(args=None):
     rclpy.init(args=args)
