@@ -34,9 +34,11 @@ include_directories(${NumPy_INCLUDE_DIR})
 find_package(rosidl_default_generators REQUIRED)
 
 # Path to resources
-install(DIRECTORY
-launch
-DESTINATION share/${PROJECT_NAME}/
+install(
+  DIRECTORY
+  launch
+  config
+  DESTINATION share/${PROJECT_NAME}/
 )
 
 find_package(diegetic_transform_engine REQUIRED)
@@ -58,7 +60,6 @@ install(PROGRAMS
   scripts/gaze_controller.py
   scripts/robot_command_mapper.py
   scripts/joy_command_mapper.py
-  # scripts/input_parser.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

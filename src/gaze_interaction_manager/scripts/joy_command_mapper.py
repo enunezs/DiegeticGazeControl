@@ -8,8 +8,8 @@ from geometry_msgs.msg import TwistStamped, PoseStamped
 from sensor_msgs.msg import Joy
 from scipy.spatial.transform import Rotation
 from builtin_interfaces.msg import Time
-import math
-from typing import Dict, Optional, Tuple, Set
+# import math
+# from typing import Dict, Optional, Tuple, Set
 from robot_command_mapper import ButtonStateManager, CommandMapper
 
 """
@@ -31,20 +31,41 @@ class JoyCommandMapper(CommandMapper):
 
         # Mapping joystick buttons to button IDs
         # Only mode changes remain; others commented
-        self.joy_to_button_id = {
-            0: "ContinueWaypoints",          # A button
-            1: "PauseWaypoints",          # B button
-            2: "SwitchRef1",  # X button -> Mode change
-            3: "WaypointDemo",  # Y button -> Mode change
-            # 4: "TL",         # LB
-            # 5: "TR",         # RB
-            # 6: "S1RotZ_+1",  # Back
-            # 7: "S1RotZ_-1",  # Start
-        }
 
         # D-pad axes indices (commonly axes[6] = left/right, axes[7] = up/down)
         # Shoulder buttons difference for depth: e.g., RB - LB
-        self.axis_threshold = 0.6
+        self.declare_parameter("axis_threshold", 0.6)
+        self.axis_threshold = self.get_parameter("axis_threshold").value
+        self.get_logger().info(f"Axis threshold set to {self.axis_threshold}")
+
+        # Timing parameters
+        # self.declare_parameter("joy_to_button_id", {})
+        # self.joy_to_button_id = self.get_parameter("joy_to_button_id").value
+        # self.get_logger().info(f"Loaded {len(self.joy_to_button_id)} joystick button mappings")
+
+        self.joy_to_button_id = {
+            0: "A",         # A button
+            1: "B",         # B button
+            2: "X",         # X button
+            3: "Y",         # Y button
+            4: "LB",        # Left Bumper
+            5: "RB",        # Right Bumper
+            6: "Back",      # Back button
+            7: "Start",     # Start button
+            8: "LeftStick", # Left Stick press
+            9: "RightStick", # Right Stick press
+            10: "Guide"      # Guide / Home button
+        }
+        self.joy_to_axis_id = {
+            0: "LeftStick_X",
+            1: "LeftStick_Y",
+            2: "RightStick_X",
+            3: "RightStick_Y",
+            4: "LT",  # Left Trigger
+            5: "RT",  # Right Trigger
+            6: "L2",  # Left Bumper
+            7: "R2",  # Right Bumper
+        }
 
     def joy_callback(self, msg: Joy):
         """Handle incoming /joy messages and map to gaze-style button IDs."""

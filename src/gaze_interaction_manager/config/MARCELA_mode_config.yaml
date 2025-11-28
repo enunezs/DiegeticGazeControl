@@ -1,0 +1,157 @@
+mode_mappings:
+
+  UpHybrid:
+    translation:
+      action_type: velocity
+      axis: z
+      speed: 1.0
+      reference_frame: j2n6s300_link_base
+    rotation:
+      action_type: velocity
+      axis: rz
+      speed: 1.0
+      reference_frame: j2n6s300_link_base
+
+  DownHybrid:
+    translation:
+      action_type: velocity
+      axis: z
+      speed: -1.0
+      reference_frame: j2n6s300_link_base
+    rotation:
+      action_type: velocity
+      axis: rz
+      speed: -1.0
+      reference_frame: j2n6s300_link_base
+
+  LeftHybrid:
+    translation:
+      action_type: velocity
+      axis: x
+      speed: 1.0
+      reference_frame: j2n6s300_link_base
+    rotation:
+      action_type: velocity
+      axis: rx
+      speed: 1.0
+      reference_frame: j2n6s300_link_base
+
+  RightHybrid:
+    translation:
+      action_type: velocity
+      axis: x
+      speed: -1.0
+      reference_frame: j2n6s300_link_base
+    rotation:
+      action_type: velocity
+      axis: rx
+      speed: -1.0
+      reference_frame: j2n6s300_link_base
+
+  CloserHybrid:
+    translation:
+      action_type: velocity
+      axis: y
+      speed: 1.0
+      reference_frame: j2n6s300_link_base
+    rotation:
+      action_type: velocity
+      axis: ry
+      speed: -1.0
+      reference_frame: j2n6s300_link_base
+
+  FartherHybrid:
+    translation:
+      action_type: velocity
+      axis: y
+      speed: -1.0
+      reference_frame: j2n6s300_link_base
+    rotation:
+      action_type: velocity
+      axis: ry
+      speed: 1.0
+      reference_frame: j2n6s300_link_base
+
+  SwitchRef1:
+    translation:
+      action_type: mode
+      mode_cmd: toggle_next
+
+  SwitchRef2:
+    translation:
+      action_type: mode
+      mode_cmd: rotation
+    rotation:
+      action_type: mode
+      mode_cmd: translation
+
+  S1X_+1:
+    "*":
+      action_type: velocity
+      axis: x
+      speed: 1.0
+      reference_frame: j2n6s300_link_base
+
+  S1X_-1:
+    "*":
+      action_type: velocity
+      axis: x
+      speed: -1.0
+      reference_frame: j2n6s300_link_base
+
+  S1Y_+1:
+    "*":
+      action_type: velocity
+      axis: y
+      speed: 1.0
+      reference_frame: j2n6s300_link_base
+
+  S1Y_-1:
+    "*":
+      action_type: velocity
+      axis: y
+      speed: -1.0
+      reference_frame: j2n6s300_link_base
+
+  TR:
+    "*":
+      action_type: velocity
+      axis: z
+      speed: 1.0
+      reference_frame: j2n6s300_link_base
+
+  TL:
+    "*":
+      action_type: velocity
+      axis: z
+      speed: -1.0
+      reference_frame: j2n6s300_link_base
+
+  S1RotZ_+1:
+    "*":
+      action_type: discrete
+      axis: rz
+      step_deg: 30.0
+      reference_frame: j2n6s300_link_base
+
+  S1RotZ_-1:
+    "*":
+      action_type: discrete
+      axis: rz
+      step_deg: -30.0
+      reference_frame: j2n6s300_link_base
+
+  S1Reset:
+    "*":
+      action_type: system
+      cmd: reset_pose
+
+  A:
+    "*":
+      action_type: mode
+      mode_cmd: toggle_next
+
+  B:
+    "*":
+      action_type: mode
+      mode_cmd: toggle_next

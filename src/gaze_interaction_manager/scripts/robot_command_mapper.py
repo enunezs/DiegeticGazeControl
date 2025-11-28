@@ -4,19 +4,24 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Int32
 from geometry_msgs.msg import TwistStamped, PoseStamped
-# from builtin_interfaces.msg import Time
-
+from nav_msgs.msg import Path   
+from builtin_interfaces.msg import Time
 from rclpy.time import Time, Duration
 
 from gaze_interaction_manager.msg import ButtonStatus as ButtonStatusMsg
 
 import math
-from typing import Dict, Optional, Tuple, Set
+from typing import Dict, Optional, Tuple, Set, List
 from scipy.spatial.transform import Rotation
 
+import yaml
+from ament_index_python.packages import get_package_share_directory
+import os
+
+
+PUBLISH_RATE_HZ = 100
 
 # from geometry_msgs.msg import PoseArray
-from nav_msgs.msg import Path   # Also prefer this
 
 
 """
@@ -25,9 +30,9 @@ Command mapping node:
 - Subscribes to /teleop/current_mode (String)
 - Publishes:
     /teleop/cartesian_velocity -> TwistStamped (continuous)
-    /teleop/discrete_pose   -> PoseStamped (on command)
-    /teleop/system          -> String (on command)
-    /teleop/mode_command    -> String (used to ask ModeManager to switch)
+    /teleop/waypoint_path      -> Path (waypoint list for discrete mode)
+    /teleop/system             -> String (system commands)
+    /teleop/mode_command       -> String (mode change requests)
 """
 
 
@@ -151,27 +156,38 @@ class CommandMapper(Node):
         self._init_publishers()
         self._init_subscribers()
         
-        # TODO: Load mode mappings (move to YAML config)
+        # tODO: Load mode mappings (move to YAML config later)
         self._init_mode_mappings()
         
         # Timer to publish velocity continuously at 100 Hz
-        self.vel_publish_timer = self.create_timer(0.01, self._publish_velocity_tick)
+        self.vel_publish_timer = self.create_timer(1.0 / PUBLISH_RATE_HZ, self._publish_velocity_tick)
+
+
 
     def _init_publishers(self):
-        """Initialize all ROS publishers."""
+        """Initialize all ROS publishers:
+        - /teleop/cartesian_velocity -> TwistStamped (Velocity and frame of reference for movement)
+        - /teleop/waypoint_path -> Path (Planned path for the robot to follow)
+        - /teleop/system -> String (System status messages)
+        - /teleop/mode_command -> String (Commands to change control modes)
+
+        """
         self.vel_pub = self.create_publisher(TwistStamped, '/teleop/cartesian_velocity', 10)
-        self.pose_pub = self.create_publisher(PoseStamped, '/teleop/discrete_pose', 10)
+        
+        self.pose_pub = self.create_publisher(Path, '/teleop/waypoint_path', 10)
         
         self.sys_pub = self.create_publisher(String, '/teleop/system', 10)
         self.mode_cmd_pub = self.create_publisher(String, '/teleop/mode_command', 10)
-        self.pose_pub = self.create_publisher(Path, '/teleop/waypoint_path', 10)
 
-        
         # Publisher for button sound events
         self.button_sound_pub = self.create_publisher(Int32, '/button_events', 10)
 
     def _init_subscribers(self):
-        """Initialize all ROS subscribers."""
+        """Initialize all ROS subscribers:
+        - /dwell_time/active_button -> ButtonStatus
+        - /teleop/current_mode -> String
+        """
+
         self.button_sub = self.create_subscription(
             ButtonStatusMsg, 
             '/dwell_time/active_button', 
@@ -195,221 +211,73 @@ class CommandMapper(Node):
         - axis: x,y,z for linear, rx,ry,rz for angular
         
         TODO: Load from YAML configuration file
-        """
         
-        """ 
-        # Marcela strategy
-        self.mode_mappings = {
-            # Mode-specific hybrid buttons (different behavior per mode)
-            "UpHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rz",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "DownHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rz",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "LeftHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rx",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "RightHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rx",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "CloserHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "ry",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "FartherHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "ry",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "SwitchRef1": {
-                "translation": {
-                    "action_type": "mode",
-                    "mode_cmd": "rotation"
-                },
-                "rotation": {
-                    "action_type": "mode",
-                    "mode_cmd": "translation"
-                }
-            },
-            "SwitchRef2": {
-                "translation": {
-                    "action_type": "mode",
-                    "mode_cmd": "rotation"
-                },
-                "rotation": {
-                    "action_type": "mode",
-                    "mode_cmd": "translation"
-                }
-            },
-            # Mode-independent buttons (always use velocity, continuous)
-            "S1X_+1": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "S1X_-1": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "S1Y_+1": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "S1Y_-1": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "TR": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "TL": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            # Discrete rotation buttons (step-based, one-shot)
-            "S1RotZ_+1": {
-                "*": {
-                    "action_type": "discrete",
-                    "axis": "rz",
-                    "step_deg": 30.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "S1RotZ_-1": {
-                "*": {
-                    "action_type": "discrete",
-                    "axis": "rz",
-                    "step_deg": -30.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            # System commands
-            "S1Reset": {
-                "*": {
-                    "action_type": "system",
-                    "cmd": "reset_pose"
-                }
-            },
-            "A": {
-                "*": {
-                    "action_type": "mode",
-                    "mode_cmd": "toggle_next"
-                }
-            },
-            "B": {
-                "*": {
-                    "action_type": "mode",
-                    "mode_cmd": "toggle_next"
-                }
-            },
-        }
+        """
 
-        """ 
+        self.declare_parameter("parser_mappings_file", "CALIB_mode_config.yaml")
+        filename = self.get_parameter("parser_mappings_file").value
+
+        config_file = os.path.join(
+            get_package_share_directory("gaze_interaction_manager"),
+            "config",
+            filename
+        )
+
+        if not os.path.exists(config_file):
+            self.get_logger().error(f"Config file not found: {config_file}")
+            raise FileNotFoundError(config_file)
+
+        with open(config_file, 'r') as f:
+            cfg = yaml.safe_load(f)
+
+        self.mode_mappings = cfg.get("mode_mappings", {})
+        self.get_logger().info(f"Loaded {len(self.mode_mappings)} mode sets from {filename}")
+        self.get_logger().info(f"Mode mappings: {self.mode_mappings}")
+
+
+
+        far_x = 0.45
+        close_x = 0.33
+        mid_x = (far_x + close_x) / 2.0
+
+        away_y = -0.16
+        proximal_y = 0.16
+        mid_y = (away_y + proximal_y) / 2.0
+
+        low_z = 0.25
+        high_z = 0.65
+        mid_z = (low_z + high_z) / 2.0
+
+        rotation =  {"roll": -180-20, "pitch": -5, "yaw": 180-10}
+        time_per_waypoint = 5.0
+        # We need to define a route for all possible permutations of the positions
+
+        """
 
         # Emanuel strategy
         self.mode_mappings = {
-            "WaypointDemo": { # ! TODO
+            "WaypointDemo": { 
                 "*": {
                     "action_type": "waypoint_demo",  # special handler
                     "waypoints": [  # hardcoded demo for now
-                        {"x": 0.3, "y": 0.0, "z": 0.3, "roll": 0, "pitch": 0, "yaw": 0, "time": 5.0},
-                        # {"x": 0.3, "y": 0.1, "z": 0.3, "roll": 0, "pitch": 0, "yaw": 30, "time": 5.0},
-                        # {"x": 0.3, "y": 0.1, "z": 0.4, "roll": 0, "pitch": 0, "yaw": 60, "time": 5.0},
-                    ]
+                        {"x": far_x, "y": away_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
+                        {"x": far_x, "y": proximal_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
+                        {"x": close_x, "y": away_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
+                        {"x": close_x, "y": proximal_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
+                    ],
+                    "reference_frame": "j2n6s300_link_base"
                 }
             },
             "PauseWaypoints": {
                 "*": {
                     "action_type": "system",
                     "cmd": "pause_waypoints"
+                }
+            },
+            "ResumeWaypoints": {
+                "*": {
+                    "action_type": "system",
+                    "cmd": "resume_waypoints"
                 }
             },
             "StopWaypoints": {
@@ -504,13 +372,9 @@ class CommandMapper(Node):
                 }
             },
             "SwitchRef1": {
-                "translation": {
+                "*": {
                     "action_type": "mode",
-                    "mode_cmd": "rotation"
-                },
-                "rotation": {
-                    "action_type": "mode",
-                    "mode_cmd": "translation"
+                    "mode_cmd": "toggle_next"
                 }
             },
             "SwitchRef2": {
@@ -695,9 +559,11 @@ class CommandMapper(Node):
             },
         }
 
+        """
+        
 
     def mode_callback(self, msg: String):
-        """Handle mode change notifications."""
+        """Handle mode change notifications:"""
         self.current_mode = msg.data
         self.get_logger().info(f"CommandMapper: current_mode = {self.current_mode}")
 
@@ -770,7 +636,7 @@ class CommandMapper(Node):
         
         # Handle rising edge events (button press)
         if edge == 'rising':
-            # self.get_logger().debug(f"[RISING_EDGE] Button {button_id}: action_type={action_type}")
+            self.get_logger().debug(f"[RISING_EDGE] Button {button_id}: action_type={action_type}")
             
             # Publish button press sound
             self.button_sound_pub.publish(Int32(data=1))
@@ -783,12 +649,12 @@ class CommandMapper(Node):
             elif action_type == "mode":
                 self._publish_mode_command(params)
             elif action_type == "waypoint_demo":
-                self._publish_waypoint_list(params) 
+                self._publish_waypoint_list(params)
+         
         # Handle falling edge events (button release)
         elif edge == 'falling':
-            # self.get_logger().info(f"[FALLING_EDGE] Button {button_id} released")
+            self.get_logger().debug(f"[FALLING_EDGE] Button {button_id} released")
             self.button_sound_pub.publish(Int32(data=2))
-
 
     def _update_velocity_commands(self):
         """
@@ -814,6 +680,7 @@ class CommandMapper(Node):
         Periodically publish velocity commands at 100 Hz.
         Called by timer callback.
         """
+
         twist = TwistStamped()
         twist.header.stamp = self.get_clock().now().to_msg()
         
@@ -944,54 +811,72 @@ class CommandMapper(Node):
             params: Action parameters containing the mode command
         """
         cmd = String()
+        # TODO: I dont like the mode_cmd naming convention,
         cmd.data = params["mode_cmd"]
         self.mode_cmd_pub.publish(cmd)
         self.get_logger().info(f"Published mode_command: {cmd.data}")
 
     def _publish_waypoint_list(self, params: Dict):
         """
-        Publish a list of waypoints as a Path message.
-        
+        Converts waypoint list from button mapping into a nav_msgs/Path message.
+        Each waypoint includes absolute position and orientation.
+    
         Args:
-            params: Action parameters containing the waypoint list
+            params: Action parameters containing waypoint list and reference frame
         """
         waypoints = params.get("waypoints", [])
+        reference_frame = params.get("reference_frame", "j2n6s300_link_base")
+
+        if not waypoints:
+            self.get_logger().warn("No waypoints defined for waypoint_demo button")
+            return
+
+        # Create Path message
         path_msg = Path()
         path_msg.header.stamp = self.get_clock().now().to_msg()
-        path_msg.header.frame_id = "j2n6s300_link_base"  # or other appropriate frame
+        path_msg.header.frame_id = reference_frame
         
+
         target_time = self.get_clock().now().to_msg()
         target_time = Time.from_msg(target_time)
 
-        for wp in waypoints:
+        # Convert each waypoint dict to PoseStamped
+        for i, wp in enumerate(waypoints):
             pose_stamped = PoseStamped()
-            # TODO: Technically this should be in the future
-            # target_time+= rclpy.time.Duration(seconds=wp.get("time", 5.0)).to_msg()
+
+            # Rollout timing
             extra = wp.get("time", 5.0)   # default 5 seconds
-            target_time = target_time + Duration(seconds=extra)
+            target_time += Duration(seconds=extra)
             pose_stamped.header.stamp = target_time.to_msg()
 
-            pose_stamped.header.frame_id = path_msg.header.frame_id
+            # Reference frame
+            pose_stamped.header.frame_id = reference_frame
             
+            # Position (absolute coordinates in meters)
             pose_stamped.pose.position.x = wp.get("x", 0.0)
             pose_stamped.pose.position.y = wp.get("y", 0.0)
             pose_stamped.pose.position.z = wp.get("z", 0.0)
             
-            roll = math.radians(wp.get("roll", 0.0))
-            pitch = math.radians(wp.get("pitch", 0.0))
-            yaw = math.radians(wp.get("yaw", 0.0))
-            r = Rotation.from_euler('xyz', [roll, pitch, yaw], degrees=False)
-            q = r.as_quat()  # x, y, z, w
-            
-            pose_stamped.pose.orientation.x = float(q[0])
-            pose_stamped.pose.orientation.y = float(q[1])
-            pose_stamped.pose.orientation.z = float(q[2])
-            pose_stamped.pose.orientation.w = float(q[3])
+            # Orientation (convert from euler angles in degrees to quaternion)
+            roll_deg = (wp.get("roll", 0.0))
+            pitch_deg = (wp.get("pitch", 0.0))
+            yaw_deg = (wp.get("yaw", 0.0))
+
+            rot = Rotation.from_euler('xyz', [roll_deg, pitch_deg, yaw_deg], degrees=True)
+            quat = rot.as_quat()  # x, y, z, w
+
+            pose_stamped.pose.orientation.x = float(quat[0])
+            pose_stamped.pose.orientation.y = float(quat[1])
+            pose_stamped.pose.orientation.z = float(quat[2])
+            pose_stamped.pose.orientation.w = float(quat[3])
             
             path_msg.poses.append(pose_stamped)
         
+        # Publish path
         self.pose_pub.publish(path_msg)
-        self.get_logger().info(f"Published waypoint demo with {len(waypoints)} waypoints.")
+        self.get_logger().info(
+            f"Published waypoint path with {len(waypoints)} waypoints to /teleop/waypoint_path"
+        )
 
 def main(args=None):
     rclpy.init(args=args)
