@@ -58,6 +58,7 @@ class AudioFeedbackNode(Node):
 
         # === Subscribers ===
         self.create_subscription(String, '/teleop/current_mode', self.mode_callback, 10)
+        self.create_subscription(String, '/controller/controller_status_info', self.robot_info, 10)
         self.create_subscription(String, '/controller/action_status', self.action_callback, 10)
         self.create_subscription(String, '/safety/status', self.safety_callback, 10)
         self.create_subscription(Int32, '/button_events', self.button_callback, 10)
@@ -81,6 +82,11 @@ class AudioFeedbackNode(Node):
         if new_mode != self.last_mode:
             self.last_mode = new_mode
             self.say(f"Switched to {new_mode}")
+
+    def robot_info(self, msg):
+        info = msg.data.lower()
+        self.play_beep("info")
+    
 
     # === Playback ===
     def play_beep(self, name):

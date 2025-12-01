@@ -1,14 +1,4 @@
 mode_mappings:
-  Y: # WaypointDemo
-    "*":
-      action_type: waypoint_demo
-      reference_frame: j2n6s300_link_base
-      waypoints:
-        - { x: 0.50,  y: 0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
-        - { x: 0.50,  y:-0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
-        - { x: 0.30,  y: 0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
-        - { x: 0.30,  y:-0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
-
   B: # PauseWaypoints
     "*":
       action_type: system
@@ -28,3 +18,9 @@ mode_mappings:
     "*":
       action_type: mode
       mode_cmd: toggle_next
+  Back: 
+    "*": 
+      action_type: waypoint_demo
+      reference_frame: j2n6s300_link_base
+      waypoints:
+          - { x: 0.375,  y: 0.0,  z: 0.31, roll: -200, pitch: -5, yaw: 170, time: 5.0 }

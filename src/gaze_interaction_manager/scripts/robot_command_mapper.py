@@ -18,6 +18,7 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 import os
 
+from random import shuffle
 
 PUBLISH_RATE_HZ = 100
 
@@ -230,337 +231,124 @@ class CommandMapper(Node):
         with open(config_file, 'r') as f:
             cfg = yaml.safe_load(f)
 
+        # Load mode mappings
         self.mode_mappings = cfg.get("mode_mappings", {})
+
+        # Add calibration waypoint demo
+        calibration_route = self.calculate_calibration_route()
+        self.mode_mappings["Y"] = calibration_route
+
         self.get_logger().info(f"Loaded {len(self.mode_mappings)} mode sets from {filename}")
         self.get_logger().info(f"Mode mappings: {self.mode_mappings}")
+        
+        # print by mode_mappings for debug
+        for button_id, modes in self.mode_mappings.items():
+            self.get_logger().debug(f"Button {button_id}: modes = {list(modes.keys())}")
 
+    def calculate_calibration_route(self) -> Dict[str, Dict]:
+        """Define a waypoint demo route for calibration purposes.
+        The route visits predefined positions in space.
+        """
 
-
-        far_x = 0.45
-        close_x = 0.33
+        far_x = 0.50
+        close_x = 0.25
         mid_x = (far_x + close_x) / 2.0
 
-        away_y = -0.16
-        proximal_y = 0.16
+        away_y = -0.20
+        proximal_y = 0.20
         mid_y = (away_y + proximal_y) / 2.0
 
-        low_z = 0.25
-        high_z = 0.65
+        low_z = 0.22
+        high_z = 0.40
         mid_z = (low_z + high_z) / 2.0
 
         rotation =  {"roll": -180-20, "pitch": -5, "yaw": 180-10}
-        time_per_waypoint = 5.0
+        time_per_waypoint = 10.0
         # We need to define a route for all possible permutations of the positions
+        calibration_route = []
 
-        """
+        # Generate waypoints for all combinations 2X2X2:
+        # * x: far, mid, close
+        # * y: away, mid, proximal
+        # * z: low, mid, high
+        # for x in [far_x, close_x]:
+        #     for y in [away_y, proximal_y]:
+        #         for z in [low_z, high_z]:
+        
+        for x in [far_x, mid_x, close_x]:
+            for y in [away_y, mid_y, proximal_y]:
+                for z in [low_z, mid_z, high_z]:
+                    calibration_route.append(
+                        {"x": x, "y": y, "z": z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint}
+                    )
+                    self.get_logger().debug(f"Added calibration waypoint at x={x}, y={y}, z={z}")
+                    # break  # IGNORE --- only one waypoint per button for now
+                # break  # IGNORE --- only one waypoint per button for now
+            # break  # IGNORE --- only one waypoint per button for now
+        self.get_logger().info(f"Generated {len(calibration_route)} calibration waypoints.")
 
-        # Emanuel strategy
-        self.mode_mappings = {
-            "WaypointDemo": { 
-                "*": {
-                    "action_type": "waypoint_demo",  # special handler
-                    "waypoints": [  # hardcoded demo for now
-                        {"x": far_x, "y": away_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
-                        {"x": far_x, "y": proximal_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
-                        {"x": close_x, "y": away_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
-                        {"x": close_x, "y": proximal_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
-                    ],
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "PauseWaypoints": {
-                "*": {
-                    "action_type": "system",
-                    "cmd": "pause_waypoints"
-                }
-            },
-            "ResumeWaypoints": {
-                "*": {
-                    "action_type": "system",
-                    "cmd": "resume_waypoints"
-                }
-            },
-            "StopWaypoints": {
-                "*": {
-                    "action_type": "system",
-                    "cmd": "stop_waypoints"
-                }
-            },
-            # Mode-specific hybrid buttons (different behavior per mode)
-            "UpHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rx",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "DownHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rx",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "LeftHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rz",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "RightHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rz",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "CloserHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "ry",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "FartherHybrid": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "ry",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "SwitchRef1": {
-                "*": {
-                    "action_type": "mode",
-                    "mode_cmd": "toggle_next"
-                }
-            },
-            "SwitchRef2": {
-                "translation": {
-                    "action_type": "mode",
-                    "mode_cmd": "rotation"
-                },
-                "rotation": {
-                    "action_type": "mode",
-                    "mode_cmd": "translation"
-                }
-            },
-            # Mode-independent buttons (always use velocity, continuous)
-            "S1X_+1": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "S1X_-1": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "S1Y_+1": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "S1Y_-1": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "TR": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "TL": {
-                "*": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            # Discrete rotation buttons (step-based, one-shot)
-            "S1RotZ_+1": {
-                "*": {
-                    "action_type": "discrete",
-                    "axis": "rz",
-                    "step_deg": 30.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            "S1RotZ_-1": {
-                "*": {
-                    "action_type": "discrete",
-                    "axis": "rz",
-                    "step_deg": -30.0,
-                    "reference_frame": "j2n6s300_link_base"
-                }
-            },
-            # System commands
-            "S1Reset": {
-                "*": {
-                    "action_type": "system",
-                    "cmd": "reset_pose"
-                }
-            },
-            "A": {
-                "*": {
-                    "action_type": "mode",
-                    "mode_cmd": "toggle_next"
-                }
-            },
-            "B": {
-                "*": {
-                    "action_type": "mode",
-                    "mode_cmd": "toggle_next"
-                }
-            },
-            # Mode-specific hybrid buttons (different behavior per mode)
-            "UpHybridRe": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rx",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "DownHybridRe": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "z",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rx",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "LeftHybridRe": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rz",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "RightHybridRe": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "x",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "rz",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "CloserHybridRe": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "ry",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
-            "FartherHybridRe": {
-                "translation": {
-                    "action_type": "velocity",
-                    "axis": "y",
-                    "speed": -1.0,
-                    "reference_frame": "j2n6s300_link_base"
-                },
-                "rotation": {
-                    "action_type": "velocity",
-                    "axis": "ry",
-                    "speed": 1.0,
-                    "reference_frame": "j2n6s300_link_6"
-                }
-            },
+        # # Generate waypoints for all combinations 3X3X3:
+        # # * x: far, mid, close
+        # # * y: away, mid, proximal
+        # # * z: low, mid, high
+        # for x in [far_x, mid_x, close_x]:
+        #     for y in [away_y, mid_y, proximal_y]:
+        #         for z in [low_z, mid_z, high_z]:+
+
+        #             calibration_route[f"WaypointDemo_{x}_{y}_{z}"] = {
+        #                 "action_type": "waypoint_demo",
+        #                 "waypoints": [
+        #                     {"x": x, "y": y, "z": z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint}
+        #                 ],
+        #                 "reference_frame": "j2n6s300_link_base"
+        #             }
+        
+        # # Emanuel strategy
+        # calibration_route = {
+        #     "WaypointDemo": { 
+        #         "*": {
+        #             "action_type": "waypoint_demo",  # special handler
+        #             "waypoints": [  # hardcoded demo for now
+        #                 {"x": far_x, "y": away_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
+        #                 {"x": far_x, "y": proximal_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
+        #                 {"x": close_x, "y": away_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
+        #                 {"x": close_x, "y": proximal_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
+        #             ],
+        #             "reference_frame": "j2n6s300_link_base"
+        #         }
+        #     }
+        # }
+
+
+        ### shuffle
+        shuffled_waypoints = list(calibration_route)
+        shuffle(shuffled_waypoints) # from random import shuffle
+        calibration_route = shuffled_waypoints
+        self.get_logger().info(f"Shuffled calibration route waypoints.")
+
+        # Finish shapping
+        calibration_route = {
+            "*": {
+                "action_type": "waypoint_demo",
+                "reference_frame": "j2n6s300_link_base",
+                "waypoints": [wp for wp in calibration_route]
+            }
         }
 
         """
-        
+          Y: # WaypointDemo
+        "*":
+        action_type: waypoint_demo
+        reference_frame: j2n6s300_link_base
+        waypoints:
+            - { x: 0.50,  y: 0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
+            - { x: 0.50,  y:-0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
+            - { x: 0.30,  y: 0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
+            - { x: 0.30,  y:-0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
+
+        """        
+
+        return calibration_route
 
     def mode_callback(self, msg: String):
         """Handle mode change notifications:"""
