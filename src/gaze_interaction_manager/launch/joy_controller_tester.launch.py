@@ -13,14 +13,16 @@ def generate_launch_description():
     launch_description = LaunchDescription()
 
     config = os.path.join(
-        get_package_share_directory("pupil_neon_ros"), "config", "params.yaml"
+        get_package_share_directory("gaze_interaction_manager"), 
+        "config", 
+        "ros_params.yaml"
     )
 
     ### Testing Joystick Controller with JoyCommandMapper ###
     joy_command_mapper_node = Node(
         package="gaze_interaction_manager",
         executable="joy_command_mapper.py",
-        name="joy_command_mapper_node",
+        name="command_mapper_node",
         arguments=["__log_level:=debug"],
         output="screen",
         parameters=[config],

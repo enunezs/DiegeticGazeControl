@@ -130,7 +130,6 @@ class ButtonStateManager:
         """Get all currently held buttons."""
         return self.held_buttons.copy()
 
-
 class CommandMapper(Node):
     """
     Maps gaze-based button interactions to robot control commands.
@@ -142,7 +141,7 @@ class CommandMapper(Node):
     BUTTON_ACTIVE = 1
 
     def __init__(self):
-        super().__init__('command_mapper')
+        super().__init__('command_mapper_node')
         self.get_logger().info("CommandMapper starting...")
         
         # Current control mode
@@ -215,7 +214,7 @@ class CommandMapper(Node):
         
         """
 
-        self.declare_parameter("parser_mappings_file", "CALIB_mode_config.yaml")
+        self.declare_parameter("parser_mappings_file", "CALIB_mode_config.inputs.yaml")
         filename = self.get_parameter("parser_mappings_file").value
 
         config_file = os.path.join(
@@ -235,7 +234,7 @@ class CommandMapper(Node):
         self.mode_mappings = cfg.get("mode_mappings", {})
 
         # Add calibration waypoint demo
-        calibration_route = self.calculate_calibration_route()
+        calibration_route = self.calculate_calibration_route_EX()
         self.mode_mappings["Y"] = calibration_route
 
         self.get_logger().info(f"Loaded {len(self.mode_mappings)} mode sets from {filename}")
@@ -244,6 +243,85 @@ class CommandMapper(Node):
         # print by mode_mappings for debug
         for button_id, modes in self.mode_mappings.items():
             self.get_logger().debug(f"Button {button_id}: modes = {list(modes.keys())}")
+
+    # from random import shuffle
+    # from typing import Dict
+
+    def calculate_calibration_route_EX(self) -> Dict[str, Dict]:
+        """Define a waypoint demo route for calibration purposes.
+        The route visits predefined positions in space with orientations
+        adapted depending on x and z.
+        """
+
+        far_x = 0.58
+        close_x = 0.380
+        mid_x = (far_x + close_x) / 2.0
+
+        away_y = -0.25
+        proximal_y = 0.25
+        mid_y = (away_y + proximal_y) / 2.0
+
+        low_z = 0.33
+        high_z = 0.65
+        mid_z = (low_z + high_z) / 2.0
+
+        time_per_waypoint = 10.0
+        calibration_route = []
+
+
+        # Function to compute pitch depending on x and z
+        def pitch_for_position(x, z):
+            # Define center
+            center_x = 0
+            center_z = 0
+
+            # Compute angle using atan2
+            angle_rad = math.atan2(-(z - center_z), (x - center_x))  # radians
+            angle_deg = math.degrees(angle_rad)                 # convert to degrees
+
+            # Map angle to desired pitch range
+            pitch = -5 +angle_deg
+            return pitch
+
+        # Function to define orientation
+        def orientation(x, z):
+            roll = -200  # keep constant
+            pitch = -pitch_for_position(x, z)
+            yaw = 170    # keep constant
+            return {"roll": roll, "pitch": pitch, "yaw": yaw}
+
+
+        # Generate waypoints for all combinations 3X3X3:
+        for x in [far_x, mid_x, close_x]:
+            for y in [away_y, mid_y, proximal_y]:
+                for z in [low_z, mid_z, high_z]:
+        # for x in [far_x, close_x]:
+        #     for y in [away_y, proximal_y]:
+        #         for z in [low_z, high_z]:
+                    rot = orientation(x, z)
+                    calibration_route.append(
+                        {"x": x, "y": y, "z": z,
+                        "roll": rot["roll"], "pitch": rot["pitch"], "yaw": rot["yaw"],
+                        "time": time_per_waypoint}
+                    )
+                    self.get_logger().debug(f"Added waypoint at x={x}, y={y}, z={z}, roll={rot['roll']}, pitch={rot['pitch']}")
+
+        self.get_logger().info(f"Generated {len(calibration_route)} calibration waypoints.")
+
+        # Shuffle the waypoints
+        shuffle(calibration_route)
+        self.get_logger().info(f"Shuffled calibration route waypoints.")
+
+        # Wrap into dictionary format
+        calibration_route_dict = {
+            "*": {
+                "action_type": "waypoint_demo",
+                "reference_frame": "j2n6s300_link_base",
+                "waypoints": calibration_route
+            }
+        }
+
+        return calibration_route_dict
 
     def calculate_calibration_route(self) -> Dict[str, Dict]:
         """Define a waypoint demo route for calibration purposes.

@@ -65,6 +65,11 @@ def generate_launch_description():
     launch_description.add_action(button_finder_node)
 
     ### Gaze Interaction Manager
+    config = os.path.join(
+        get_package_share_directory("gaze_interaction_manager"),
+        "config",
+        "ros_params.yaml",
+    )
     dwell_time_node = Node(
         package="gaze_interaction_manager",
         executable="dwell_time.py",
@@ -82,6 +87,18 @@ def generate_launch_description():
         parameters=[config],
     )
     launch_description.add_action(controller_node)
+
+    # Robot Parser #
+    robot_parser_node = Node(
+        package="gaze_interaction_manager",
+        executable="robot_command_mapper.py",
+        name="command_mapper_node",
+        arguments=["__log_level:=debug"],
+        output="screen",
+        parameters=[config],
+    )
+    launch_description.add_action(robot_parser_node)
+
 
     ### Visuals ###
 
@@ -115,15 +132,5 @@ def generate_launch_description():
     # )
     # launch_description.add_action(button_visualizer_node)
 
-    ### Robot Parser ###
-    robot_parser_node = Node(
-        package="gaze_interaction_manager",
-        executable="robot_command_mapper.py",
-        name="robot_parser_node",
-        arguments=["__log_level:=debug"],
-        output="screen",
-        parameters=[config],
-    )
-    launch_description.add_action(robot_parser_node)
 
     return launch_description
