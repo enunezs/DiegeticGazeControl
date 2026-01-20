@@ -8,24 +8,60 @@ from launch_ros.actions import Node
 from launch.substitutions import ThisLaunchFileDir, PathJoinSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import SetParameter
+
+SetParameter(name="use_sim_time", value=True)
+
+
+"""
+ros2 launch gaze_interaction_manager rosbag_CALIB_testing.launch.py \
+  bag_path:=/home/emanuel/Documents/ROS2_Workspaces/DiegeticGazeControl/bag_files/CALIB/X_P_01
+"""
+
 
 def generate_launch_description():
+
     launch_description = LaunchDescription()
+
+    # -----------------------------
+    # Launch arguments
+    # -----------------------------
+    # bag_path_arg = DeclareLaunchArgument(
+    #     "bag_path",
+    #     description="Path to the rosbag to play instead of the live Pupil node",
+    # )
+
+    # bag_path = LaunchConfiguration("bag_path")
+
+    # # -----------------------------
+    # # Rosbag player (replaces Pupil)
+    # # -----------------------------
+    # rosbag_play = ExecuteProcess(
+    #     cmd=[
+    #         "ros2", "bag", "play",
+    #         bag_path,
+    #         "--clock"
+    #     ],
+    #     output="screen",
+    # )
 
     config = os.path.join(
         get_package_share_directory("pupil_neon_ros"), "config", "params.yaml"
     )
+    # launch_description.add_action(rosbag_play)
 
-    ### Pupil Glasses ###
-    pupil_node = Node(
-        package="pupil_neon_ros",
-        executable="async_pupil_publisher.py",
-        name="pupil_glasses_node",
-        arguments=["__log_level:=debug"],
-        output="screen",
-        parameters=[config],
-    )
-    launch_description.add_action(pupil_node)
+    # ### Pupil Glasses ###
+    # pupil_node = Node(
+    #     package="pupil_neon_ros",
+    #     executable="async_pupil_publisher.py",
+    #     name="pupil_glasses_node",
+    #     arguments=["__log_level:=debug"],
+    #     output="screen",
+    #     parameters=[config],
+    # )
+    # launch_description.add_action(pupil_node)
 
     pupil_visuals_node = Node(
         package="pupil_neon_ros",
@@ -65,72 +101,40 @@ def generate_launch_description():
     launch_description.add_action(button_finder_node)
 
     ### Gaze Interaction Manager ###
+
     config = os.path.join(
         get_package_share_directory("gaze_interaction_manager"),
         "config",
-        "ros_params.yaml",
+        "CALIB_ros_params.yaml",
     )
-    dwell_time_node = Node(
-        package="gaze_interaction_manager",
-        executable="dwell_time.py",
-        name="dwell_time_node",
-        arguments=["__log_level:=debug"],
-        output="screen",
-        parameters=[config],
-    )
-    launch_description.add_action(dwell_time_node)
 
-    controller_node = Node(
+    ### Testing Joystick Controller with JoyCommandMapper ###
+    joy_command_mapper_node = Node(
         package="gaze_interaction_manager",
-        executable="gaze_controller.py",
-        name="controller_node",
-        parameters=[config],
-    )
-    launch_description.add_action(controller_node)
-
-    # Robot Parser #
-    robot_parser_node = Node(
-        package="gaze_interaction_manager",
-        executable="robot_command_mapper.py",
+        executable="joy_command_mapper.py",
         name="command_mapper_node",
         arguments=["__log_level:=debug"],
         output="screen",
         parameters=[config],
     )
-    launch_description.add_action(robot_parser_node)
+    launch_description.add_action(joy_command_mapper_node)
 
-
-    ### Visuals ###
-
-    button_visualizer_node = Node(
-        package="feedback_tools",
-        executable="3D_visuals.py",
-        name="button_3D_visualizer",
-        arguments=["__log_level:=debug"],
-        output="screen",
+    controller_node = Node(
+        package="joy",
+        executable="joy_node",
+        name="joy_node",
         parameters=[config],
     )
-    launch_description.add_action(button_visualizer_node)
+    launch_description.add_action(controller_node)
 
-    audio_feedback_node = Node(
-        package="feedback_tools",
-        executable="audio_feedback.py",
-        name="audio_feedback_node",
-        arguments=["__log_level:=debug"],
-        output="screen",
-        parameters=[config],
-    )
-    launch_description.add_action(audio_feedback_node)
-
-    # button_visualizer_node = Node(
+    # audio_feedback_node = Node(
     #     package="feedback_tools",
-    #     executable="2D_visuals.py",
-    #     name="button_2D_visualizer",
+    #     executable="audio_feedback.py",
+    #     name="audio_feedback_node",
     #     arguments=["__log_level:=debug"],
     #     output="screen",
     #     parameters=[config],
     # )
-    # launch_description.add_action(button_visualizer_node)
-
+    # launch_description.add_action(audio_feedback_node)
 
     return launch_description

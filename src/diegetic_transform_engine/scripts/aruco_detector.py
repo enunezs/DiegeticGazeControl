@@ -5,54 +5,98 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 import cv2
 import numpy as np
-import yaml
-import os
-from cv_bridge import CvBridge
-from tf2_ros import TransformBroadcaster
-from geometry_msgs.msg import TransformStamped, PoseStamped
-from sensor_msgs.msg import Image, CompressedImage, CameraInfo
-from std_msgs.msg import Header
-from diegetic_transform_engine.msg import (
-    MarkerArray,
-    Marker,
-)
-import tf_transformations
-
 import traceback
 
+from cv_bridge import CvBridge
+from tf2_ros import TransformBroadcaster, StaticTransformBroadcaster
+from geometry_msgs.msg import TransformStamped, PoseStamped
+from sensor_msgs.msg import CompressedImage, CameraInfo
+from diegetic_transform_engine.msg import MarkerArray, Marker
+import tf_transformations
+
+# ----------------------------------------------------------------------------
+# 1€ Filter Implementation (Kept same as before)
+# ----------------------------------------------------------------------------
+class LowPassFilter:
+    def __init__(self, alpha, init_val=None):
+        self.y = init_val
+        self.s = init_val
+        self.alpha = alpha
+
+    def set_alpha(self, alpha):
+        self.alpha = alpha
+
+    def filter(self, val):
+        if self.y is None:
+            self.s = val
+        else:
+            self.s = self.alpha * val + (1.0 - self.alpha) * self.s
+        self.y = self.s
+        return self.y
+
+class OneEuroFilter:
+    def __init__(self, t0, x0, min_cutoff=1.0, beta=0.0, d_cutoff=1.0):
+        self.frequency = 0.0
+        self.min_cutoff = min_cutoff
+        self.beta = beta
+        self.d_cutoff = d_cutoff
+        self.x_filt = LowPassFilter(self.alpha(min_cutoff), x0)
+        self.dx_filt = LowPassFilter(self.alpha(d_cutoff), np.zeros_like(x0))
+        self.t_prev = t0
+
+    def alpha(self, cutoff):
+        tau = 1.0 / (2 * np.pi * cutoff)
+        return 1.0 / (1.0 + tau * self.frequency)
+
+    def __call__(self, t, x):
+        if self.t_prev != t:
+            self.frequency = 1.0 / (t - self.t_prev)
+        self.t_prev = t
+        
+        # Estimate derivative
+        prev_x = self.x_filt.y
+        dx = (x - prev_x) * self.frequency
+        dx_hat = self.dx_filt.filter(dx)
+        
+        cutoff = self.min_cutoff + self.beta * np.abs(dx_hat)
+        self.x_filt.set_alpha(self.alpha(cutoff))
+        return self.x_filt.filter(x)
+
+# ----------------------------------------------------------------------------
+# ROS Node
+# ----------------------------------------------------------------------------
 
 class ArucoDetectorNode(Node):
     def __init__(self):
         super().__init__("aruco_detector")
 
-        # Initialize CV bridge
         self.bridge = CvBridge()
-
-        # Initialize TF broadcaster
+        
+        # 1. Dynamic Broadcaster (Updates Camera position every frame)
         self.tf_broadcaster = TransformBroadcaster(self)
+        
+        # 2. Static Broadcaster (Connects Marker to Robot ONCE)
+        self.static_broadcaster = StaticTransformBroadcaster(self)
 
-        # Load configuration
         self.load_config()
+        self.last_marker_poses = {} 
+        self.filters = {} 
 
-        # Last known marker poses for temporary caching
-        self.last_marker_poses = {}  # {marker_id: (PoseStamped, rclpy.time.Time)}
+        # --- IMPORTANT: Publish the bridge between Robot and Marker ---
+        self.publish_static_marker_link()
+        # --------------------------------------------------------------
 
-        # Initialize ArUco detector
         self.setup_aruco_detector()
 
-        # Camera calibration parameters (will be updated from camera_info)
         self.camera_matrix = None
         self.dist_coeffs = None
-        self.camera_info = None
-
-        # QoS profiles
+        
         sensor_qos = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
             durability=DurabilityPolicy.VOLATILE,
             depth=1,
         )
 
-        # Subscribers
         self.image_sub = self.create_subscription(
             CompressedImage,
             "pupil_glasses/front_image",
@@ -67,109 +111,147 @@ class ArucoDetectorNode(Node):
             sensor_qos,
         )
 
-        # Publishers
         self.aruco_marker_array_pub = self.create_publisher(
             MarkerArray, "aruco_markers", 10
         )
         self.marker_pose_pub = self.create_publisher(PoseStamped, "aruco_poses", 10)
-        # TODO: Debug image publisher (optional)
-        self.debug_image_pub = self.create_publisher(Image, "aruco_debug_image", 1)
 
-        self.get_logger().info("ArUco detector node initialized")
+        self.get_logger().info(f"ArUco detector initialized. Anchor ID: {self.config['anchor_id']}")
 
     def load_config(self):
-        # Declare ROS 2 parameters with default values
         self.declare_parameter("aruco_dict", "DICT_4X4_100")
-        self.declare_parameter("marker_size", 0.044)  # meters
-        self.declare_parameter("camera_frame", "camera_optical_frame")
-        self.declare_parameter("world_frame", "world")
+        self.declare_parameter("marker_size", 0.044)
+        self.declare_parameter("camera_frame", "camera_optical_frame") 
         self.declare_parameter("publish_tf", True)
         self.declare_parameter("publish_poses", True)
-        self.declare_parameter("debug_images", True)
-        # self.declare_parameter(
-        #     "markers", {}
-        # )  # marker_id: {'frame_id': 'marker_X', 'relative_to': 'transient'}
-        self.declare_parameter("marker_persistence", 0.5)  # seconds
+        self.declare_parameter("marker_persistence", 0.5)
+        self.declare_parameter("filter_min_cutoff", 0.5) 
+        self.declare_parameter("filter_beta", 0.05)      
 
-        # Load parameters into self.config
+        # --- ANCHOR CONFIGURATION ---
+        self.declare_parameter("anchor_id", 91) # For calibration target
+        # self.declare_parameter("anchor_id", 78) # For controls
+
+        # The robot frame that the marker is attached to (e.g. base_link or end_effector)
+        self.declare_parameter("robot_parent_frame", "j2n6s300_end_effector") 
+        
+        # Where is the marker relative to that robot frame? (x, y, z, r, p, y)
+        # Example: Marker is 5cm above the base center
+        self.declare_parameter("marker_offset_xyz", [0.0, 0.045, -0.09])
+        self.declare_parameter("marker_offset_rpy", [-np.pi/2, 0.0, 0.0])
+
         self.config = {
             "aruco_dict": self.get_parameter("aruco_dict").value,
             "marker_size": self.get_parameter("marker_size").value,
             "camera_frame": self.get_parameter("camera_frame").value,
-            "world_frame": self.get_parameter("world_frame").value,
             "publish_tf": self.get_parameter("publish_tf").value,
             "publish_poses": self.get_parameter("publish_poses").value,
-            "debug_images": self.get_parameter("debug_images").value,
             "marker_persistence": self.get_parameter("marker_persistence").value,
-            # "markers": self.get_parameter("markers").value,
+            "min_cutoff": self.get_parameter("filter_min_cutoff").value,
+            "beta": self.get_parameter("filter_beta").value,
+            "anchor_id": self.get_parameter("anchor_id").value,
+            "robot_parent_frame": self.get_parameter("robot_parent_frame").value,
+            "marker_offset_xyz": self.get_parameter("marker_offset_xyz").value,
+            "marker_offset_rpy": self.get_parameter("marker_offset_rpy").value,
         }
-
         self.marker_persistence = self.config.get("marker_persistence", 0.5)
 
-    def create_default_config(self, config_path):
-        """Create a default configuration file"""
-        try:
-            os.makedirs(os.path.dirname(config_path), exist_ok=True)
-            with open(config_path, "w") as file:
-                yaml.dump(self.config, file, default_flow_style=False)
-            self.get_logger().info(f"Created default config file at {config_path}")
-        except Exception as e:
-            self.get_logger().warn(f"Could not create config file: {e}")
+    def publish_static_marker_link(self):
+        """
+        Publishes a static transform connecting the Robot to the Marker.
+        Tree: [robot_parent_frame] -> [aruco_78]
+        """
+        t = TransformStamped()
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = self.config["robot_parent_frame"]  # e.g., j2m6s300_link_base
+        t.child_frame_id = f"aruco_{self.config['anchor_id']}"
+
+        # Get offsets from config
+        xyz = self.config["marker_offset_xyz"]
+        rpy = self.config["marker_offset_rpy"]
+
+        t.transform.translation.x = float(xyz[0])
+        t.transform.translation.y = float(xyz[1])
+        t.transform.translation.z = float(xyz[2])
+
+        quat = tf_transformations.quaternion_from_euler(rpy[0], rpy[1], rpy[2])
+        t.transform.rotation.x = quat[0]
+        t.transform.rotation.y = quat[1]
+        t.transform.rotation.z = quat[2]
+        t.transform.rotation.w = quat[3]
+
+        self.static_broadcaster.sendTransform(t)
+        self.get_logger().info(f"Published Static TF: {t.header.frame_id} -> {t.child_frame_id}")
 
     def setup_aruco_detector(self):
-        """Initialize ArUco detector"""
         aruco_dict_name = self.config.get("aruco_dict", "DICT_4X4_100")
         if hasattr(cv2.aruco, aruco_dict_name):
             aruco_dict_id = getattr(cv2.aruco, aruco_dict_name)
             self.aruco_dict = cv2.aruco.Dictionary_get(aruco_dict_id)
         else:
-            self.get_logger().warn(
-                f"Unknown ArUco dictionary {aruco_dict_name}, using DICT_4X4_100"
-            )
             self.aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_100)
-
         self.detector_params = cv2.aruco.DetectorParameters_create()
         self.marker_size = self.config.get("marker_size", 0.05)
 
     def camera_info_callback(self, msg):
-        """Handle camera info messages"""
         self.get_logger().info("Camera calibration received", once=True)
-
-        self.camera_info = msg
         self.camera_matrix = np.array(msg.k).reshape(3, 3)
         self.dist_coeffs = np.array(msg.d)
 
     def image_callback(self, msg):
-        """Handle compressed image messages"""
         if self.camera_matrix is None:
-            self.get_logger().warn("No camera calibration received yet")
             return
-        # self.get_logger().info("Image received", throttle_duration_sec=1)
-
         try:
-            # Convert compressed image to OpenCV format
             cv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
-
-            # Detect ArUco markers
             self.detect_markers(cv_image, msg.header)
-
         except Exception as e:
             self.get_logger().error(f"Error processing image: {e}")
             self.get_logger().error(traceback.format_exc())
 
-    def detect_markers(self, image, header):
-        """Detect ArUco markers and publish results"""
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        corners, ids, _ = cv2.aruco.detectMarkers(
-            gray, self.aruco_dict, parameters=self.detector_params
-        )
-        rvecs = None
-        tvecs = None
+    def get_filtered_pose(self, marker_id, t_curr, tvec, quat):
+        """Applies OneEuroFilter to position and rotation."""
+        min_cutoff = self.config.get("min_cutoff", 0.5)
+        beta = self.config.get("beta", 0.05)
+        
+        tvec = np.array(tvec, dtype=float)
+        quat = np.array(quat, dtype=float)
 
-        detected_ids = set()
+        if marker_id not in self.filters:
+            self.filters[marker_id] = {
+                'pos': OneEuroFilter(t_curr, tvec, min_cutoff=min_cutoff, beta=beta),
+                'rot': OneEuroFilter(t_curr, quat, min_cutoff=min_cutoff, beta=beta)
+            }
+            return tvec, quat
+
+        f_pos = self.filters[marker_id]['pos'](t_curr, tvec)
+
+        prev_quat = self.filters[marker_id]['rot'].x_filt.y
+        if prev_quat is not None:
+            prev_quat = np.array(prev_quat)
+            if np.dot(prev_quat, quat) < 0:
+                quat = -quat
+
+        f_quat = self.filters[marker_id]['rot'](t_curr, quat)
+        f_quat = f_quat / np.linalg.norm(f_quat)
+
+        return f_pos, f_quat
+
+    def detect_markers(self, image, header):
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        corners, ids, _ = cv2.aruco.detectMarkers(gray, self.aruco_dict, parameters=self.detector_params)
+
+        current_header = header
+        current_header.stamp = self.get_clock().now().to_msg()
+
         marker_array = MarkerArray()
-        marker_array.header = header
+        marker_array.header = current_header
+        
+        marker_array.header.frame_id = self.config["camera_frame"]
         marker_array.markers = []
+        detected_ids = set()
+
+        t_curr = header.stamp.sec + header.stamp.nanosec * 1e-9     
+
 
         if ids is not None and len(ids) > 0:
             rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
@@ -177,138 +259,118 @@ class ArucoDetectorNode(Node):
             )
 
             for i, marker_id in enumerate(ids.flatten()):
-                rvec = rvecs[i][0]
-                tvec = tvecs[i][0]
+                # Raw detection (Camera -> Marker)
+                rvec_raw = rvecs[i][0]
+                tvec_raw = tvecs[i][0]
+                
+                rot_mat = cv2.Rodrigues(rvec_raw)[0]
+                T_raw = np.vstack([np.hstack([rot_mat, [[0],[0],[0]]]), [0, 0, 0, 1]])
+                quat_raw = tf_transformations.quaternion_from_matrix(T_raw)
 
-                rotation_matrix = cv2.Rodrigues(rvec)[0]
-                quaternion = tf_transformations.quaternion_from_matrix(
-                    np.vstack(
-                        [np.hstack([rotation_matrix, [[0], [0], [0]]]), [0, 0, 0, 1]]
-                    )
+                # Filter
+                tvec_filtered, quat_filtered = self.get_filtered_pose(
+                    int(marker_id), t_curr, tvec_raw, quat_raw
                 )
 
+                # Reconstruct T_cam_marker from filtered data
+                T_cam_marker = tf_transformations.quaternion_matrix(quat_filtered)
+                T_cam_marker[0:3, 3] = tvec_filtered
+
+                # 1. Populate Marker Msg
                 marker = Marker()
                 marker.id = int(marker_id)
-                marker.pose.position.x = float(tvec[0])
-                marker.pose.position.y = float(tvec[1])
-                marker.pose.position.z = float(tvec[2])
-                marker.pose.orientation.x = quaternion[0]
-                marker.pose.orientation.y = quaternion[1]
-                marker.pose.orientation.z = quaternion[2]
-                marker.pose.orientation.w = quaternion[3]
-
+                marker.pose.position.x = float(tvec_filtered[0])
+                marker.pose.position.y = float(tvec_filtered[1])
+                marker.pose.position.z = float(tvec_filtered[2])
+                marker.pose.orientation.x = quat_filtered[0]
+                marker.pose.orientation.y = quat_filtered[1]
+                marker.pose.orientation.z = quat_filtered[2]
+                marker.pose.orientation.w = quat_filtered[3]
                 marker_array.markers.append(marker)
+                detected_ids.add(marker_id)
 
-                # Publish individual pose
+                # 2. Dynamic Broadcasting
+                if self.config.get("publish_tf", True):
+                    anchor_id = self.config["anchor_id"]
+                    
+                    if int(marker_id) == anchor_id:
+                        # ANCHOR FOUND: Update Camera Position based on Anchor
+                        # Robot (Static) -> Aruco (Detection) -> Camera
+                        self.broadcast_anchor_transform(T_cam_marker, header, marker_id)
+                    else:
+                        # STANDARD MARKER: Update Marker Position based on Camera
+                        # Camera -> Aruco
+                        self.broadcast_standard_transform(marker_id, tvec_filtered, quat_filtered, header)
+
+                # Publish PoseStamped
                 if self.config.get("publish_poses", True):
                     pose_msg = PoseStamped()
                     pose_msg.header = header
                     pose_msg.pose = marker.pose
                     self.marker_pose_pub.publish(pose_msg)
+                    self.last_marker_poses[marker_id] = (pose_msg, self.get_clock().now())
 
-                    # Cache last known pose
-                    self.last_marker_poses[marker_id] = (
-                        pose_msg,
-                        self.get_clock().now(),
-                    )
-
-                # Broadcast TF if enabled
-                if self.config.get("publish_tf", True):
-                    self.broadcast_marker_transform(marker_id, tvec, quaternion, header)
-
-                detected_ids.add(marker_id)
-
-        # Add cached markers if within persistence time
+        # Persistence for lost markers
         now = self.get_clock().now()
         for marker_id, (pose_msg, ts) in self.last_marker_poses.items():
             if marker_id not in detected_ids:
                 elapsed = (now - ts).nanoseconds / 1e9
                 if elapsed <= self.marker_persistence:
-                    # Update header timestamp
                     pose_msg.header.stamp = self.get_clock().now().to_msg()
                     self.marker_pose_pub.publish(pose_msg)
+                    marker_array.markers.append(Marker(id=int(marker_id), pose=pose_msg.pose))
 
-                    # Also include in MarkerArray
-                    # self.get_logger().info(f"Marker id {marker_id}")
-
-                    marker_array.markers.append(
-                        Marker(id=int(marker_id), pose=pose_msg.pose)
-                    )
-
-        # Publish marker array
         self.aruco_marker_array_pub.publish(marker_array)
 
-        # Publish debug image if enabled
-        # self.publish_debug_image(image, corners, ids, rvecs, tvecs, header)
+    def broadcast_anchor_transform(self, T_cam_marker, header, marker_id):
+        """
+        Calculates Camera position relative to the Marker (Robot).
+        Publishes TF: aruco_78 -> camera_optical_frame
+        """
+        # self.get_logger().info(f"Broadcasting Anchor Transform for Marker ID: {marker_id}")
+        # Invert: T_marker_cam = (T_cam_marker)^-1
+        T_marker_cam = np.linalg.inv(T_cam_marker)
+        
+        trans = tf_transformations.translation_from_matrix(T_marker_cam)
+        quat = tf_transformations.quaternion_from_matrix(T_marker_cam)
 
-    def broadcast_marker_transform(self, marker_id, tvec, quaternion, header):
-        """Broadcast transform for detected marker"""
-        # Get marker configuration
-        marker_config = self.config.get("markers", {}).get(str(marker_id), {})
-        frame_id = marker_config.get("frame_id", f"aruco_{marker_id}")
-        relative_to = marker_config.get("relative_to", "transient")
-
-        # Create transform
         t = TransformStamped()
-        t.header = header
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = f"aruco_{marker_id}"  # Parent: The Marker (on the robot)
+        # t.child_frame_id = header.frame_id        
+        t.child_frame_id = self.config["camera_frame"] # Child: The Camera
 
-        # Set parent frame based on configuration
-        if relative_to == "transient":
-            t.header.frame_id = self.config.get("camera_frame", "camera_optical_frame")
-        elif relative_to == "world":
-            t.header.frame_id = self.config.get("world_frame", "world")
-        else:
-            t.header.frame_id = relative_to
+        t.transform.translation.x = float(trans[0])
+        t.transform.translation.y = float(trans[1])
+        t.transform.translation.z = float(trans[2])
+        t.transform.rotation.x = quat[0]
+        t.transform.rotation.y = quat[1]
+        t.transform.rotation.z = quat[2]
+        t.transform.rotation.w = quat[3]
 
-        t.child_frame_id = frame_id
+        self.tf_broadcaster.sendTransform(t)
 
-        # Set translation
+    def broadcast_standard_transform(self, marker_id, tvec, quaternion, header):
+        """Standard Marker: Camera -> Marker"""
+        t = TransformStamped()
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = self.config["camera_frame"] # Parent: The Camera
+        t.child_frame_id = f"aruco_{marker_id}"
+
         t.transform.translation.x = float(tvec[0])
         t.transform.translation.y = float(tvec[1])
         t.transform.translation.z = float(tvec[2])
-
-        # Set rotation
         t.transform.rotation.x = quaternion[0]
         t.transform.rotation.y = quaternion[1]
         t.transform.rotation.z = quaternion[2]
         t.transform.rotation.w = quaternion[3]
 
-        # Broadcast transform
         self.tf_broadcaster.sendTransform(t)
-
-    def publish_debug_image(self, image, corners, ids, rvecs, tvecs, header):
-        """Publish debug image with detected markers"""
-        debug_image = image.copy()
-        self.get_logger().info("Sending debug image", throttle_duration_sec=5)
-
-        # Draw detected markers
-        cv2.aruco.drawDetectedMarkers(debug_image, corners, ids)
-
-        # Draw axes for each marker
-        if rvecs is not None and tvecs is not None:
-            for i in range(len(ids)):
-                cv2.aruco.drawAxis(
-                    debug_image,
-                    self.camera_matrix,
-                    self.dist_coeffs,
-                    rvecs[i],
-                    tvecs[i],
-                    self.marker_size * 0.5,
-                )
-
-        # Convert back to compressed image message
-        try:
-            debug_msg = self.bridge.cv2_to_imgmsg(debug_image)  # , dst_format="jpg"
-            debug_msg.header = header
-            self.debug_image_pub.publish(debug_msg)
-        except Exception as e:
-            self.get_logger().error(f"Error publishing debug image: {e}")
-
+        self.get_logger().info(f"Broadcasted TF: {t.header.frame_id} -> {t.child_frame_id}", once=True)
 
 def main(args=None):
     rclpy.init(args=args)
     node = ArucoDetectorNode()
-
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
@@ -316,7 +378,6 @@ def main(args=None):
     finally:
         node.destroy_node()
         rclpy.shutdown()
-
 
 if __name__ == "__main__":
     main()

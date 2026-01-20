@@ -238,14 +238,12 @@ class CommandMapper(Node):
         self.mode_mappings["Y"] = calibration_route
 
         self.get_logger().info(f"Loaded {len(self.mode_mappings)} mode sets from {filename}")
-        self.get_logger().info(f"Mode mappings: {self.mode_mappings}")
+        # self.get_logger().info(f"Mode mappings: {self.mode_mappings}")
         
         # print by mode_mappings for debug
         for button_id, modes in self.mode_mappings.items():
             self.get_logger().debug(f"Button {button_id}: modes = {list(modes.keys())}")
 
-    # from random import shuffle
-    # from typing import Dict
 
     def calculate_calibration_route_EX(self) -> Dict[str, Dict]:
         """Define a waypoint demo route for calibration purposes.
@@ -253,16 +251,16 @@ class CommandMapper(Node):
         adapted depending on x and z.
         """
 
-        far_x = 0.58
-        close_x = 0.380
+        far_x = 0.68
+        close_x = 0.32
         mid_x = (far_x + close_x) / 2.0
 
-        away_y = -0.25
-        proximal_y = 0.25
+        away_y = -0.225
+        proximal_y = 0.225
         mid_y = (away_y + proximal_y) / 2.0
 
-        low_z = 0.33
-        high_z = 0.65
+        low_z = 0.32
+        high_z = 0.62
         mid_z = (low_z + high_z) / 2.0
 
         time_per_waypoint = 10.0
@@ -272,21 +270,24 @@ class CommandMapper(Node):
         # Function to compute pitch depending on x and z
         def pitch_for_position(x, z):
             # Define center
+            # center_x = mid_x
             center_x = 0
-            center_z = 0
+            center_z = mid_z
 
             # Compute angle using atan2
             angle_rad = math.atan2(-(z - center_z), (x - center_x))  # radians
             angle_deg = math.degrees(angle_rad)                 # convert to degrees
-
+            print(f"DEBUG: x={x:.2f}, z={z:.2f} => angle_deg={angle_deg:.2f}")
             # Map angle to desired pitch range
-            pitch = -5 +angle_deg
-            return pitch
+            pitch = -5 + angle_deg
+            return pitch 
 
         # Function to define orientation
         def orientation(x, z):
             roll = -200  # keep constant
-            pitch = -pitch_for_position(x, z)
+            pitch =  90 -pitch_for_position(x, z)
+            # pitch = 90
+
             yaw = 170    # keep constant
             return {"roll": roll, "pitch": pitch, "yaw": yaw}
 
@@ -295,6 +296,8 @@ class CommandMapper(Node):
         for x in [far_x, mid_x, close_x]:
             for y in [away_y, mid_y, proximal_y]:
                 for z in [low_z, mid_z, high_z]:
+
+        # For testing, only 2X2X2:
         # for x in [far_x, close_x]:
         #     for y in [away_y, proximal_y]:
         #         for z in [low_z, high_z]:

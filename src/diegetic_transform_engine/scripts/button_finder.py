@@ -159,7 +159,7 @@ class DiegeticButtonPublisher(Node):
         self.button_map_path = self.get_parameter("button_map_path").value
 
         # Frame IDs
-        self.declare_parameter("camera_frame_id", "camera_link")
+        self.declare_parameter("camera_frame_id", "camera_optical_frame")
         self.camera_frame_id = self.get_parameter("camera_frame_id").value
 
         self.declare_parameter("button_frame_id", "button_frame")
@@ -382,10 +382,12 @@ class DiegeticButtonPublisher(Node):
     def _compute_3d_positions(
         self, active_buttons: Dict[str, List[Marker]], header
     ) -> DiegeticButtonArray:
+        
         """Compute 3D positions for active buttons using the selected strategy"""
         button_array = DiegeticButtonArray()
+
         button_array.header = header
-        button_array.header.frame_id = self.button_frame_id
+        button_array.header.frame_id = self.camera_frame_id
 
         for button_id, markers in active_buttons.items():
             button_def = self.button_definitions[button_id]
@@ -684,9 +686,7 @@ class DiegeticButtonPublisher(Node):
             self.get_logger().debug(f"Failed to compute 3D button corners: {e}")
             return None
 
-    def _get_bounding_box_corners_3d(
-        self, button_3d: DiegeticButton
-    ) -> Optional[np.ndarray]:
+    def _get_bounding_box_corners_3d(self, button_3d: DiegeticButton) -> Optional[np.ndarray]:
         """Get 3D corners of button bounding box - DEPRECATED, use _get_button_corner_points_3d instead"""
         return self._get_button_corner_points_3d(button_3d)
 
@@ -694,13 +694,23 @@ class DiegeticButtonPublisher(Node):
         """Broadcast TF transforms for each button"""
         for button in button_3d_array.buttons:
             transform_stamped = TransformStamped()
+            
+            # Use the header from the computed array (which comes from the marker message)
+            # This ensures the timestamp matches the camera image time, preventing TF errors.
             transform_stamped.header = button_3d_array.header
-            transform_stamped.header.frame_id = "camera_optical_frame"  # Parent frame
+            
+            # Explicitly ensure the parent frame matches the camera frame
+            # (In your code, button_3d_array.header.frame_id is set to self.button_frame_id 
+            # in _compute_3d_positions, which might be wrong).
+            
+            # FIX: The buttons are calculated relative to the Camera. 
+            # So the parent MUST be the Camera Frame.
+            transform_stamped.header.frame_id = self.camera_frame_id 
+            
             transform_stamped.child_frame_id = f"bt_{button.button_id}"
             transform_stamped.transform = button.button_transform
 
             self.tf_broadcaster.sendTransform(transform_stamped)
-
     def _trigger_haptic_feedback(self, active_buttons: Dict[str, List[Marker]]):
         """Trigger haptic feedback for newly detected buttons"""
         if active_buttons:
