@@ -25,34 +25,14 @@ def generate_launch_description():
 
     launch_description = LaunchDescription()
 
-    # -----------------------------
-    # Launch arguments
-    # -----------------------------
-    # bag_path_arg = DeclareLaunchArgument(
-    #     "bag_path",
-    #     description="Path to the rosbag to play instead of the live Pupil node",
-    # )
-
-    # bag_path = LaunchConfiguration("bag_path")
-
-    # # -----------------------------
-    # # Rosbag player (replaces Pupil)
-    # # -----------------------------
-    # rosbag_play = ExecuteProcess(
-    #     cmd=[
-    #         "ros2", "bag", "play",
-    #         bag_path,
-    #         "--clock"
-    #     ],
-    #     output="screen",
-    # )
-
     config = os.path.join(
-        get_package_share_directory("pupil_neon_ros"), "config", "params.yaml"
+        get_package_share_directory("gaze_interaction_manager"),
+        "config",
+        "CALIB_ros_params.yaml",
     )
-    # launch_description.add_action(rosbag_play)
 
-    # ### Pupil Glasses ###
+    ### Pupil Glasses ###
+
     # pupil_node = Node(
     #     package="pupil_neon_ros",
     #     executable="async_pupil_publisher.py",
@@ -73,13 +53,27 @@ def generate_launch_description():
     )
     launch_description.add_action(pupil_visuals_node)
 
-    config = os.path.join(
-        get_package_share_directory("diegetic_transform_engine"),
-        "config",
-        "params.yaml",
+    visuals_node_2d = Node(
+        package="feedback_tools",
+        executable="2D_visuals.py",
+        name="visualizer_2d_node",
+        arguments=["__log_level:=debug"],
+        output="screen",
+        parameters=[{"use_camera_background": True}],
     )
+    launch_description.add_action(visuals_node_2d)
+
+    # aruco_visualizer_node = Node(
+    #     package="feedback_tools",
+    #     executable="aruco_visualizer.py",
+    #     name="aruco_visualizer_node",
+    #     output="screen",
+    #     parameters=[{"use_camera_background": True}],
+    # )
+    # launch_description.add_action(aruco_visualizer_node)
 
     ### Transform Engine ###
+
     aruco_detector_node = Node(
         package="diegetic_transform_engine",
         executable="aruco_detector.py",
@@ -102,30 +96,50 @@ def generate_launch_description():
 
     ### Gaze Interaction Manager ###
 
-    config = os.path.join(
-        get_package_share_directory("gaze_interaction_manager"),
-        "config",
-        "CALIB_ros_params.yaml",
-    )
-
-    ### Testing Joystick Controller with JoyCommandMapper ###
-    joy_command_mapper_node = Node(
+    dwell_time_node = Node(
         package="gaze_interaction_manager",
-        executable="joy_command_mapper.py",
-        name="command_mapper_node",
+        executable="dwell_time.py",
+        name="dwell_time_node",
         arguments=["__log_level:=debug"],
         output="screen",
         parameters=[config],
     )
-    launch_description.add_action(joy_command_mapper_node)
+    launch_description.add_action(dwell_time_node)
 
     controller_node = Node(
-        package="joy",
-        executable="joy_node",
-        name="joy_node",
+        package="gaze_interaction_manager",
+        executable="EX_gaze_controller.py",
+        name="EX_gaze_controller_node",
         parameters=[config],
     )
     launch_description.add_action(controller_node)
+
+    calibration_learner_node = Node(
+        package="gaze_interaction_manager",
+        executable="calibration_learner.py",
+        name="EX_calibration_learner_node",
+        parameters=[config],
+    )
+    launch_description.add_action(calibration_learner_node)
+
+    ### Testing Joystick Controller with JoyCommandMapper ###
+    # joy_command_mapper_node = Node(
+    #     package="gaze_interaction_manager",
+    #     executable="joy_command_mapper.py",
+    #     name="command_mapper_node",
+    #     arguments=["__log_level:=debug"],
+    #     output="screen",
+    #     parameters=[config],
+    # )
+    # launch_description.add_action(joy_command_mapper_node)
+
+    # controller_node = Node(
+    #     package="joy",
+    #     executable="joy_node",
+    #     name="joy_node",
+    #     parameters=[config],
+    # )
+    # launch_description.add_action(controller_node)
 
     # audio_feedback_node = Node(
     #     package="feedback_tools",

@@ -33,6 +33,7 @@ include_directories(${NumPy_INCLUDE_DIR})
 
 find_package(rosidl_default_generators REQUIRED)
 
+
 # Path to resources
 install(
   DIRECTORY
@@ -42,6 +43,8 @@ install(
 )
 
 find_package(diegetic_transform_engine REQUIRED)
+find_package(pupil_neon_ros REQUIRED)
+
 # Path to scripts
 ament_python_install_package("scripts")
 
@@ -49,15 +52,20 @@ ament_python_install_package("scripts")
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ButtonStatus.msg"
   "msg/ButtonStatusArray.msg"
+  "msg/CalibrationModel.msg"
+  "msg/InteractionSegment.msg"
   DEPENDENCIES builtin_interfaces
   DEPENDENCIES geometry_msgs
   DEPENDENCIES diegetic_transform_engine
+  DEPENDENCIES pupil_neon_ros
 )
 
 # Install python scripts
 install(PROGRAMS
   scripts/dwell_time.py
   scripts/gaze_controller.py
+  scripts/EX_gaze_controller.py
+  scripts/calibration_learner.py
   scripts/robot_command_mapper.py
   scripts/joy_command_mapper.py
   DESTINATION lib/${PROJECT_NAME}

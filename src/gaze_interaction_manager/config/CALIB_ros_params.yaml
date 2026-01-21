@@ -1,4 +1,58 @@
-my_node_name:
+/glasses_emulator_node:
+  ros__parameters:
+    camera_id: 0
+    publish_freq: 50
+    draw_circle: false
+    camera_depth: 1.0
+    video_resolution:
+      - 1600
+      - 1200
+    print_performance: False
+    camera_matrix:
+      [
+        883.10398037,
+        0.0,
+        796.76508223,
+        0.0,
+        889.42718313,
+        646.25149238,
+        0.0,
+        0.0,
+        1.0,
+      ]
+    dist_coeff: [-0.28984511, 0.08497217, -0.00134947, -0.00125141, -0.01016795]
+
+/pupil_glasses_node:
+  ros__parameters:
+    publish_freq: 50
+    draw_circle: true
+    camera_depth: 1.0
+    video_resolution:
+      - 1600
+      - 1200
+    ip: "10.0.0.2"
+    port: "8080"
+    print_performance: False
+
+/aruco_detector:
+  ros__parameters:
+        aruco_dict : "DICT_4X4_250"
+        marker_size : 0.06641
+        camera_frame : "camera_optical_frame" 
+        publish_tf : True
+        publish_poses : True
+        marker_persistence : 0.5
+        filter_min_cutoff : 0.5 
+        filter_beta : 0.05  
+
+/button_finder:
+  ros__parameters:
+        button_center_strategy : "inverse_square"
+        button_map_path : "src/diegetic_transform_engine/button_maps/ButtonMap - EXCALIB.csv"
+        # camera_frame_id : "camera_optical_frame"
+        # button_frame_id : "button_frame"
+
+/command_mapper_node:
   ros__parameters:
     axis_threshold: 0.6
     parser_mappings_file: "CALIB_mode_config.inputs.yaml"

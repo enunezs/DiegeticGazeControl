@@ -84,10 +84,14 @@ RUN pip3 install --no-deps \
     transforms3d \
     argcomplete
 
+# Install scikit-learn (compatible with NumPy 1.23.x)
+RUN pip3 install \
+    scikit-learn==1.1.3
+
 # Reinstall dependencies that scipy/matplotlib need, but control numpy version
 RUN pip3 install \
     python-dateutil \
-    pyparsing \
+    pyparsing==3.0.9 \
     cycler \
     kiwisolver \
     pillow \
@@ -172,3 +176,14 @@ RUN echo 'alias python="python3"' >> $HOME/.bashrc && \
 # Verification step - check OpenCV installation
 RUN python3 -c "import numpy; print('NumPy version:', numpy.__version__)" && \
     python3 -c "import cv2; print('OpenCV version:', cv2.__version__); print('OpenCV build info:'); print(cv2.getBuildInformation())"
+
+
+RUN python3 - <<EOF
+import matplotlib
+import pyparsing
+from sklearn.linear_model import Ridge
+from scipy.stats import binned_statistic_2d
+print("matplotlib:", matplotlib.__version__)
+print("pyparsing:", pyparsing.__version__)
+print("All scientific imports OK")
+EOF

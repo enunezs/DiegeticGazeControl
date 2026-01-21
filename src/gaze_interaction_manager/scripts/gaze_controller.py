@@ -15,12 +15,13 @@ from threading import Lock
 from std_msgs.msg import Header, Float32
 from geometry_msgs.msg import Point, Vector3
 from gaze_interaction_manager.msg import ButtonStatus as ButtonStatus_msg
-from pupil_neon_ros.msg import GazeData, GazeEvent  # <-- adjust if your msgs differ
+from pupil_neon_ros.msg import GazeData, GazeEvent
 
 # Custom output (you can replace with whatever you want)
 from geometry_msgs.msg import PointStamped
 
 # TODO: I should be able to switch between compensation on or off based on launch params
+
 
 class GazeControllerNode(Node):
     def __init__(self):
@@ -39,8 +40,8 @@ class GazeControllerNode(Node):
 
         # Internal state
         self._lock = Lock()
-        self.active_button_status : ButtonStatus_msg = None
-        
+        self.active_button_status: ButtonStatus_msg = None
+
         self.fixation_active = False
         self.dwell_active = False
         self.intersection_active = False
@@ -48,14 +49,13 @@ class GazeControllerNode(Node):
         self.last_fixation_end_ns = 0
         self.latest_saccade_end_ns = 0
 
-
         # Correction factor
         self.gaze_correction = Vector3()  # Placeholder for gaze correction values
         self.gaze_correction.x = 0.0
         self.gaze_correction.y = 0.0
         self.gaze_correction.z = 0.0
 
-        self.max_offset = 30 # px
+        self.max_offset = 30  # px
 
         # ROS interfaces
         qos = QoSProfile(depth=10)
@@ -118,14 +118,17 @@ class GazeControllerNode(Node):
 
     def _gaze_cb(self, gaze_msg: GazeData):
         with self._lock:
-            
 
             # Timing debug information
             self.debug_pub()
 
             # 1. Activate compensation?
             self.intersection_active = self._check_event_active()
-            if self.use_gaze_compensation and self.intersection_active and self.active_button_status is not None:
+            if (
+                self.use_gaze_compensation
+                and self.intersection_active
+                and self.active_button_status is not None
+            ):
                 try:
                     # 2. Compute error with active button
                     err_x = gaze_msg.x - self.active_button_status.button.center_x
@@ -137,25 +140,28 @@ class GazeControllerNode(Node):
                     # Store, limit to 20px each side
                     if abs(err_x) < self.max_offset and abs(err_y) < self.max_offset:
                         # self.get_logger().info("Correction applied")
-                        self.gaze_correction.x = max(-self.max_offset, min(self.max_offset, err_x))
-                        self.gaze_correction.y = max(-self.max_offset, min(self.max_offset, err_y))
+                        self.gaze_correction.x = max(
+                            -self.max_offset, min(self.max_offset, err_x)
+                        )
+                        self.gaze_correction.y = max(
+                            -self.max_offset, min(self.max_offset, err_y)
+                        )
                     else:
                         pass
                         # self.get_logger().info(f"No correction applied, big error")
-                    
+
                     self.gaze_correction.z = 0.0
 
                 except Exception as e:
                     self.get_logger().error(f"Error computing gaze error: {e}")
                     # show traceback
 
-                    
                     return
             else:
                 self.gaze_correction.x = 0.0
                 self.gaze_correction.y = 0.0
                 self.gaze_correction.z = 0.0
-            
+
             # 3. Apply correction and publish corrected gaze
             # TODO: To different node?
             corrected_gaze_msg = PointStamped()
@@ -163,34 +169,39 @@ class GazeControllerNode(Node):
             corrected_gaze_msg.header.stamp = self.get_clock().now().to_msg()
             corrected_gaze_msg.header.frame_id = "gaze_controller"
 
-            corrected_gaze_msg.point = Point(x=gaze_msg.x - self.gaze_correction.x, 
-                                             y=gaze_msg.y - self.gaze_correction.y, 
-                                             z=0.0)
+            corrected_gaze_msg.point = Point(
+                x=gaze_msg.x - self.gaze_correction.x,
+                y=gaze_msg.y - self.gaze_correction.y,
+                z=0.0,
+            )
 
             self.corrected_gaze_pub.publish(corrected_gaze_msg)
             # Correction debug information
-            corrected_gaze_msg.point = Point(x=self.gaze_correction.x, 
-                                             y=self.gaze_correction.y, 
-                                             z=0.0)
+            corrected_gaze_msg.point = Point(
+                x=self.gaze_correction.x, y=self.gaze_correction.y, z=0.0
+            )
             self.correction_offset.publish(corrected_gaze_msg)
 
             # Publish as PointStamped
             err_msg = corrected_gaze_msg
-            err_msg.point = Point(x=self.gaze_correction.x, y=self.gaze_correction.y, z=0.0)
+            err_msg.point = Point(
+                x=self.gaze_correction.x, y=self.gaze_correction.y, z=0.0
+            )
             self.error_pub.publish(err_msg)
 
     def debug_pub(self):
 
         # Visualize intersection conditions
         # Repeat for dwell received (true/false)
-        self.dwell_pub.publish(Float32(data=float(self.dwell_active)+0.0))
+        self.dwell_pub.publish(Float32(data=float(self.dwell_active) + 0.0))
 
         # Repeat for Fixation received (true/false)
-        self.gaze_pub.publish(Float32(data=float(self.fixation_active)-1.0))
+        self.gaze_pub.publish(Float32(data=float(self.fixation_active) - 1.0))
 
         # Repeat for intersection received (true/false)
-        self.intersection_pub.publish(Float32(data=float(self.intersection_active)-2.0))
-
+        self.intersection_pub.publish(
+            Float32(data=float(self.intersection_active) - 2.0)
+        )
 
     # ---------------- OtherCallbacks ---------------- #
 
@@ -203,14 +214,14 @@ class GazeControllerNode(Node):
             # self.get_logger().info("Fixation started.")
 
     # Received fixation message, means fixation has ended
-    def _fixation_end_cb(self, msg: GazeEvent): 
+    def _fixation_end_cb(self, msg: GazeEvent):
         with self._lock:
             # self.last_fixation_end_ns = msg.end_time_ns
             self.fixation_active = False
             # self.get_logger().info("Fixation ended.")
 
     def _buttons_cb(self, msg: ButtonStatus_msg):
-        with self._lock:    
+        with self._lock:
             if msg.button_status == ButtonStatus_msg.BUTTON_INACTIVE:  # INACTIVE
                 self.dwell_active = False
                 self.active_button_status = None
@@ -221,7 +232,6 @@ class GazeControllerNode(Node):
             else:
                 # Hovered or undefined
                 self.dwell_active = False
-
 
     # ---------------- Helpers ---------------- #
 

@@ -28,6 +28,7 @@ install(PROGRAMS
   scripts/2D_visuals.py
   scripts/3D_visuals.py
   scripts/button_visualizer.py
+  scripts/aruco_visualizer.py
   scripts/audio_feedback.py
   DESTINATION lib/${PROJECT_NAME}
 )
