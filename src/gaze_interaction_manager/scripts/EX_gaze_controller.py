@@ -1,60 +1,59 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
+from rclpy.parameter import Parameter
+from rcl_interfaces.msg import SetParametersResult
 from collections import deque
 import numpy as np
 from threading import Lock
 from statistics import median
 
+# Messages
+from std_msgs.msg import Float32, Header
+from geometry_msgs.msg import Point, PointStamped
 from pupil_neon_ros.msg import GazeData, GazeEvent
 from gaze_interaction_manager.msg import ButtonStatus
 from gaze_interaction_manager.msg import InteractionSegment, CalibrationModel
-from geometry_msgs.msg import PointStamped, Point
 
 
 class GazeController(Node):
     def __init__(self):
-        super().__init__("EX_gaze_controller")
+        super().__init__("gaze_controller")
         self._lock = Lock()
+        self.get_logger().info("Gaze Controller Node Initialized")
 
-        # --- Parameters & Buffers ---
-        self.history_depth = 1000  # 5 seconds @ 200Hz
-        self.smoothing_window = 20  # 100ms @ 200Hz
-        self.ema_alpha = 0.2
-        self.padding_samples = 20  # 100ms padding
-        self.min_samples = 40  # 200ms min duration
+        # --- 1. Expose Parameters ---
+        self.declare_parameter("median_window", 20)  # 100ms @ 200Hz
+        self.declare_parameter("ema_alpha", 0.2)
+        self.declare_parameter("edge_margin", 100)  # px from edge
+        self.declare_parameter("pad_duration_ms", 100.0)  # padding around events
+        self.declare_parameter("min_event_duration_ms", 200.0)  # min duration to save
+        self.declare_parameter("history_length_s", 5.0)  # buffer depth
+        self.declare_parameter("max_offset_px", 200.0)  # cap for compensation
 
-        # Deques for rolling history
-        self.raw_history = deque(maxlen=self.history_depth)
-        self.smoothed_x = 0.0
-        self.smoothed_y = 0.0
+        self.declare_parameter("compensation_active", False)  # Perform compensation
 
-        # Interaction Tracking
-        self.is_hovering = False
-        self.current_target = None
+        # Add a callback to update these live
+        self.add_on_set_parameters_callback(self.param_callback)
+        self.update_internal_params()
+
+        # --- 2. Buffers & State ---
+        self.raw_history = deque(maxlen=self.history_depth_samples)
         self.active_segment_samples = []
 
-        # Calibration State
-        self.model_type = 0  # Quadratic default
-        self.coeffs_x = np.zeros(6)
-        self.coeffs_y = np.zeros(6)
+        self.smoothed_x = 0.0
+        self.smoothed_y = 0.0
+        self.coeffs_x = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        self.coeffs_y = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
-        # --- Subscriptions ---
-        self.create_subscription(GazeData, "pupil_glasses/gaze_data", self.gaze_cb, 10)
-        self.create_subscription(
-            ButtonStatus, "dwell_time/active_button", self.button_cb, 10
-        )
-        self.create_subscription(
-            GazeEvent, "pupil_glasses/event/saccade", self.event_cb, 10
-        )
-        self.create_subscription(
-            GazeEvent, "pupil_glasses/event/blink", self.event_cb, 10
-        )
-        self.create_subscription(
-            CalibrationModel, "calibration/model_update", self.model_cb, 10
-        )
+        # Logical States for Debug
+        self.is_hovering = False
+        self.in_saccade = False
+        self.in_blink = False
+        self.last_event_time = 0.0  # To track padding AFTER an event
 
-        # --- Publishers ---
+        # --- 3. Publishers ---
+        # Main Publishers
         self.segment_pub = self.create_publisher(
             InteractionSegment, "calibration/interaction_segment", 10
         )
@@ -62,103 +61,181 @@ class GazeController(Node):
             PointStamped, "gaze_controller/corrected_gaze", 10
         )
 
+        # We use Float32 for easy plotting in rqt_plot
+        self.debug_pub_saccade = self.create_publisher(
+            Float32, "debug/signal_saccade", 10
+        )
+        self.debug_pub_blink = self.create_publisher(Float32, "debug/signal_blink", 10)
+        self.debug_pub_fov = self.create_publisher(Float32, "debug/signal_in_fov", 10)
+        self.debug_pub_hover = self.create_publisher(
+            Float32, "debug/signal_hovering", 10
+        )
+        self.debug_pub_clean = self.create_publisher(
+            Float32, "debug/signal_is_clean", 10
+        )
+
+        # --- 4. Subscriptions ---
+        self.create_subscription(GazeData, "pupil_glasses/gaze_data", self.gaze_cb, 10)
+        self.create_subscription(
+            GazeEvent, "pupil_glasses/event/saccade", self.saccade_cb, 10
+        )
+        self.create_subscription(
+            GazeEvent, "pupil_glasses/event/blink", self.blink_cb, 10
+        )
+        self.create_subscription(
+            ButtonStatus, "dwell_time/active_button", self.button_cb, 10
+        )
+        self.create_subscription(
+            CalibrationModel, "calibration/model_update", self.model_cb, 10
+        )
+
+    def update_internal_params(self):
+        """Calculates internal sample counts based on time parameters."""
+        self.median_window = self.get_parameter("median_window").value
+        self.ema_alpha = self.get_parameter("ema_alpha").value
+        self.edge_margin = self.get_parameter("edge_margin").value
+        self.max_offset = self.get_parameter("max_offset_px").value
+
+        # 200Hz assumption for sample calculation
+        hz = 200.0
+        self.history_depth_samples = int(
+            self.get_parameter("history_length_s").value * hz
+        )
+        self.pad_samples = int(
+            (self.get_parameter("pad_duration_ms").value / 1000.0) * hz
+        )
+        self.min_samples = int(
+            (self.get_parameter("min_event_duration_ms").value / 1000.0) * hz
+        )
+
+    def param_callback(self, params):
+        self.update_internal_params()
+        return SetParametersResult(successful=True)
+
     def gaze_cb(self, msg: GazeData):
         with self._lock:
-            # 1. Cleaning & Smoothing
+            now = self.get_clock().now().nanoseconds / 1e9
             self.raw_history.append(msg)
 
-            # FOV Check (100px border)
-            is_valid_fov = 100 < msg.x < 1500 and 100 < msg.y < 1100
+            # --- A. CLEANING CRITERIA ---
+            # 1. FOV Check
+            in_fov = (
+                self.edge_margin < msg.x < 1600 - self.edge_margin
+                and self.edge_margin < msg.y < 1200 - self.edge_margin
+            )
 
-            # Rolling Median (approx 100ms)
-            last_samples = list(self.raw_history)[-self.smoothing_window :]
-            if len(last_samples) >= self.smoothing_window:
-                med_x = median([s.x for s in last_samples])
-                med_y = median([s.y for s in last_samples])
+            # 2. Time-since-event Check (100ms padding AFTER an event)
+            event_padding_active = (now - self.last_event_time) < (
+                self.get_parameter("pad_duration_ms").value / 1000.0
+            )
 
-                # EMA
-                self.smoothed_x = (self.ema_alpha * med_x) + (
+            # 3. Overall Validity
+            is_clean = (
+                in_fov
+                and not self.in_saccade
+                and not self.in_blink
+                and not event_padding_active
+            )
+
+            # --- B. SMOOTHING ---
+            last_samples = list(self.raw_history)[-self.median_window :]
+            if len(last_samples) >= self.median_window:
+                mx = median([s.x for s in last_samples])
+                my = median([s.y for s in last_samples])
+                self.smoothed_x = (self.ema_alpha * mx) + (
                     1 - self.ema_alpha
                 ) * self.smoothed_x
-                self.smoothed_y = (self.ema_alpha * med_y) + (
+                self.smoothed_y = (self.ema_alpha * my) + (
                     1 - self.ema_alpha
                 ) * self.smoothed_y
             else:
                 self.smoothed_x, self.smoothed_y = msg.x, msg.y
 
-            # 2. Apply Current Calibration
-            # dx, dy = self.calculate_correction(self.smoothed_x, self.smoothed_y)
-            dx, dy = 0, 0  # No correction for EX testing
+            # --- C. CORRECTION ---
+            dx, dy = self.get_quadratic_correction(self.smoothed_x, self.smoothed_y)
 
-            corr_msg = PointStamped()
-            corr_msg.header = msg.header
-            corr_msg.point = Point(
-                x=self.smoothed_x - dx, y=self.smoothed_y - dy, z=0.0
-            )
-            self.corrected_gaze_pub.publish(corr_msg)
+            self.compensation_active = self.get_parameter("compensation_active").value
 
-            # TODO: Remove debug after testing
-            # self.get_logger().debug(
-            #     f"Corrected Gaze: ({corr_msg.point.x:.1f}, {corr_msg.point.y:.1f})"
-            # )
+            # Apply capped correction
+            if self.compensation_active:
+                dx = np.clip(dx, -self.max_offset, self.max_offset)
+                dy = np.clip(dy, -self.max_offset, self.max_offset)
+            else:
+                dx, dy = 0.0, 0.0
 
-            # 3. Buffer samples if interacting
-            if self.is_hovering and is_valid_fov:
+            out_msg = PointStamped()
+            out_msg.header = msg.header
+            out_msg.point = Point(x=self.smoothed_x - dx, y=self.smoothed_y - dy, z=0.0)
+            self.corrected_gaze_pub.publish(out_msg)
+
+            # --- D. DATA COLLECTION ---
+            if self.is_hovering and is_clean:
                 self.active_segment_samples.append(msg)
 
-    def calculate_correction(self, x, y):
-        if self.model_type == 0:  # Quadratic
-            # x^2, y^2, xy, x, y, 1
-            feats = np.array([x**2, y**2, x * y, x, y, 1.0])
-            return np.dot(self.coeffs_x, feats), np.dot(self.coeffs_y, feats)
-        return 0.0, 0.0
+            # --- E. DEBUG SIGNALS ---
+            offset = 0.1  # To separate lines in rqt_plot
+            self.debug_pub_hover.publish(
+                Float32(data=1.0 - offset if self.is_hovering else 0.0)
+            )
+            self.debug_pub_saccade.publish(
+                Float32(data=2.0 - offset if self.in_saccade else 1.0)
+            )
+            self.debug_pub_blink.publish(
+                Float32(data=3.0 - offset if self.in_blink else 2.0)
+            )
+            self.debug_pub_fov.publish(Float32(data=4.0 - offset if in_fov else 3.0))
+            self.debug_pub_clean.publish(
+                Float32(data=5.0 - offset if is_clean else 4.0)
+            )
 
-    def event_cb(self, msg):
-        """Triggered by Saccade or Blink: End current segment"""
-        self.process_and_send_segment()
+    def get_quadratic_correction(self, x, y):
+        # [x^2, y^2, xy, x, y, 1]
+        feats = np.array([x**2, y**2, x * y, x, y, 1.0])
+        return np.dot(self.coeffs_x, feats), np.dot(self.coeffs_y, feats)
+
+    # --- Event Handlers ---
+    def saccade_cb(self, msg: GazeEvent):
+        # Depending on your glasses API, check msg type
+        # For Neon/Pupil, saccade events usually have start/end
+        self.in_saccade = False  # Usually updated by a timer or specific event status
+        self.last_event_time = self.get_clock().now().nanoseconds / 1e9
+        # Reset current segment if event occurs mid-interaction
+        self.active_segment_samples = []
+
+    def blink_cb(self, msg: GazeEvent):
+        self.in_blink = False
+        # self.last_event_time = self.get_clock().now().nanoseconds / 1e9
+        # self.active_segment_samples = []
+        pass  #  TODO: Currently ignored for calibration
 
     def button_cb(self, msg: ButtonStatus):
-        with self._lock:
-            if msg.button_status == ButtonStatus.BUTTON_ACTIVE:
-                if not self.is_hovering:
-                    self.is_hovering = True
-                    self.current_target = msg.button
-                    self.active_segment_samples = []
-            else:
-                if self.is_hovering:
-                    self.process_and_send_segment()
-                    self.is_hovering = False
+        if msg.button_status == ButtonStatus.BUTTON_ACTIVE:
+            self.is_hovering = True
+            self.current_button_target = msg.button
+        else:
+            if self.is_hovering:  # Just stopped hovering
+                self.process_and_send_batch()
+            self.is_hovering = False
 
-    def process_and_send_segment(self):
-        """The 'Post-Event' Trimming Logic"""
-        if len(self.active_segment_samples) < (
-            self.min_samples + 2 * self.padding_samples
-        ):
-            self.active_segment_samples = []
-            return
-
-        # Slice 100ms from start and end
-        trimmed = self.active_segment_samples[
-            self.padding_samples : -self.padding_samples
-        ]
-
-        seg_msg = InteractionSegment()
-        seg_msg.header.stamp = self.get_clock().now().to_msg()
-        seg_msg.button_id = self.current_target.button_id
-        seg_msg.target_pixel = Point(
-            x=self.current_target.center_x, y=self.current_target.center_y
-        )
-        seg_msg.samples = trimmed
-
-        self.segment_pub.publish(seg_msg)
+    def process_and_send_batch(self):
+        # The Post-Event Trimming is handled here:
+        # Since we only appended samples where 'is_clean' was True,
+        # saccades and blinks already "punched holes" in the data.
+        if len(self.active_segment_samples) > self.min_samples:
+            batch = InteractionSegment()
+            batch.button_id = self.current_button_target.button_id
+            batch.target_pixel = Point(
+                x=self.current_button_target.center_x,
+                y=self.current_button_target.center_y,
+            )
+            batch.samples = self.active_segment_samples
+            self.segment_pub.publish(batch)
         self.active_segment_samples = []
 
     def model_cb(self, msg: CalibrationModel):
-        with self._lock:
-            self.model_type = msg.model_type
-            self.coeffs_x = np.array(msg.coeffs_x)
-            self.coeffs_y = np.array(msg.coeffs_y)
-            self.get_logger().info("Calibration model updated.")
+        self.get_logger().info("Updating Calibration Model Coefficients")
+        self.coeffs_x = np.array(msg.coeffs_x)
+        self.coeffs_y = np.array(msg.coeffs_y)
 
 
 def main(args=None):
