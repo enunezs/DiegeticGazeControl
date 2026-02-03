@@ -169,8 +169,15 @@ class GazeController(Node):
             self.corrected_gaze_pub.publish(out_msg)
 
             # --- D. DATA COLLECTION ---
-            if self.is_hovering and is_clean:
-                self.active_segment_samples.append(msg)
+            if self.is_hovering:
+                if is_clean:
+                    # Append sample to the current "Fixation Chunk"
+                    self.active_segment_samples.append(msg)
+                else:
+                    # An interruption occurred (e.g. eye moved or blinked)
+                    # Try to finalize whatever we collected before the interruption
+                    if len(self.active_segment_samples) > 0:
+                        self.finalize_and_send_segment()
 
             # --- E. DEBUG SIGNALS ---
             offset = 0.1  # To separate lines in rqt_plot
@@ -195,27 +202,68 @@ class GazeController(Node):
 
     # --- Event Handlers ---
     def saccade_cb(self, msg: GazeEvent):
-        # Depending on your glasses API, check msg type
-        # For Neon/Pupil, saccade events usually have start/end
-        self.in_saccade = False  # Usually updated by a timer or specific event status
-        self.last_event_time = self.get_clock().now().nanoseconds / 1e9
-        # Reset current segment if event occurs mid-interaction
-        self.active_segment_samples = []
+        with self._lock:
+            # Saccades usually have a status or are sent at the START of movement
+            # self.in_saccade = True
+            self.last_event_time = self.get_clock().now().nanoseconds / 1e9
+
+            # If we were collecting data, the saccade just ended the clean fixation
+            self.finalize_and_send_segment()
 
     def blink_cb(self, msg: GazeEvent):
-        self.in_blink = False
-        # self.last_event_time = self.get_clock().now().nanoseconds / 1e9
-        # self.active_segment_samples = []
-        pass  #  TODO: Currently ignored for calibration
+        with self._lock:
+            # self.in_blink = True
+            self.last_event_time = self.get_clock().now().nanoseconds / 1e9
+
+            # If we were collecting data, the blink just ended the clean fixation
+            self.finalize_and_send_segment()
 
     def button_cb(self, msg: ButtonStatus):
-        if msg.button_status == ButtonStatus.BUTTON_ACTIVE:
-            self.is_hovering = True
-            self.current_button_target = msg.button
-        else:
-            if self.is_hovering:  # Just stopped hovering
-                self.process_and_send_batch()
-            self.is_hovering = False
+        with self._lock:
+            # Status: 0=Inactive, 1=Active/Hovering
+            new_hover_state = msg.button_status == ButtonStatus.BUTTON_ACTIVE
+
+            if new_hover_state != self.is_hovering:
+                if not new_hover_state:
+                    # User just looked away from the button
+                    self.finalize_and_send_segment()
+
+                self.is_hovering = new_hover_state
+                self.current_button_target = msg.button if self.is_hovering else None
+
+    # ---------------- HELPER ----------------
+    def finalize_and_send_segment(self):
+        """
+        Validates the current buffer and sends it to the Learner.
+        Called by Saccades, Blinks, and Look-Aways.
+        """
+        # 1. Check if we have enough samples to be mathematically useful
+        if len(self.active_segment_samples) >= self.min_samples:
+
+            # 2. Trim the start padding (100ms) to ensure we aren't
+            # including the "landing" part of the previous saccade
+            if len(self.active_segment_samples) > self.pad_samples * 2:
+                trimmed_samples = self.active_segment_samples[self.pad_samples :]
+            else:
+                trimmed_samples = self.active_segment_samples
+
+            # 3. Construct and Publish Batch
+            batch = InteractionSegment()
+            batch.header.stamp = self.get_clock().now().to_msg()
+            batch.button_id = self.current_button_target.button_id
+            batch.target_pixel = Point(
+                x=float(self.current_button_target.center_x),
+                y=float(self.current_button_target.center_y),
+            )
+            batch.samples = trimmed_samples
+
+            self.segment_pub.publish(batch)
+            self.get_logger().info(
+                f"Sent segment: {len(trimmed_samples)} samples for {batch.button_id}"
+            )
+
+        # 4. Clear the buffer regardless of whether it was sent
+        self.active_segment_samples = []
 
     def process_and_send_batch(self):
         # The Post-Event Trimming is handled here:
