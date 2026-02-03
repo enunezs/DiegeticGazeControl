@@ -72,7 +72,7 @@ class ButtonStatus:
     # Store all 4 corner coordinates as arrays
     x_points: List[float] = None  # Array of 4 x coordinates
     y_points: List[float] = None  # Array of 4 y coordinates
-    
+
     def __post_init__(self):
         if self.x_points is None:
             self.x_points = [0.0, 0.0, 0.0, 0.0]
@@ -107,7 +107,7 @@ class GazeInteractionNode(Node):
 
         # State tracking
         self.button_statuses: Dict[str, ButtonStatus] = {}
-        
+
         self.current_gaze_pos = Point(x=0.5, y=0.5)  # Normalized coordinates (0-1)
         self.last_update_time = 0.0
 
@@ -286,7 +286,7 @@ class GazeInteractionNode(Node):
 
     def _buttons_callback(self, msg: DiegeticButton2DArray):
         """Buffer 2D button positions and update tracking"""
-        current_time = self.get_clock().now().nanoseconds * 1e-9
+        current_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
 
         with self._button_lock:
             # Update existing buttons and add new ones
@@ -359,7 +359,9 @@ class GazeInteractionNode(Node):
             # Process each tracked button
             for button_id, status in self.button_statuses.items():
                 # Check if gaze intersects with button using new polygon-based method
-                is_gazed = self._point_in_button_polygon(gaze_screen_x, gaze_screen_y, status)
+                is_gazed = self._point_in_button_polygon(
+                    gaze_screen_x, gaze_screen_y, status
+                )
 
                 # Update activation level based on interaction mode
                 previous_state = status.state
@@ -379,6 +381,13 @@ class GazeInteractionNode(Node):
 
                 # Prepare status message with your old format
                 status_msg = ButtonStatus_msg()
+                status_msg.header.stamp.sec = int(status.last_seen)
+                status_msg.header.stamp.nanosec = int(
+                    (status.last_seen - int(status.last_seen)) * 1e9
+                )
+                status_msg.header.frame_id = "gaze_interaction"
+
+                # timestamp.to_msg() if timestamp else self.get_clock().now().to_msg()
                 status_msg.button = DiegeticButton2D()
 
                 status_msg.button.button_id = button_id
@@ -405,7 +414,7 @@ class GazeInteractionNode(Node):
         # self._publish_status_array(self.button_statuses.items(), current_time)
 
         # Publish active button info (using same message type)
-        self._publish_active_button(active_buttons, current_time)
+        self._publish_active_button(active_buttons)
 
         # Generate debug visualization
         if self.publish_debug_image:
@@ -414,20 +423,26 @@ class GazeInteractionNode(Node):
         # Cleanup old buttons
         self._cleanup_old_buttons(current_time)
 
-    def _point_in_button_polygon(self, x: float, y: float, button_status: ButtonStatus) -> bool:
+    def _point_in_button_polygon(
+        self, x: float, y: float, button_status: ButtonStatus
+    ) -> bool:
         """Check if point is inside button using polygon (quadrilateral) method"""
         if not button_status.x_points or not button_status.y_points:
             return False
-        
+
         if len(button_status.x_points) != 4 or len(button_status.y_points) != 4:
-            self.get_logger().warning(f"Button {button_status.button_id} doesn't have 4 corner points")
+            self.get_logger().warning(
+                f"Button {button_status.button_id} doesn't have 4 corner points"
+            )
             return False
 
         # Create polygon from the 4 corner points
         polygon_points = []
         for i in range(4):
-            polygon_points.append([button_status.x_points[i], button_status.y_points[i]])
-        
+            polygon_points.append(
+                [button_status.x_points[i], button_status.y_points[i]]
+            )
+
         polygon_points = np.array(polygon_points, dtype=np.float32)
         test_point = np.array([x, y], dtype=np.float32)
 
@@ -439,16 +454,18 @@ class GazeInteractionNode(Node):
         """Legacy method - replaced by _point_in_button_polygon"""
         return self._point_in_button_polygon(x, y, button_status)
 
-    def _get_button_bounding_box(self, button_status: ButtonStatus) -> Tuple[float, float, float, float]:
+    def _get_button_bounding_box(
+        self, button_status: ButtonStatus
+    ) -> Tuple[float, float, float, float]:
         """Get axis-aligned bounding box from corner points for visualization"""
         if not button_status.x_points or not button_status.y_points:
             return 0.0, 0.0, 0.0, 0.0
-        
+
         x_min = min(button_status.x_points)
         x_max = max(button_status.x_points)
         y_min = min(button_status.y_points)
         y_max = max(button_status.y_points)
-        
+
         return x_min, y_min, x_max, y_max
 
     def _update_button_activation(
@@ -523,8 +540,8 @@ class GazeInteractionNode(Node):
     ):
         """Publish array of button statuses"""
         # if not status_updates:
-            # return
-        self.get_logger().debug(f"Publishing status for {status_updates}") 
+        # return
+        self.get_logger().debug(f"Publishing status for {status_updates}")
         msg = ButtonStatusArray_msg()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "gaze_interaction"
@@ -532,10 +549,8 @@ class GazeInteractionNode(Node):
 
         self.status_publisher.publish(msg)
 
-    def _publish_active_button(
-        self, active_buttons: List[ButtonStatus], timestamp: float
-    ):
-        # TODO 
+    def _publish_active_button(self, active_buttons: List[ButtonStatus]):
+        # TODO
         """Publish information about active buttons using ButtonStatusArray_msg"""
         status_msg = ButtonStatus_msg()
 
@@ -550,15 +565,16 @@ class GazeInteractionNode(Node):
             status_msg.button.x_points = [0.0] * 4
             status_msg.button.y_points = [0.0] * 4
 
-            status_msg.button_status = 0 # INACTIVE
+            status_msg.button_status = 0  # INACTIVE
             status_msg.percent = 0.0
             status_msg.button_id = ""
 
+            status_msg.header.stamp = self.get_clock().now().to_msg()
         else:
             # Pick the highest-activation active button
             max_button_status = max(active_buttons, key=lambda b: b.activation_level)
 
-            status_msg.button = DiegeticButton2D() 
+            status_msg.button = DiegeticButton2D()
             status_msg.button.button_id = max_button_status.button_id
             status_msg.button.center_x = max_button_status.center_x
             status_msg.button.center_y = max_button_status.center_y
@@ -569,12 +585,11 @@ class GazeInteractionNode(Node):
             status_msg.percent = float(max_button_status.activation_level)
             status_msg.button_id = max_button_status.button_id
 
+            status_msg.header.stamp = max_button_status.last_seen
 
-        status_msg.header.stamp = self.get_clock().now().to_msg()
         status_msg.header.frame_id = "active_buttons"
 
         self.active_button_publisher.publish(status_msg)
-
 
     def _generate_debug_image(self, gaze_x: float, gaze_y: float):
         """Generate debug visualization image"""
@@ -597,7 +612,9 @@ class GazeInteractionNode(Node):
                     # Create polygon points
                     polygon_points = []
                     for i in range(4):
-                        polygon_points.append([int(status.x_points[i]), int(status.y_points[i])])
+                        polygon_points.append(
+                            [int(status.x_points[i]), int(status.y_points[i])]
+                        )
                     polygon_points = np.array(polygon_points, np.int32)
 
                     # Draw polygon outline
@@ -605,10 +622,14 @@ class GazeInteractionNode(Node):
 
                     # Draw activation level as filled polygon
                     if status.activation_level > 0:
-                        alpha = int(255 * status.activation_level * 0.3)  # 30% max opacity
+                        alpha = int(
+                            255 * status.activation_level * 0.3
+                        )  # 30% max opacity
                         overlay = img.copy()
                         cv2.fillPoly(overlay, [polygon_points], color)
-                        cv2.addWeighted(overlay, status.activation_level * 0.3, img, 1.0, 0, img)
+                        cv2.addWeighted(
+                            overlay, status.activation_level * 0.3, img, 1.0, 0, img
+                        )
 
                     # Draw button ID near the center
                     cv2.putText(
