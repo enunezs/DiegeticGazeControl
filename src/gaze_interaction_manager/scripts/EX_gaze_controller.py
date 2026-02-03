@@ -7,6 +7,7 @@ from collections import deque
 import numpy as np
 from threading import Lock
 from statistics import median
+import time
 
 # Messages
 from std_msgs.msg import Float32, Header
@@ -89,6 +90,16 @@ class GazeController(Node):
             CalibrationModel, "calibration/model_update", self.model_cb, 10
         )
 
+        # Latency Debugging
+        self.latency_ema_alpha = 0.1  # Weight for the moving average
+        self.mean_latency_ms = 0.0
+        self.rms_latency_ms = 0.0
+
+        self.debug_pub_latency = self.create_publisher(Float32, "debug/latency_ms", 10)
+        self.debug_pub_latency_rms = self.create_publisher(
+            Float32, "debug/latency_rms", 10
+        )
+
     def update_internal_params(self):
         """Calculates internal sample counts based on time parameters."""
         self.median_window = self.get_parameter("median_window").value
@@ -112,6 +123,9 @@ class GazeController(Node):
         self.update_internal_params()
         return SetParametersResult(successful=True)
 
+    # The Gaze Callback (High Speed):
+    # Takes the latest available correction model and applies it to the current point.
+    # Avoid heavy math.
     def gaze_cb(self, msg: GazeData):
         with self._lock:
             now = self.get_clock().now().nanoseconds / 1e9
@@ -218,8 +232,40 @@ class GazeController(Node):
             # If we were collecting data, the blink just ended the clean fixation
             self.finalize_and_send_segment()
 
+    # The Button Callback (Lower Speed):
+    # It looks back in time, calculates the error, and updates the model that the gaze callback is using.
+
     def button_cb(self, msg: ButtonStatus):
         with self._lock:
+            # 1. Calculate Latency (Time-of-arrival vs Time-of-capture)
+            # msg.header.stamp should be the time the image was captured
+            now_ns = self.get_clock().now().nanoseconds
+            button_time_ns = msg.header.stamp.sec * 1e9 + msg.header.stamp.nanosec
+
+            latency_ms = (
+                now_ns - button_time_ns
+            ) / 1e6  # Total delay from camera to this node
+
+            # 2. Update RMS/EMA (Efficiently)
+            self.mean_latency_ms = (self.latency_ema_alpha * latency_ms) + (
+                1 - self.latency_ema_alpha
+            ) * self.mean_latency_ms
+            self.rms_latency_ms = np.sqrt(
+                (self.latency_ema_alpha * (latency_ms**2))
+                + (1 - self.latency_ema_alpha) * (self.rms_latency_ms**2)
+            )
+
+            self.debug_pub_latency.publish(Float32(data=latency_ms))
+            self.debug_pub_latency_rms.publish(Float32(data=self.rms_latency_ms))
+
+            # 3. Time-Matching (Finding the exact gaze point when the button was seen)
+            matched_gaze = self.get_interpolated_gaze(button_time_ns)
+
+            if matched_gaze:
+                # This is your "Ground Truth" comparison
+                # Error = Matched Gaze - Button Center
+                pass
+
             # Status: 0=Inactive, 1=Active/Hovering
             new_hover_state = msg.button_status == ButtonStatus.BUTTON_ACTIVE
 
@@ -230,6 +276,51 @@ class GazeController(Node):
 
                 self.is_hovering = new_hover_state
                 self.current_button_target = msg.button if self.is_hovering else None
+
+    def get_interpolated_gaze(self, target_time_ns):
+        """
+        Efficiently finds/interpolates gaze data from the buffer for a specific timestamp.
+        """
+        if len(self.raw_history) < 2:
+            return None
+
+        # Convert target_time to seconds to match GazeData headers if necessary
+        target_time = target_time_ns / 1e9
+
+        # Since deque is ordered, we search backwards (most recent first)
+        # because the button timestamp is likely very recent.
+        history_list = list(self.raw_history)  # Snapshot for iteration
+
+        g2 = None
+        g1 = None
+
+        for i in range(len(history_list) - 1, 0, -1):
+            t_current = history_list[i].header.stamp.sec + (
+                history_list[i].header.stamp.nanosec / 1e9
+            )
+            t_prev = history_list[i - 1].header.stamp.sec + (
+                history_list[i - 1].header.stamp.nanosec / 1e9
+            )
+
+            if t_current >= target_time >= t_prev:
+                g2 = history_list[i]
+                g1 = history_list[i - 1]
+                break
+
+        if g1 and g2:
+            t1 = g1.header.stamp.sec + (g1.header.stamp.nanosec / 1e9)
+            t2 = g2.header.stamp.sec + (g2.header.stamp.nanosec / 1e9)
+
+            # Linear Interpolation Factor (0 to 1)
+            alpha = (target_time - t1) / (t2 - t1)
+
+            interp_x = g1.x + alpha * (g2.x - g1.x)
+            interp_y = g1.y + alpha * (g2.y - g1.y)
+            return (interp_x, interp_y)
+
+        # If target_time is newer than our newest gaze, we extrapolate (risky)
+        # or just return the latest sample.
+        return None
 
     # ---------------- HELPER ----------------
     def finalize_and_send_segment(self):
@@ -264,26 +355,6 @@ class GazeController(Node):
 
         # 4. Clear the buffer regardless of whether it was sent
         self.active_segment_samples = []
-
-    def process_and_send_batch(self):
-        # The Post-Event Trimming is handled here:
-        # Since we only appended samples where 'is_clean' was True,
-        # saccades and blinks already "punched holes" in the data.
-        if len(self.active_segment_samples) > self.min_samples:
-            batch = InteractionSegment()
-            batch.button_id = self.current_button_target.button_id
-            batch.target_pixel = Point(
-                x=self.current_button_target.center_x,
-                y=self.current_button_target.center_y,
-            )
-            batch.samples = self.active_segment_samples
-            self.segment_pub.publish(batch)
-        self.active_segment_samples = []
-
-    def model_cb(self, msg: CalibrationModel):
-        self.get_logger().info("Updating Calibration Model Coefficients")
-        self.coeffs_x = np.array(msg.coeffs_x)
-        self.coeffs_y = np.array(msg.coeffs_y)
 
 
 def main(args=None):
