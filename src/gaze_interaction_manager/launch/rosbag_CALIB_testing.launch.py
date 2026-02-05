@@ -23,6 +23,8 @@ ros2 launch gaze_interaction_manager rosbag_CALIB_testing.launch.py \
 
 def generate_launch_description():
 
+    use_sim_time = False
+
     launch_description = LaunchDescription()
 
     config = os.path.join(
@@ -49,7 +51,7 @@ def generate_launch_description():
         name="pupil_glasses_visuals_node",
         arguments=["__log_level:=debug"],
         output="screen",
-        parameters=[config],
+        parameters=[config, {"use_sim_time": use_sim_time}],
     )
     launch_description.add_action(pupil_visuals_node)
 
@@ -59,7 +61,7 @@ def generate_launch_description():
         name="visualizer_2d_node",
         arguments=["__log_level:=debug"],
         output="screen",
-        parameters=[{"use_camera_background": True}],
+        parameters=[{"use_camera_background": True}, {"use_sim_time": use_sim_time}],
     )
     launch_description.add_action(visuals_node_2d)
 
@@ -80,7 +82,7 @@ def generate_launch_description():
         name="aruco_detector",
         arguments=["__log_level:=debug"],
         output="screen",
-        parameters=[config],
+        parameters=[config, {"use_sim_time": use_sim_time}],
     )
     launch_description.add_action(aruco_detector_node)
 
@@ -90,7 +92,7 @@ def generate_launch_description():
         name="button_finder",
         arguments=["__log_level:=debug"],
         output="screen",
-        parameters=[config],
+        parameters=[config, {"use_sim_time": use_sim_time}],
     )
     launch_description.add_action(button_finder_node)
 
@@ -102,23 +104,23 @@ def generate_launch_description():
         name="dwell_time_node",
         arguments=["__log_level:=debug"],
         output="screen",
-        parameters=[config],
+        parameters=[config, {"use_sim_time": use_sim_time}],
     )
     launch_description.add_action(dwell_time_node)
 
     controller_node = Node(
         package="gaze_interaction_manager",
-        executable="EX_gaze_controller.py",
-        name="EX_gaze_controller_node",
-        parameters=[config],
+        executable="gaze_controller.py",
+        name="gaze_controller_node",
+        parameters=[config, {"use_sim_time": use_sim_time}],
     )
     launch_description.add_action(controller_node)
 
     calibration_learner_node = Node(
         package="gaze_interaction_manager",
         executable="calibration_learner.py",
-        name="EX_calibration_learner_node",
-        parameters=[config],
+        name="calibration_learner_node",
+        parameters=[config, {"use_sim_time": use_sim_time}],
     )
     launch_description.add_action(calibration_learner_node)
 
@@ -129,7 +131,7 @@ def generate_launch_description():
     #     name="command_mapper_node",
     #     arguments=["__log_level:=debug"],
     #     output="screen",
-    #     parameters=[config],
+    #     parameters=[config, {"use_sim_time": use_sim_time}],
     # )
     # launch_description.add_action(joy_command_mapper_node)
 
@@ -137,7 +139,7 @@ def generate_launch_description():
     #     package="joy",
     #     executable="joy_node",
     #     name="joy_node",
-    #     parameters=[config],
+    #     parameters=[config, {"use_sim_time": use_sim_time}],
     # )
     # launch_description.add_action(controller_node)
 
@@ -147,7 +149,7 @@ def generate_launch_description():
     #     name="audio_feedback_node",
     #     arguments=["__log_level:=debug"],
     #     output="screen",
-    #     parameters=[config],
+    #     parameters=[config, {"use_sim_time": use_sim_time}],
     # )
     # launch_description.add_action(audio_feedback_node)
 

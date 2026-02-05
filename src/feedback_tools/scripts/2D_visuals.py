@@ -138,6 +138,10 @@ class Visualizer2D(Node):
 
         ### BUTTON DRAWING ###
         with self._button_lock:
+            if self.button_statuses is None:
+                # TODO: No button data yet, draw in grey
+                pass
+
             for button_id, status in self.button_statuses.items():
                 # Pick color
                 color = (200, 200, 200)  # Default gray

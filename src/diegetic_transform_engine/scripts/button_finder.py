@@ -316,16 +316,22 @@ class DiegeticButtonPublisher(Node):
     ################
     def _marker_callback(self, msg: MarkerArray):
         """Process detected ArUco markers and compute button positions"""
+
         if not self.camera_info_received:
             self.get_logger().debug("Camera calibration not yet received, skipping")
             return
 
-        # Find active buttons (dictionary of button_id) based on visible markers
+        # 1. Capture the EXACT timestamp of the markers (derived from the camera frame)
+        # We must use this stamp for everything in this cycle.
+        current_frame_stamp = msg.header.stamp
+
+        # 2. Find active buttons based on visible markers
         active_buttons = self._find_active_buttons(msg.markers)
 
-        if not active_buttons:
-            return
+        # 3. Compute 3D positions for CSV-defined buttons
+        button_3d_array = self._compute_3d_positions(active_buttons, msg.header)
 
+        ### --- Screen buttons --- ###
         # TODO: If the screen is visible, we load our active markers and append it to the active_buttons list
         # If one of the 4 aruco markers is found, screen is visible
         # if any(marker.id in self.screen_marker_ids for marker in msg.markers):
@@ -337,29 +343,53 @@ class DiegeticButtonPublisher(Node):
         #     button_3d = self._compute_screen_button_3d_position(button)
         #     if button_3d is not None:
         #         self.screen_3d_buttons.append(button_3d)
-
-        # Compute 3D positions for active buttons, return a DiegeticButtonArray with all sorted
-        button_3d_array = self._compute_3d_positions(active_buttons, msg.header)
-
-        # TODO: Screen
         # Using the screen buffer, find the 3D positions of buttons on the screen
+        ### --- Screen buttons --- ###
 
-        # Project to 2D screen coordinates
+        #    # --- INTEGRATION OF SCREEN BUTTONS ---
+        #     # 4. If any screen markers are visible, compute 3D positions for buttons currently on screen
+        #     # Note: We use the same frame_stamp so gaze-matching works for screen buttons too
+        #     visible_marker_ids = [m.id for m in msg.markers]
+        #     for screen_btn_def in self.screen_3d_buttons:
+        #         # Check if at least one parent marker for this screen button is visible
+        #         if any(mid in visible_marker_ids for mid in screen_btn_def.marker_parents.keys()):
+        #             # Filter msg.markers to only include parents of this specific screen button
+        #             relevant_markers = [m for m in msg.markers if m.id in screen_btn_def.marker_parents]
+
+        #             pos, orient = self._compute_button_pose(screen_btn_def, relevant_markers)
+
+        #             if pos is not None:
+        #                 s_btn = DiegeticButton()
+        #                 s_btn.button_id = screen_btn_def.id
+        #                 s_btn.x0, s_btn.y0 = screen_btn_def.bounding_box[0], screen_btn_def.bounding_box[1]
+        #                 s_btn.x1, s_btn.y1 = screen_btn_def.bounding_box[2], screen_btn_def.bounding_box[3]
+        #                 s_btn.button_transform.translation.x, s_btn.button_transform.translation.y, s_btn.button_transform.translation.z = pos
+        #                 s_btn.button_transform.rotation.x, s_btn.button_transform.rotation.y, s_btn.button_transform.rotation.z, s_btn.button_transform.rotation.w = orient
+        #                 button_3d_array.buttons.append(s_btn)
+
+        #     if not button_3d_array.buttons:
+        #         return
+
+        # if not active_buttons:
+        #     return
+
+        # 5. Project to 2D using the camera matrix
+        # This function will now preserve the stamp internally
         button_2d_array = self._project_to_2d(button_3d_array)
 
-        # Publish results
+        # 6. Publish results
         self.button_3d_publisher.publish(button_3d_array)
         self.button_2d_publisher.publish(button_2d_array)
 
-        # Broadcast TF transforms
+        # 7. Broadcast TF transforms
         self._broadcast_transforms(button_3d_array)
 
         # self.get_logger().info(
         #     f"Found {len(button_3d_array.buttons)} buttons", throttle_duration_sec=10
         # )
 
-        # Trigger haptic feedback if needed
-        self._trigger_haptic_feedback(active_buttons)
+        # 8. Trigger haptic feedback if needed
+        # self._trigger_haptic_feedback(active_buttons)
 
     # From the visible/available markers, find the associated buttons,
     # Return a mapping as a dictionary of button_id -> List[Marker]
@@ -382,7 +412,6 @@ class DiegeticButtonPublisher(Node):
     def _compute_3d_positions(
         self, active_buttons: Dict[str, List[Marker]], header
     ) -> DiegeticButtonArray:
-        
         """Compute 3D positions for active buttons using the selected strategy"""
         button_array = DiegeticButtonArray()
 
@@ -686,31 +715,29 @@ class DiegeticButtonPublisher(Node):
             self.get_logger().debug(f"Failed to compute 3D button corners: {e}")
             return None
 
-    def _get_bounding_box_corners_3d(self, button_3d: DiegeticButton) -> Optional[np.ndarray]:
+    def _get_bounding_box_corners_3d(
+        self, button_3d: DiegeticButton
+    ) -> Optional[np.ndarray]:
         """Get 3D corners of button bounding box - DEPRECATED, use _get_button_corner_points_3d instead"""
         return self._get_button_corner_points_3d(button_3d)
 
     def _broadcast_transforms(self, button_3d_array: DiegeticButtonArray):
         """Broadcast TF transforms for each button"""
+
         for button in button_3d_array.buttons:
             transform_stamped = TransformStamped()
-            
-            # Use the header from the computed array (which comes from the marker message)
-            # This ensures the timestamp matches the camera image time, preventing TF errors.
-            transform_stamped.header = button_3d_array.header
-            
-            # Explicitly ensure the parent frame matches the camera frame
-            # (In your code, button_3d_array.header.frame_id is set to self.button_frame_id 
-            # in _compute_3d_positions, which might be wrong).
-            
-            # FIX: The buttons are calculated relative to the Camera. 
-            # So the parent MUST be the Camera Frame.
-            transform_stamped.header.frame_id = self.camera_frame_id 
-            
+
+            transform_stamped.header.stamp = button_3d_array.header.stamp
+            transform_stamped.header.frame_id = self.camera_frame_id
             transform_stamped.child_frame_id = f"bt_{button.button_id}"
-            transform_stamped.transform = button.button_transform
+
+            transform_stamped.transform.translation = (
+                button.button_transform.translation
+            )
+            transform_stamped.transform.rotation = button.button_transform.rotation
 
             self.tf_broadcaster.sendTransform(transform_stamped)
+
     def _trigger_haptic_feedback(self, active_buttons: Dict[str, List[Marker]]):
         """Trigger haptic feedback for newly detected buttons"""
         if active_buttons:

@@ -48,8 +48,12 @@ class DiegeticAndArucoVisualizer(Node):
         )
 
         # ---- Publishers ----
-        self.buttons_pub = self.create_publisher(MarkerArray, "/visuals/diegetic_buttons", 10)
-        self.aruco_pub = self.create_publisher(MarkerArray, "/visuals/aruco_markers", 10)
+        self.buttons_pub = self.create_publisher(
+            MarkerArray, "/visuals/diegetic_buttons", 10
+        )
+        self.aruco_pub = self.create_publisher(
+            MarkerArray, "/visuals/aruco_markers", 10
+        )
 
         # ---- Internal State ----
         self._status_lock = threading.Lock()
@@ -60,9 +64,9 @@ class DiegeticAndArucoVisualizer(Node):
 
         # ---- State Colors ----
         self.state_colors = {
-            "default": (1.0, 1.0, 0.0, 0.8),   # yellow
-            "hover": (0.0, 1.0, 1.0, 0.9),     # cyan
-            "active": (0.0, 1.0, 0.0, 0.9),    # green
+            "default": (1.0, 1.0, 0.0, 0.8),  # yellow
+            "hover": (0.0, 1.0, 1.0, 0.9),  # cyan
+            "active": (0.0, 1.0, 0.0, 0.9),  # green
             "pressed": (1.0, 0.0, 0.0, 0.95),  # red
             "disabled": (0.5, 0.5, 0.5, 0.5),  # gray
         }
@@ -114,9 +118,13 @@ class DiegeticAndArucoVisualizer(Node):
                         color = self.state_colors["active"]
                     elif status.button_status == status.BUTTON_HOVER:
                         color = self.state_colors["hover"]
-                    elif status.button_status == getattr(status, "BUTTON_PRESSED", None):
+                    elif status.button_status == getattr(
+                        status, "BUTTON_PRESSED", None
+                    ):
                         color = self.state_colors["pressed"]
-                    elif status.button_status == getattr(status, "BUTTON_DISABLED", None):
+                    elif status.button_status == getattr(
+                        status, "BUTTON_DISABLED", None
+                    ):
                         color = self.state_colors["disabled"]
                     else:
                         color = self.state_colors["default"]
@@ -130,7 +138,12 @@ class DiegeticAndArucoVisualizer(Node):
 
             if color is None:
                 if bid not in self.random_colors:
-                    self.random_colors[bid] = (random.random(), random.random(), random.random(), 0.8)
+                    self.random_colors[bid] = (
+                        random.random(),
+                        random.random(),
+                        random.random(),
+                        0.8,
+                    )
                 color = self.random_colors[bid]
 
             m.color.r, m.color.g, m.color.b, m.color.a = color
@@ -182,7 +195,12 @@ class DiegeticAndArucoVisualizer(Node):
             vis_marker.scale.y = size
             vis_marker.scale.z = 0.001
 
-            vis_marker.color.r, vis_marker.color.g, vis_marker.color.b, vis_marker.color.a = color
+            (
+                vis_marker.color.r,
+                vis_marker.color.g,
+                vis_marker.color.b,
+                vis_marker.color.a,
+            ) = color
             marker_array_viz.markers.append(vis_marker)
 
         self.aruco_pub.publish(marker_array_viz)

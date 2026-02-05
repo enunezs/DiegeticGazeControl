@@ -64,7 +64,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 install(PROGRAMS
   scripts/dwell_time.py
   scripts/gaze_controller.py
-  scripts/EX_gaze_controller.py
+  scripts/gaze_controller.py
   scripts/calibration_learner.py
   scripts/robot_command_mapper.py
   scripts/joy_command_mapper.py

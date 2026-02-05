@@ -66,7 +66,8 @@ class ButtonStatus:
     button_id: str
     state: ButtonState = ButtonState.INACTIVE
     activation_level: float = 0.0  # 0.0 to 1.0
-    last_seen: float = 0.0  # Timestamp when last seen
+    last_seen_stamp: rclpy.time.Time = None
+    # Button center position
     center_x: float = 0.0
     center_y: float = 0.0
     # Store all 4 corner coordinates as arrays
@@ -101,26 +102,17 @@ class GazeInteractionNode(Node):
 
         # Thread safety
         self._button_lock = Lock()
-
-        # Initialize parameters
         self._declare_parameters()
 
         # State tracking
         self.button_statuses: Dict[str, ButtonStatus] = {}
 
+        # Track the timestamp of the last gaze msg used for dt
+        self.last_gaze_stamp: Optional[rclpy.time.Time] = None
         self.current_gaze_pos = Point(x=0.5, y=0.5)  # Normalized coordinates (0-1)
-        self.last_update_time = 0.0
+        # self.last_update_time = 0.0
 
-        # Input handling
-        self.external_trigger_active = False
         self._setup_input_handling()
-
-        # OpenCV bridge for debug visualization
-        if self.publish_debug_image:
-            self.cv_bridge = CvBridge()
-            self.debug_frame = np.zeros((720, 1280, 3), dtype=np.uint8)  # Default size
-
-        # Setup ROS communication
         self._setup_subscribers()
         self._setup_publishers()
 
@@ -130,7 +122,9 @@ class GazeInteractionNode(Node):
             self.processing_timer = self.create_timer(
                 1.0 / self.processing_frequency, self._process_interaction
             )
-        # For gaze_driven mode, processing happens in gaze callback
+        if self.processing_mode == "gaze_driven":
+            # For gaze_driven mode, processing happens in gaze callback
+            pass
 
         self.get_logger().info(
             f"Gaze Interaction Node initialized with mode: {self.interaction_mode.value}"
@@ -197,6 +191,15 @@ class GazeInteractionNode(Node):
             self.get_logger().info(
                 f"Processing frequency: {self.processing_frequency} Hz"
             )
+
+        # TODO: Cleanup and test unused parameters
+        # Input handling
+        self.external_trigger_active = False
+
+        # OpenCV bridge for debug visualization
+        if self.publish_debug_image:
+            self.cv_bridge = CvBridge()
+            self.debug_frame = np.zeros((720, 1280, 3), dtype=np.uint8)  # Default size
 
     def _setup_input_handling(self):
         """Setup external input handling (keyboard/gamepad) if needed"""
@@ -273,20 +276,10 @@ class GazeInteractionNode(Node):
                 Image, "/dwell_time/debug_image", 10
             )
 
-    def _gaze_callback(self, msg: PointStamped):
-        """High-frequency gaze position updates"""
-        self.current_gaze_pos = msg.point
-        # self.get_logger().info(
-        #     f"Current gaze position: {self.current_gaze_pos.x}, {self.current_gaze_pos.y}",
-        #     throttle_duration_sec=5,
-        # )
-        # If in gaze-driven mode, process interaction immediately
-        if self.processing_mode == "gaze_driven":
-            self._process_interaction()
-
     def _buttons_callback(self, msg: DiegeticButton2DArray):
+        # The main video callback
         """Buffer 2D button positions and update tracking"""
-        current_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        button_msg_time = rclpy.time.Time.from_msg(msg.header.stamp)
 
         with self._button_lock:
             # Update existing buttons and add new ones
@@ -299,7 +292,9 @@ class GazeInteractionNode(Node):
                 if button_id in self.button_statuses:
                     # Update existing button with new corner points format
                     status = self.button_statuses[button_id]
-                    status.last_seen = current_time
+                    status.last_seen_stamp = button_msg_time
+
+                    # Should not change unless we move to screen approach
                     status.center_x = button_2d.center_x
                     status.center_y = button_2d.center_y
                     status.x_points = list(button_2d.x_points)
@@ -308,22 +303,38 @@ class GazeInteractionNode(Node):
                     # Create new button status
                     self.button_statuses[button_id] = ButtonStatus(
                         button_id=button_id,
-                        last_seen=current_time,
+                        last_seen_stamp=button_msg_time,
                         center_x=button_2d.center_x,
                         center_y=button_2d.center_y,
                         x_points=list(button_2d.x_points),
                         y_points=list(button_2d.y_points),
                     )
 
-                    if self.verbose_logging:
-                        self.get_logger().info(f"Tracking new button: {button_id}")
+                    self.get_logger().debug(f"Tracking new button: {button_id}")
 
+            # TODO: Remove?
             # Mark buttons not in current message (for potential cleanup)
             for button_id in list(self.button_statuses.keys()):
                 if button_id not in received_button_ids:
                     # Button not seen in this update, but keep it for now
                     # Cleanup happens in _cleanup_old_buttons()
                     pass
+
+    def _gaze_callback(self, msg: PointStamped):
+        ### --- High-frequency gaze position updates --- ###
+        gaze_ts = rclpy.time.Time.from_msg(msg.header.stamp)
+
+        # Calculate dt based on gaze sensor clock, not CPU clock
+        if self.last_gaze_stamp is None:
+            dt = 0.005  # Default for 200Hz
+        else:
+            dt = (gaze_ts.nanoseconds - self.last_gaze_stamp.nanoseconds) / 1e9
+
+        self.last_gaze_stamp = gaze_ts
+        self.current_gaze_pos = msg.point
+
+        if self.processing_mode == "gaze_driven":
+            self._process_interaction(dt, gaze_ts)
 
     def _joy_callback(self, msg: Joy):
         """Handle gamepad input for trigger mode"""
@@ -332,96 +343,86 @@ class GazeInteractionNode(Node):
             if len(msg.buttons) > 0:
                 self.external_trigger_active = bool(msg.buttons[0])
 
-    def _process_interaction(self):
-        """Main processing loop - called by timer or gaze callback"""
-        current_time = self.get_clock().now().nanoseconds * 1e-9
+    def _process_interaction(self, dt=None, trigger_stamp=None):
+        """
+        --- Main processing loop - called by timer or gaze callback ---
+        dt: The time delta since last gaze (for dwell accumulation)
+        trigger_stamp: The timestamp of the current gaze point
+        """
 
-        # Calculate delta time
-        if hasattr(self, "_last_process_time"):
-            dt = current_time - self._last_process_time
-        else:
-            # First run - use expected interval
-            if self.processing_mode == "fixed_rate":
-                dt = 1.0 / self.processing_frequency
-            else:
-                dt = 1.0 / 200.0  # Assume gaze runs at ~200Hz
+        # Fallback if called by timer
+        if dt is None:
+            dt = 1.0 / self.processing_frequency
+        # if trigger_stamp is None:
+        # trigger_stamp = self.get_clock().now()
 
-        self._last_process_time = current_time
-
-        # Convert gaze position to screen coordinates
-        gaze_screen_x = self.current_gaze_pos.x
-        gaze_screen_y = self.current_gaze_pos.y
-
-        active_buttons = []
-        status_updates = []
+        active_buttons: List[ButtonStatus] = []
+        status_updates: List[ButtonStatus_msg] = []
 
         with self._button_lock:
             # Process each tracked button
+            gaze_screen_x = self.current_gaze_pos.x
+            gaze_screen_y = self.current_gaze_pos.y
+
             for button_id, status in self.button_statuses.items():
-                # Check if gaze intersects with button using new polygon-based method
+
+                # 1. Check if gaze intersects with button using new polygon-based method
                 is_gazed = self._point_in_button_polygon(
                     gaze_screen_x, gaze_screen_y, status
                 )
+                # self.get_logger().info(
+                #     f"Gaze at ({gaze_screen_x:.2f}, {gaze_screen_y:.2f}) on button {button_id}: {is_gazed}"
+                # )
 
-                # Update activation level based on interaction mode
-                previous_state = status.state
+                # 2. Update activation level based on interaction mode
                 self._update_button_activation(status, is_gazed, dt)
 
-                # Determine new state
-                new_state = self._determine_button_state(status)
-                status.state = new_state
+                # 3. Determine new button state (State Machine)
+                previous_state = status.state
+                status.state = self._determine_button_state(status)
 
                 # Handle state transitions
-                if previous_state != new_state:
-                    self._handle_state_transition(status, previous_state, new_state)
-
-                # Collect active buttons
+                if previous_state != status.state:
+                    self._handle_state_transition(status, previous_state, status.state)
+                # If active, add button to the list
                 if status.state == ButtonState.ACTIVE:
                     active_buttons.append(status)
 
-                # Prepare status message with your old format
+                # 4. Build status message
                 status_msg = ButtonStatus_msg()
-                status_msg.header.stamp.sec = int(status.last_seen)
-                status_msg.header.stamp.nanosec = int(
-                    (status.last_seen - int(status.last_seen)) * 1e9
-                )
-                status_msg.header.frame_id = "gaze_interaction"
+                status_msg.header.stamp = status.last_seen_stamp.to_msg()
+                status_msg.header.frame_id = "glasses_camera_dwell_time"
 
-                # timestamp.to_msg() if timestamp else self.get_clock().now().to_msg()
-                status_msg.button = DiegeticButton2D()
+                status_msg.button_id = button_id
+                status_msg.percent = float(status.activation_level)
+                status_msg.button_status = self._state_to_int(status.state)
 
+                # ...and copy button info
                 status_msg.button.button_id = button_id
                 status_msg.button.center_x = status.center_x
                 status_msg.button.center_y = status.center_y
                 status_msg.button.x_points = status.x_points
                 status_msg.button.y_points = status.y_points
 
-                # Map state to integer constants
-                if status.state == ButtonState.INACTIVE:
-                    status_msg.button_status = 0  # BUTTON_INACTIVE
-                elif status.state == ButtonState.HOVERED:
-                    status_msg.button_status = 2  # BUTTON_HOVER
-                elif status.state == ButtonState.ACTIVE:
-                    status_msg.button_status = 1  # BUTTON_ACTIVE
-
-                status_msg.button_id = button_id
-                status_msg.percent = float(status.activation_level)
                 status_updates.append(status_msg)
 
+            # Generate debug visualization
+            if self.publish_debug_image:
+                self._generate_debug_image(gaze_screen_x, gaze_screen_y)
+
         # Publish status updates
-
-        self._publish_status_array(status_updates, current_time)
-        # self._publish_status_array(self.button_statuses.items(), current_time)
-
-        # Publish active button info (using same message type)
+        self._publish_status_array(status_updates)
         self._publish_active_button(active_buttons)
 
-        # Generate debug visualization
-        if self.publish_debug_image:
-            self._generate_debug_image(gaze_screen_x, gaze_screen_y)
+        self._cleanup_old_buttons(trigger_stamp)
 
-        # Cleanup old buttons
-        self._cleanup_old_buttons(current_time)
+    def _state_to_int(self, state: ButtonState):
+        mapping = {
+            ButtonState.INACTIVE: 0,
+            ButtonState.ACTIVE: 1,
+            ButtonState.HOVERED: 2,
+        }
+        return mapping.get(state, 0)
 
     def _point_in_button_polygon(
         self, x: float, y: float, button_status: ButtonStatus
@@ -535,15 +536,12 @@ class GazeInteractionNode(Node):
         msg.data = feedback_type
         self.haptic_publisher.publish(msg)
 
-    def _publish_status_array(
-        self, status_updates: List[ButtonStatus_msg], timestamp: float
-    ):
+    def _publish_status_array(self, status_updates: List[ButtonStatus_msg]):
         """Publish array of button statuses"""
-        # if not status_updates:
-        # return
+
         self.get_logger().debug(f"Publishing status for {status_updates}")
         msg = ButtonStatusArray_msg()
-        msg.header.stamp = self.get_clock().now().to_msg()
+        # msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "gaze_interaction"
         msg.inputs = status_updates
 
@@ -553,41 +551,40 @@ class GazeInteractionNode(Node):
         # TODO
         """Publish information about active buttons using ButtonStatusArray_msg"""
         status_msg = ButtonStatus_msg()
+        status_msg.header.frame_id = "active_button"
 
         # self.get_logger().info(f"Active buttons: {(active_buttons)}")
 
         if not active_buttons:
             # Send empty message
-            status_msg.button = DiegeticButton2D()
+            # status_msg.header.stamp = self.get_clock().now().to_msg()
+            status_msg.button_status = 0  # INACTIVE
+            status_msg.button_id = ""
+            status_msg.percent = 0.0
+
+            # Geometry
             status_msg.button.button_id = ""
             status_msg.button.center_x = 0.0
             status_msg.button.center_y = 0.0
             status_msg.button.x_points = [0.0] * 4
             status_msg.button.y_points = [0.0] * 4
 
-            status_msg.button_status = 0  # INACTIVE
-            status_msg.percent = 0.0
-            status_msg.button_id = ""
-
-            status_msg.header.stamp = self.get_clock().now().to_msg()
         else:
             # Pick the highest-activation active button
             max_button_status = max(active_buttons, key=lambda b: b.activation_level)
 
-            status_msg.button = DiegeticButton2D()
+            status_msg.header.stamp = max_button_status.last_seen_stamp.to_msg()
+
+            status_msg.button_id = max_button_status.button_id
+            status_msg.button_status = 1  # ACTIVE
+            status_msg.percent = float(max_button_status.activation_level)
+
+            # Geometry
             status_msg.button.button_id = max_button_status.button_id
             status_msg.button.center_x = max_button_status.center_x
             status_msg.button.center_y = max_button_status.center_y
             status_msg.button.x_points = max_button_status.x_points
             status_msg.button.y_points = max_button_status.y_points
-
-            status_msg.button_status = 1  # ACTIVE
-            status_msg.percent = float(max_button_status.activation_level)
-            status_msg.button_id = max_button_status.button_id
-
-            status_msg.header.stamp = max_button_status.last_seen
-
-        status_msg.header.frame_id = "active_buttons"
 
         self.active_button_publisher.publish(status_msg)
 
@@ -669,18 +666,26 @@ class GazeInteractionNode(Node):
         except Exception as e:
             self.get_logger().debug(f"Failed to publish debug image: {e}")
 
-    def _cleanup_old_buttons(self, current_time: float):
-        """Remove buttons that haven't been seen recently"""
+    def _cleanup_old_buttons(self, current_stamp: rclpy.time.Time):
+        """Remove buttons not seen in the last X seconds of CAMERA time"""
+
         with self._button_lock:
             buttons_to_remove = []
+
             for button_id, status in self.button_statuses.items():
-                if current_time - status.last_seen > self.button_timeout:
-                    buttons_to_remove.append(button_id)
+
+                if current_stamp is not None:
+                    button_age = (
+                        current_stamp.nanoseconds - status.last_seen_stamp.nanoseconds
+                    ) / 1e9
+
+                    if button_age > self.button_timeout:
+                        buttons_to_remove.append(button_id)
 
             for button_id in buttons_to_remove:
                 del self.button_statuses[button_id]
                 if self.verbose_logging:
-                    self.get_logger().info(f"Removed stale button: {button_id}")
+                    self.get_logger().debug(f"Removed stale button: {button_id}")
 
 
 def main(args=None):
