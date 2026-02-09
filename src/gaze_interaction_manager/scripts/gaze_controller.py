@@ -29,7 +29,7 @@ class GazeController(Node):
         self.get_logger().info("Gaze Controller Node Initialized")
 
         # --- 1. Parameters ---
-        self.declare_parameter("history_length_s", 5.0)
+        self.declare_parameter("history_length_s", 15.0)
         self.declare_parameter("internal_pipeline_delay_ms", 0.0)
         self.declare_parameter(
             "use_button_termination", True
@@ -245,24 +245,28 @@ class GazeController(Node):
             adjusted_ts = button_capture_ts - (
                 self.get_parameter("internal_pipeline_delay_ms").value / 1000.0
             )
+            is_pos_valid = (
+                abs(msg.button.center_x) > 1e-5 and abs(msg.button.center_y) > 1e-5
+            )
             is_active = msg.button_status == ButtonStatus.BUTTON_ACTIVE
 
             # Store ground truth history for interpolation
-            self.btn_history.append(
-                (
-                    adjusted_ts,
-                    msg.button.center_x,
-                    msg.button.center_y,
-                    msg.button.button_id,
-                    is_active,
+            if is_pos_valid:
+                self.btn_history.append(
+                    (
+                        adjusted_ts,
+                        msg.button.center_x,
+                        msg.button.center_y,
+                        msg.button.button_id,
+                        is_active,
+                    )
                 )
-            )
-
-            # 3. Handle Transitions
-            if is_active:
-                # Update the last known valid timestamp for the ground truth
                 self.last_valid_btn_ts = adjusted_ts
 
+            # 3. Handle Transitions
+            if is_active and is_pos_valid:
+                # Rising Edge: Start Recording only if we have valid coordinates
+                # Update the last known valid timestamp for the ground truth
                 if not self.is_recording:
                     # Rising Edge: Start Recording
                     self.is_recording = True
@@ -352,6 +356,10 @@ class GazeController(Node):
             return
 
         b_times = np.array([b[0] for b in btn_data])
+        if len(b_times) < 2:
+            self.get_logger().warning("Not enough valid button history to interpolate.")
+            self.reset_recording_state()
+            return
         b_xs, b_ys = np.array([b[1] for b in btn_data]), np.array(
             [b[2] for b in btn_data]
         )
