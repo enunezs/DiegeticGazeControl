@@ -3,7 +3,8 @@ import rclpy
 from rclpy.node import Node
 from rcl_interfaces.msg import SetParametersResult
 import numpy as np
-from threading import Lock
+from threading import Lock, RLock  # Add RLock to imports
+
 from collections import deque
 from statistics import median
 
@@ -23,7 +24,6 @@ class GazeController(Node):
     def __init__(self):
         super().__init__("gaze_controller")
         self._lock = Lock()
-
         self.bridge = CvBridge()
 
         self.get_logger().info("Gaze Controller Node Initialized")
@@ -36,32 +36,25 @@ class GazeController(Node):
         )  # If False, only gaze events end segments
         self.declare_parameter("median_window", 20)
         self.declare_parameter("ema_alpha", 0.2)
-        self.declare_parameter("edge_margin", 100)
+        self.declare_parameter("edge_margin", 50)
+
         self.declare_parameter(
-            "pad_duration_ms", 100.0
+            "pad_duration_ms", 200.0
         )  # Padding for trimming the START of event
         self.declare_parameter(
-            "terminal_trim_ms", 100.0
+            "terminal_trim_ms", 200.0
         )  # Padding for trimming the END of event
         self.declare_parameter("min_event_duration_ms", 200.0)
         self.declare_parameter("max_offset_px", 200.0)
         self.declare_parameter("compensation_active", False)
-
-        self.add_on_set_parameters_callback(self.param_callback)  # TODO: Repack
-
-        self.hz_gaze = 200
-        self.update_internal_params()
+        self.declare_parameter("use_temporal_alignment", False)
 
         # --- 2. Circular Buffers ---
         # Gaze History: [timestamp, x, y]
-        self.gaze_history = np.zeros((self.gaze_buffer_size, 3))  # [ts, x, y]
+        self.hz_gaze = 200
         self.gaze_ptr = 0
         self.gaze_buffer_filled = False
-
-        # TODO: Removed?
-        self.gaze_buffer_size = int(
-            self.get_parameter("history_length_s").value * self.hz_gaze
-        )
+        self.update_internal_params()
 
         # Button History (Ground Truth): stores (adj_timestamp, x, y, id, is_active)
         # Used for linear interpolation against the gaze timestamps
@@ -134,6 +127,8 @@ class GazeController(Node):
             CalibrationModel, "calibration/model_update", self.model_cb, 10
         )
 
+        self.add_on_set_parameters_callback(self.param_callback)
+
     def update_internal_params(self):
         self.median_window = self.get_parameter("median_window").value
         self.ema_alpha = self.get_parameter("ema_alpha").value
@@ -149,12 +144,18 @@ class GazeController(Node):
         self.gaze_buffer_size = int(
             self.get_parameter("history_length_s").value * self.hz_gaze
         )
-        self.gaze_history = np.zeros((self.gaze_buffer_size, 3))
-        self.gaze_ptr = 0
+        self.gaze_history = np.zeros((self.gaze_buffer_size, 3))  # [ts, x, y]
 
-        # self.history_depth_samples = int(
-        #     self.get_parameter("history_length_s").value * hz
-        # )
+        # Buffer Resizing
+        new_size = int(self.get_parameter("history_length_s").value * self.hz_gaze)
+
+        # Only re-init if size actually changed to avoid losing data on minor param tweaks
+        if self.gaze_history is None or new_size != len(self.gaze_history):
+            self.get_logger().info(f"Initializing Gaze Buffer: {new_size} samples")
+            self.gaze_buffer_size = new_size
+            self.gaze_history = np.zeros((self.gaze_buffer_size, 3))
+            self.gaze_ptr = 0
+            self.gaze_buffer_filled = False  # CRITICAL FIX
 
     def param_callback(self, params):
         self.update_internal_params()
@@ -291,10 +292,8 @@ class GazeController(Node):
         if not self.is_recording or self.rec_start_ts is None:
             return
 
-        # if end_ts <= self.rec_start_ts:
-        #     self.get_logger().warning("End timestamp before start. Discarding.")
-        #     self.reset_recording_state()
-        #     return
+        # 1. Extraction: Get all rows with a valid timestamp
+        # This handles wrapping automatically because we sort by timestamp
 
         # 1. Slice Gaze Buffer
         data = (
@@ -304,44 +303,29 @@ class GazeController(Node):
         )
         valid_mask = data[:, 0] > 0
         data = data[valid_mask]
+
         if len(data) < 2:
             self.get_logger().warning("Not enough valid gaze data to finalize segment.")
             self.reset_recording_state()
             return
 
+        # Sort chronologically
         data = data[np.argsort(data[:, 0])]
         g_times = data[:, 0]
 
-        # --- TEMPORAL VALIDATION ---
-        buffer_min, buffer_max = g_times[0], g_times[-1]
-        if end_ts < buffer_min or self.rec_start_ts > buffer_max:
-            self.get_logger().warning(
-                f"Discarding segment: Timestamps {self.rec_start_ts:.1f} to {end_ts:.1f} "
-                f"are outside gaze buffer range ({buffer_min:.1f} to {buffer_max:.1f})"
-            )
-            self.reset_recording_state()
-            return
-
-        # 2. Find Indices for the requested window
-        ## Original slice (before internal padding)
+        # 2. Windowing
         raw_idx = np.where((g_times >= self.rec_start_ts) & (g_times <= end_ts))[0]
-        total_required = self.pad_samples + self.min_samples
+        total_samples = self.pad_samples + self.min_samples
 
-        ## Validated slice (after internal padding)
-        if len(raw_idx) < total_required:
-            self.get_logger().info(
-                f"Discarding segment: too short ({len(raw_idx)} samples)"
-            )
-            self.reset_recording_state()
-            return
-
-        if len(raw_idx) < total_required:
+        # Check if we have enough data (Padding + Minimum duration)
+        if len(raw_idx) < total_samples:
             self.get_logger().info(
                 f"Segment too short ({len(raw_idx)} samples). Discarding."
             )
             self.reset_recording_state()
             return
 
+        # Apply padding: remove the first few samples where eyes were still moving
         # Apply internal padding (trim the start of the event where eyes are settling)
         trimmed_idx = raw_idx[self.pad_samples :]
 
@@ -363,10 +347,14 @@ class GazeController(Node):
         b_xs, b_ys = np.array([b[1] for b in btn_data]), np.array(
             [b[2] for b in btn_data]
         )
+
         # Sort button data
         order = np.argsort(b_times)
         b_times = b_times[order]
         b_xs, b_ys = b_xs[order], b_ys[order]
+
+        # Get the toggle value
+        use_alignment = self.get_parameter("use_temporal_alignment").value
 
         gaze_slice = data[trimmed_idx]
         segment = InteractionSegment()
@@ -375,8 +363,22 @@ class GazeController(Node):
 
         # Interpolate button center for every gaze timestamp
         for gt, gx, gy in gaze_slice:
-            target_x = np.interp(gt, b_times, b_xs)
-            target_y = np.interp(gt, b_times, b_ys)
+            if use_alignment:
+                # Standard Mode: Temporal Interpolation
+                target_x = np.interp(gt, b_times, b_xs)
+                target_y = np.interp(gt, b_times, b_ys)
+            else:
+                # Snapshot Mode: Use latest known point before or at gaze timestamp
+                # Find indices where button time is less than or equal to gaze time
+                valid_mask = b_times <= gt
+                if np.any(valid_mask):
+                    idx = np.where(valid_mask)[0][-1]
+                    target_x = b_xs[idx]
+                    target_y = b_ys[idx]
+                else:
+                    # Fallback if no prior data exists
+                    target_x = b_xs[0]
+                    target_y = b_ys[0]
 
             # Pack GazeData (Preserving 200Hz)
             g_msg = GazeData()
@@ -384,7 +386,7 @@ class GazeController(Node):
             g_msg.x, g_msg.y = float(gx), float(gy)
 
             segment.samples.append(g_msg)
-            self.get_logger().debug(
+            self.get_logger().info(
                 f"Interpolated GT for gaze at {gt:.3f}s: ({gx:.1f}, {gy:.1f}) -> ({target_x:.1f}, {target_y:.1f})"
             )
 
@@ -448,7 +450,15 @@ class GazeController(Node):
             p = to_pixels(t, gx)
             if p:
                 is_used = i in used_indices
-                color = (0, 255, 255) if is_used else (200, 100, 50)
+                use_alignment = self.get_parameter("use_temporal_alignment").value
+                if is_used:
+
+                    if use_alignment:
+                        color = (0, 255, 255)
+                    else:
+                        color = (0, 255, 0)
+                else:
+                    color = (200, 100, 50)
                 radius = 2 if is_used else 1
                 cv2.circle(img, p, radius, color, -1)
 
