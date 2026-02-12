@@ -623,7 +623,7 @@ class GazeController(Node):
         self.segment_pub.publish(segment)
 
         # Plot Debug Viz
-        if gaze_data is not None:
+        if gaze_data is None:
             self.plot_debug_viz(
                 gaze_slice, btn_data, self.rec_start_ts, end_ts, gaze_slice
             )
