@@ -10,6 +10,9 @@ import cv2
 from cv_bridge import CvBridge
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from scipy.stats import binned_statistic_2d
+import matplotlib.cm as cm
+import time
 
 # Machine Learning Imports
 from sklearn.linear_model import HuberRegressor
@@ -21,9 +24,11 @@ class CalibrationLearner(Node):
         super().__init__("calibration_learner")
 
         # --- Parameters ---
+        ## Toggles for visualization layers
+        self.declare_parameter("publish_data_quiver", True)
         self.declare_parameter("show_raw_samples", True)
         self.declare_parameter("show_prediction", True)
-        self.declare_parameter("publish_debug_image", True)
+        self.declare_parameter("show_binned_truth", True)
 
         # --- Aggregator ---
         self.db_gaze = []
@@ -41,10 +46,24 @@ class CalibrationLearner(Node):
         self.knn_model_x = None
         self.knn_model_y = None
 
+        # --- History Tracking ---
+        self.start_time = None
+        self.history_time = []  # In minutes
+        self.history_scores = {name: [] for name in self.model_names}
+        # Define fixed colors for models for visual consistency over time
+        self.model_colors = {
+            "Bias": "#1f77b4",  # Blue
+            "Linear": "#ff7f0e",  # Orange
+            "Quadratic": "#2ca02c",  # Green
+            "Conical": "#d62728",  # Red
+            "KNN": "#9467bd",  # Purple
+        }
+
         # --- Plotting ---
         self.fig_main, self.ax_main = plt.subplots(figsize=(8, 6), dpi=100)
         self.canvas_main = FigureCanvasAgg(self.fig_main)
-        self.fig_tourney, self.ax_tourney = plt.subplots(figsize=(4, 5), dpi=100)
+        # Wider plot for time series
+        self.fig_tourney, self.ax_tourney = plt.subplots(figsize=(6, 4), dpi=100)
         self.canvas_tourney = FigureCanvasAgg(self.fig_tourney)
 
         # --- ROS Setup ---
@@ -55,9 +74,8 @@ class CalibrationLearner(Node):
         self.model_pub = self.create_publisher(
             CalibrationModel, "calibration/model_update", 10
         )
-        self.image_pub = self.create_publisher(
-            Image, "calibration/debug_plot_image", 10
-        )
+        self.image_pub = self.create_publisher(Image, "calibration/data_quiver", 10)
+
         self.tourney_pub = self.create_publisher(
             Image, "calibration/tournament_status", 10
         )
@@ -65,6 +83,9 @@ class CalibrationLearner(Node):
         self.get_logger().info("Tournament Calibration Learner Initialized.")
 
     def segment_cb(self, msg: InteractionSegment):
+        if self.start_time is None:
+            self.start_time = self.get_clock().now()
+
         target = msg.target_pixel
         segment_raw_errors = []
         for s in msg.samples:
@@ -79,7 +100,7 @@ class CalibrationLearner(Node):
 
         if len(self.grid_data) > 1:
             self.run_model_tournament()
-            if self.get_parameter("publish_debug_image").value:
+            if self.get_parameter("publish_data_quiver").value:
                 self.publish_plots()
 
     def get_features(self, X, model_name):
@@ -162,13 +183,22 @@ class CalibrationLearner(Node):
         # Model complexity penalty (approximate BIC logic)
         penalties = {"Bias": 1, "Linear": 3, "Conical": 4, "Quadratic": 6, "KNN": 10}
 
+        # Calculate current time in minutes
+        elapsed_min = (
+            (self.get_clock().now() - self.start_time).nanoseconds / 1e9 / 60.0
+        )
+        self.history_time.append(elapsed_min)
+
         for name in self.model_names:
             score, res = (
                 self.solve_knn(X_train, Y_train)
                 if name == "KNN"
                 else self.solve_parametric(X_train, Y_train, name)
             )
+            # Cap the score for history and leaderboard at 500
+            # display_score = min(score, 500.0)
             self.model_scores[name] = score
+            self.history_scores[name].append(score)
 
             adj_score = score + (penalties[name] * 0.5)
             if adj_score < best_score and score != float("inf"):
@@ -219,61 +249,171 @@ class CalibrationLearner(Node):
         return np.clip(px, -250, 250), np.clip(py, -250, 250)
 
     def publish_plots(self):
-        # Setup Grid
+        if not self.db_gaze:
+            return
+
+        # Get current toggle states
+        draw_raw = self.get_parameter("show_raw_samples").value
+        draw_binned = self.get_parameter("show_binned_truth").value
+        draw_pred = self.get_parameter("show_prediction").value
+
+        # Data Prep
+        gaze_pts = np.array(self.db_gaze)
+        err_vecs = np.array(self.db_error)
+
+        # Grid Prep (Match aggregator bin size)
         x_edges = np.arange(0, self.x_max + self.bin_size, self.bin_size)
         y_edges = np.arange(0, self.y_max + self.bin_size, self.bin_size)
         Xc, Yc = np.meshgrid(
             (x_edges[:-1] + x_edges[1:]) / 2, (y_edges[:-1] + y_edges[1:]) / 2
         )
 
-        # Main Plot
         self.ax_main.clear()
-        if self.get_parameter("show_raw_samples").value and self.db_gaze:
-            gpts = np.array(self.db_gaze)
-            self.ax_main.scatter(gpts[:, 0], gpts[:, 1], s=1, alpha=0.1, c="gray")
 
-        if self.get_parameter("show_prediction").value:
+        # --- LAYER 1: RAW SAMPLES (Colored by angle) ---
+        if draw_raw:
+            angles = np.arctan2(err_vecs[:, 1], err_vecs[:, 0])
+            colors = cm.hsv((angles + np.pi) / (2 * np.pi))
+            self.ax_main.quiver(
+                gaze_pts[:, 0],
+                gaze_pts[:, 1],
+                err_vecs[:, 0],
+                err_vecs[:, 1],
+                color=colors,
+                angles="xy",
+                scale_units="xy",
+                scale=1,
+                alpha=0.4,
+                width=0.0015,
+            )
+
+        # --- LAYER 2: BINNED TRUTH (Median vector per bin, Gray) ---
+        avg_x, avg_y = None, None
+        if draw_binned or draw_pred:
+            # We compute this from raw db_gaze to show "Truth" regardless of model
+            avg_x, _, _, _ = binned_statistic_2d(
+                gaze_pts[:, 0],
+                gaze_pts[:, 1],
+                err_vecs[:, 0],
+                "median",
+                [x_edges, y_edges],
+            )
+            avg_y, _, _, _ = binned_statistic_2d(
+                gaze_pts[:, 0],
+                gaze_pts[:, 1],
+                err_vecs[:, 1],
+                "median",
+                [x_edges, y_edges],
+            )
+
+            if draw_binned:
+                mask = ~np.isnan(avg_x.T)
+                self.ax_main.quiver(
+                    Xc[mask],
+                    Yc[mask],
+                    avg_x.T[mask],
+                    avg_y.T[mask],
+                    angles="xy",
+                    scale_units="xy",
+                    scale=1,
+                    color="gray",
+                    alpha=0.6,
+                    width=0.003,
+                )
+
+        # --- LAYER 3: PREDICTION (Active Tournament Model, Colored by residual) ---
+        if draw_pred and self.active_model_name:
             px, py = self.predict_on_grid(Xc, Yc)
+
+            # Color by distance from the binned truth
+            if avg_x is not None:
+                # avg_x is (NX, NY), px is (NY, NX), so we transpose avg to match
+                diff = np.sqrt((px - avg_x.T) ** 2 + (py - avg_y.T) ** 2)
+                diff_c = np.clip(diff, 0, 50)  # Max color at 50px error
+                cmap = cm.jet
+            else:
+                diff_c = "blue"
+                cmap = None
+
             self.ax_main.quiver(
                 Xc,
                 Yc,
                 px,
                 py,
-                color="blue",
-                alpha=0.5,
-                scale=1,
-                scale_units="xy",
+                diff_c,
                 angles="xy",
+                scale_units="xy",
+                scale=1,
+                cmap=cmap,
+                alpha=0.8,
+                width=0.004,
             )
 
+        # Final Render Settings for Main Plot
         self.ax_main.set_xlim(0, self.x_max)
         self.ax_main.set_ylim(self.y_max, 0)
-        self.ax_main.set_title(f"Active: {self.active_model_name}")
+        self.ax_main.set_title(f"Active Model: {self.active_model_name}")
+        self.ax_main.set_axis_off()
+        self.fig_main.tight_layout(pad=0)
 
-        # Tournament Plot
+        # --- TOURNAMENT SCOREBOARD ---
         self.ax_tourney.clear()
-        names = list(self.model_scores.keys())
-        scores = [
-            self.model_scores[n] if self.model_scores[n] != float("inf") else 0
-            for n in names
-        ]
-        colors = ["gold" if n == self.active_model_name else "skyblue" for n in names]
-        bars = self.ax_tourney.barh(names, scores, color=colors)
-        self.ax_tourney.set_title("LOOCV Scoreboard")
-        self.ax_tourney.invert_yaxis()
-        self.ax_tourney.bar_label(bars, fmt="%.1f px", padding=3)
+        for name in self.model_names:
+            y_data = self.history_scores[name]
+            if not y_data:
+                continue
 
-        # Publish
+            # Use specific color, make the active model thicker
+            is_active = name == self.active_model_name
+            alpha = 1.0 if is_active else 0.4
+            linewidth = 2.5 if is_active else 1.0
+
+            self.ax_tourney.plot(
+                self.history_time,
+                y_data,
+                label=name,
+                color=self.model_colors[name],
+                alpha=alpha,
+                linewidth=linewidth,
+            )
+
+            # Add a point at the end of the line for the active one
+            if is_active:
+                self.ax_tourney.scatter(
+                    self.history_time[-1],
+                    y_data[-1],
+                    color=self.model_colors[name],
+                    s=40,
+                    zorder=5,
+                )
+
+        self.ax_tourney.set_ylim(0, 505)  # Capped at 500 (+ buffer)
+        self.ax_tourney.set_xlabel("Time (minutes)")
+        self.ax_tourney.set_ylabel("LOOCV Error (pixels)")
+        self.ax_tourney.set_title("Model Performance Over Time")
+        self.ax_tourney.grid(True, linestyle="--", alpha=0.6)
+        self.ax_tourney.legend(loc="upper right", fontsize="small")
+
+        # --- Publish Both Images ---
         self.canvas_main.draw()
         self.canvas_tourney.draw()
-        img_m = cv2.cvtColor(
+
+        img_main = cv2.cvtColor(
             np.asarray(self.canvas_main.buffer_rgba()), cv2.COLOR_RGBA2BGR
         )
-        img_t = cv2.cvtColor(
+        img_tourney = cv2.cvtColor(
             np.asarray(self.canvas_tourney.buffer_rgba()), cv2.COLOR_RGBA2BGR
         )
-        self.image_pub.publish(self.bridge.cv2_to_imgmsg(img_m, "bgr8"))
-        self.tourney_pub.publish(self.bridge.cv2_to_imgmsg(img_t, "bgr8"))
+
+        msg_main = self.bridge.cv2_to_imgmsg(img_main, "bgr8")
+        msg_main.header.stamp = self.get_clock().now().to_msg()
+        msg_main.header.frame_id = "gaze_debug"
+
+        msg_tourney = self.bridge.cv2_to_imgmsg(img_tourney, "bgr8")
+        msg_tourney.header.stamp = msg_main.header.stamp
+
+        self.image_pub.publish(msg_main)
+        self.tourney_pub.publish(msg_tourney)
 
 
 def main():
