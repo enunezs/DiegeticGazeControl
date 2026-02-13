@@ -38,10 +38,10 @@ class GazeController(Node):
         self.declare_parameter("edge_margin", 50)
 
         self.declare_parameter(
-            "pad_duration_ms", 200.0
+            "pad_duration_ms", 100.0
         )  # Padding for trimming the START of event
         self.declare_parameter(
-            "terminal_trim_ms", 200.0
+            "terminal_trim_ms", 100.0
         )  # Padding for trimming the END of event
 
         self.declare_parameter("min_event_duration_ms", 200.0)
@@ -277,7 +277,7 @@ class GazeController(Node):
 
     def finalize_and_send_segment(self, end_ts):
         """Extracts 200Hz gaze slice and interpolates 30Hz button ground truth."""
-        self.get_logger().info(
+        self.get_logger().debug(
             f"Finalizing segment for button {self.current_button_id} with end timestamp {end_ts:.3f}"
         )
 
@@ -312,7 +312,7 @@ class GazeController(Node):
 
         # Check if we have enough data (Padding + Minimum duration)
         if len(raw_idx) < total_samples:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f"Segment too short ({len(raw_idx)} samples). Discarding."
             )
             self.reset_recording_state()
@@ -545,9 +545,9 @@ class GazeController(Node):
             if self.is_recording:
                 # Use the exact start of the saccade provided by the glasses
                 event_start_ts = msg.start_time_ns / 1e9
-                self.get_logger().info(
-                    f"Saccade detected! Terminating segment at {event_start_ts:.3f}"
-                )
+                # self.get_logger().info(
+                #     f"Saccade detected! Terminating segment at {event_start_ts:.3f}"
+                # )
                 self._trigger_segment_end(event_start_ts, reason="SACCADE")
 
     def blink_cb(self, msg: GazeEvent):
@@ -566,7 +566,7 @@ class GazeController(Node):
         if not self.is_recording:
             return
 
-        self.get_logger().info(f"Finalizing segment: {reason} at {end_ts:.3f}")
+        # self.get_logger().info(f"Finalizing segment: {reason} at {end_ts:.3f}")
 
         # 1. Slice and Sort Gaze
         data = (
@@ -584,9 +584,10 @@ class GazeController(Node):
 
         # Check minimum duration
         if len(raw_idx) < (self.pad_samples + self.min_samples):
-            self.get_logger().info(
-                f"Segment too short ({len(raw_idx)} samples). Discarding."
-            )
+            # self.get_logger().info(
+            #     f"Segment too short ({len(raw_idx)} samples). Discarding."
+            # )
+            pass
         else:
             # Post-hoc trimming: Remove the start padding (eye settling)
             trimmed_idx = raw_idx[self.pad_samples :]

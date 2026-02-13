@@ -1,5 +1,8 @@
-uint8 TYPE_QUADRATIC=0
-uint8 TYPE_KNN_GRID=1
+uint8 TYPE_BIAS=0
+uint8 TYPE_LINEAR=1
+uint8 TYPE_QUADRATIC=2
+uint8 TYPE_CONICAL=3
+uint8 TYPE_KNN_GRID=4
 
 uint8 model_type
 float64[] coeffs_x   # [x^2, y^2, xy, x, y, 1]
