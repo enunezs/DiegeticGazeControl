@@ -105,7 +105,7 @@ class GazeController(Node):
         )
 
         self.debug_pub_viz = self.create_publisher(
-            Image, "debug/interaction_plot", 10
+            Image, "gaze_controller/interaction_plot", 10
         )  # New Viz Pub
 
         # --- 5. Subscriptions ---
@@ -510,10 +510,11 @@ class GazeController(Node):
         self.debug_pub_latency_rms.publish(Float32(data=float(rms)))
 
         # Throttle logs so they don't flood the terminal (every ~10 second at 30Hz)
-        self.get_logger().info(
-            f"Gaze to camera pipeline latency: {lat:.1f}ms | RMS: {rms:.1f}ms",
-            throttle_duration_sec=10.0,
-        )
+        # Todo:
+        # self.get_logger().debug(
+        #     f"Gaze to camera pipeline latency: {lat:.1f}ms | RMS: {rms:.1f}ms",
+        #     throttle_duration_sec=10.0,
+        # )
 
     def publish_debug_signals(self, in_fov, is_clean):
         offset = 0.1
@@ -618,6 +619,7 @@ class GazeController(Node):
         if not btn_data:
             return
 
+        # Extract button timestamps and positions for interpolation
         b_times = np.array([b[0] for b in btn_data])
         b_xs = np.array([b[1] for b in btn_data])
         b_ys = np.array([b[2] for b in btn_data])
@@ -627,17 +629,29 @@ class GazeController(Node):
         segment.button_id = self.current_button_id
 
         for gt, gx, gy in gaze_slice:
-            # Interpolation logic
+            # 1. Calculate ground truth for this specific gaze timestamp
             tx = np.interp(gt, b_times, b_xs)
             ty = np.interp(gt, b_times, b_ys)
 
+            # 2. Add the Target point
+            t_pt = Point(x=tx, y=ty, z=0.0)
+            segment.target_samples.append(t_pt)
+
+            # 3. Add the Gaze sample
             g_msg = GazeData()
             g_msg.header.stamp = self.float_to_stamp(gt)
             g_msg.x, g_msg.y = float(gx), float(gy)
-            segment.samples.append(g_msg)
+            segment.gaze_samples.append(g_msg)
 
-        segment.target_pixel = Point(x=float(np.mean(b_xs)), y=float(np.mean(b_ys)))
+        # segment.target_pixel = Point(x=float(np.mean(b_xs)), y=float(np.mean(b_ys)))
         self.segment_pub.publish(segment)
+
+        mean_error = np.mean(
+            np.sqrt((gaze_slice[:, 1] - tx) ** 2 + (gaze_slice[:, 2] - ty) ** 2)
+        )
+        self.get_logger().info(
+            f"Published segment with {len(segment.gaze_samples)} samples. Mean error to GT: {mean_error:.1f}px"
+        )
 
         # Plot Debug Viz
         if gaze_data is None:
@@ -648,8 +662,6 @@ class GazeController(Node):
             self.plot_debug_viz(
                 gaze_slice, btn_data, self.rec_start_ts, end_ts, gaze_data
             )
-
-        # self.plot_debug_viz(...)
 
 
 def main(args=None):

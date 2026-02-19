@@ -90,16 +90,43 @@ class CalibrationLearner(Node):
         if self.start_time is None:
             self.start_time = self.get_clock().now()
 
-        target = msg.target_pixel
+        if len(msg.gaze_samples) != len(msg.target_samples):
+            self.get_logger().error("Mismatched sample counts in segment!")
+            return
+
         segment_raw_errors = []
-        for s in msg.samples:
-            self.db_gaze.append([s.x, s.y])
-            err = [s.x - target.x, s.y - target.y]
+        all_target_x = []
+        all_target_y = []
+
+        # Iterate through matched pairs
+        # target = msg.target_pixel
+
+        for gaze, target in zip(msg.gaze_samples, msg.target_samples):
+            # Store for global database
+            self.db_gaze.append([gaze.x, gaze.y])
+
+            # CALCULATE DYNAMIC ERROR (The key fix)
+            err = [gaze.x - target.x, gaze.y - target.y]
             self.db_error.append(err)
+
             segment_raw_errors.append(err)
+            all_target_x.append(target.x)
+            all_target_y.append(target.y)
 
         if segment_raw_errors:
-            bx, by = int(target.x // self.bin_size), int(target.y // self.bin_size)
+            # Determine the representative location for this segment (for binning)
+            # TODO ERROR Not correct, should be based on gaze, and shoiuld be split based on bins, not averaged. We want to capture the error distribution across the segment, not just one point.
+
+            avg_target_x = np.mean(
+                all_target_x
+            )  # -> Do we want to bin based on the average target position of the segment? This seems more accurate than using the first target point, especially if the segment has multiple samples that might span a small area.
+            avg_target_y = np.mean(all_target_y)
+
+            bx, by = int(avg_target_x // self.bin_size), int(
+                avg_target_y // self.bin_size
+            )
+
+            # Store the median error for this specific grid bin
             self.grid_data[(bx, by)] = np.median(segment_raw_errors, axis=0)
 
         if len(self.grid_data) > 1:
