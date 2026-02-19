@@ -38,9 +38,11 @@ class CalibrationLearner(Node):
         self.grid_data = {}  # {(bin_x, bin_y): median_error_vector}
         self.bin_size = 100
         self.x_max, self.y_max = 1600, 1200
+        self.grid_data = {}  # {(bx, by): [[ex1, ey1], [ex2, ey2], ...]}
 
         # --- Tournament State ---
         self.active_model_name = "Bias"
+        self.active_model_objs = None  # Initialize here
         self.model_names = ["Bias", "Linear"]
 
         # self.model_names = ["Bias", "Linear", "Quadratic", "Conical"]
@@ -94,7 +96,7 @@ class CalibrationLearner(Node):
             self.get_logger().error("Mismatched sample counts in segment!")
             return
 
-        segment_raw_errors = []
+        # segment_raw_errors = []
         all_target_x = []
         all_target_y = []
 
@@ -102,37 +104,54 @@ class CalibrationLearner(Node):
         # target = msg.target_pixel
 
         for gaze, target in zip(msg.gaze_samples, msg.target_samples):
-            # Store for global database
-            self.db_gaze.append([gaze.x, gaze.y])
 
-            # CALCULATE DYNAMIC ERROR (The key fix)
+            # Calculate error vector for this sample
             err = [gaze.x - target.x, gaze.y - target.y]
-            self.db_error.append(err)
 
-            segment_raw_errors.append(err)
+            # Dont append if too big (>200px)
+            if np.linalg.norm(err) > 200:
+                continue
+
+            # 1. Global Database (for the raw scatter plot)
+            self.db_gaze.append([gaze.x, gaze.y])
+            self.db_error.append(err)
+            if len(self.db_gaze) > 5000:
+                self.db_gaze.pop(0)
+                self.db_error.pop(0)
+
+            # 2. Sample-Level Binning (Split data correctly across bins)
+            bx, by = int(target.x // self.bin_size), int(target.y // self.bin_size)
+
+            # 3. Accumulative Storage (Combine data instead of overwriting)
+            if (bx, by) not in self.grid_data:
+                self.grid_data[(bx, by)] = []
+            self.grid_data[(bx, by)].append(err)
+
+            # segment_raw_errors.append(err)
             all_target_x.append(target.x)
             all_target_y.append(target.y)
 
-        if segment_raw_errors:
-            # Determine the representative location for this segment (for binning)
-            # TODO ERROR Not correct, should be based on gaze, and shoiuld be split based on bins, not averaged. We want to capture the error distribution across the segment, not just one point.
+        # if segment_raw_errors:
+        #     # Determine the representative location for this segment (for binning)
+        #     # TODO ERROR Not correct, should be based on gaze, and shoiuld be split based on bins, not averaged. We want to capture the error distribution across the segment, not just one point.
 
-            avg_target_x = np.mean(
-                all_target_x
-            )  # -> Do we want to bin based on the average target position of the segment? This seems more accurate than using the first target point, especially if the segment has multiple samples that might span a small area.
-            avg_target_y = np.mean(all_target_y)
+        #     avg_target_x = np.mean(
+        #         all_target_x
+        #     )  # -> Do we want to bin based on the average target position of the segment? This seems more accurate than using the first target point, especially if the segment has multiple samples that might span a small area.
+        #     avg_target_y = np.mean(all_target_y)
 
-            bx, by = int(avg_target_x // self.bin_size), int(
-                avg_target_y // self.bin_size
-            )
+        #     bx, by = int(avg_target_x // self.bin_size), int(
+        #         avg_target_y // self.bin_size
+        #     )
 
-            # Store the median error for this specific grid bin
-            self.grid_data[(bx, by)] = np.median(segment_raw_errors, axis=0)
+        #     # Store the median error for this specific grid bin
+        #     self.grid_data[(bx, by)] = np.median(segment_raw_errors, axis=0)
 
-        if len(self.grid_data) > 1:
+        # 4. Filter for Tournament
+        if len(self.grid_data) > 3:
             self.run_model_tournament()
-            if self.get_parameter("publish_data_quiver").value:
-                self.publish_plots()
+        if self.get_parameter("publish_data_quiver").value:
+            self.publish_plots()
 
     def get_features(self, X, model_name):
         """Generates feature matrices. IMPORTANT: Includes 'ones' column for intercept."""
@@ -156,49 +175,48 @@ class CalibrationLearner(Node):
 
     def solve_parametric(self, X, Y, name):
         feat = self.get_features(X, name)
+
         # Check if we have enough points for the number of features
         if feat is None or len(X) < feat.shape[1]:
-            return float("inf"), None
+            return None, None
 
         try:
             if self.get_parameter("use_ransac").value:
                 # RANSAC: Hard rejection of outliers
                 base = LinearRegression(fit_intercept=False)
-                reg_x = RANSACRegressor(estimator=base, min_samples=0.5).fit(
-                    feat, Y[:, 0]
-                )
-                reg_y = RANSACRegressor(estimator=base, min_samples=0.5).fit(
-                    feat, Y[:, 1]
-                )
+
+                # Ensure RANSAC has at least as many samples as features
+                min_samples = max(feat.shape[1] + 1, 5)
+                if len(X) < min_samples:
+                    return None, None
+
+                reg_x = RANSACRegressor(
+                    estimator=base, min_samples=min_samples, max_trials=100
+                ).fit(feat, Y[:, 0])
+                reg_y = RANSACRegressor(
+                    estimator=base, min_samples=min_samples, max_trials=100
+                ).fit(feat, Y[:, 1])
             else:
                 # Traditional: Huber (robust weighting)
-                reg_x = HuberRegressor(fit_intercept=False).fit(feat, Y[:, 0])
-                reg_y = HuberRegressor(fit_intercept=False).fit(feat, Y[:, 1])
+                reg_x = HuberRegressor(fit_intercept=False, epsilon=1.35).fit(
+                    feat, Y[:, 0]
+                )
+                reg_y = HuberRegressor(fit_intercept=False, epsilon=1.35).fit(
+                    feat, Y[:, 1]
+                )
 
             # Note: RANSAC objects have 'estimator_' attribute for the underlying fit
             model_x = reg_x.estimator_ if hasattr(reg_x, "estimator_") else reg_x
             model_y = reg_y.estimator_ if hasattr(reg_y, "estimator_") else reg_y
-
-            # # We use fit_intercept=False because our features ALREADY include a column of ones.
-            # # This ensures the number of coefficients matches the number of feature columns.
-            # reg_x = HuberRegressor(fit_intercept=False, epsilon=1.35).fit(feat, Y[:, 0])
-            # reg_y = HuberRegressor(fit_intercept=False, epsilon=1.35).fit(feat, Y[:, 1])
-
-            # Hat Matrix LOOCV shortcut for certainty/fit quantification
-            # XTX_inv = np.linalg.pinv(feat.T @ feat)
-            # H = np.sum((feat @ XTX_inv) * feat, axis=1)
-            # res_x = Y[:, 0] - reg_x.predict(feat)
-            # # Prevent division by zero if H is 1
-            # loocv_x = np.mean((res_x / (1 - np.clip(H, 0, 0.99) + 1e-6)) ** 2)
-            # return np.sqrt(loocv_x), (reg_x, reg_y)
 
             pred_x = reg_x.predict(feat)
             score = np.sqrt(np.mean((Y[:, 0] - pred_x) ** 2))
 
             return score, (model_x, model_y)
 
-        except:
-            return float("inf"), None
+        except Exception as e:
+            self.get_logger().debug(f"Solver {name} failed: {e}")
+            return None, None
 
     def solve_knn(self, X, Y):
         if len(X) < 5:
@@ -223,20 +241,33 @@ class CalibrationLearner(Node):
             return float("inf"), None
 
     def run_model_tournament(self):
-        X_train = np.array(
-            [
-                (k[0] * self.bin_size, k[1] * self.bin_size)
-                for k in self.grid_data.keys()
-            ]
-        )
-        Y_train = np.array(list(self.grid_data.values()))
+        # 1. Prepare training data from bins
+        X_train, Y_train = [], []
 
-        best_score = float("inf")
+        for (bx, by), error_list in self.grid_data.items():
+            # Represent the bin by its center coordinate
+            X_train.append(
+                [
+                    bx * self.bin_size + self.bin_size / 2,
+                    by * self.bin_size + self.bin_size / 2,
+                ]
+            )
+
+            # Use the median error of ALL samples ever recorded in this bin
+            # This makes the calibration much more stable over time
+            Y_train.append(np.median(error_list, axis=0))
+
+        if not X_train:
+            return
+        X_train, Y_train = np.array(X_train), np.array(Y_train)
+
+        # 2. Setup Tournament
+        best_adj_score = float("inf")
         winner_name = self.active_model_name
         winner_results = None
 
         # Model complexity penalty (approximate BIC logic)
-        penalties = {"Bias": 1, "Linear": 3, "Conical": 4, "Quadratic": 6, "KNN": 10}
+        penalties = {"Bias": 1, "Linear": 5, "Conical": 10, "Quadratic": 15, "KNN": 10}
 
         # Calculate current time in minutes
         elapsed_min = (
@@ -244,28 +275,33 @@ class CalibrationLearner(Node):
         )
         self.history_time.append(elapsed_min)
 
+        # 3. Evaluate Models
         for name in self.model_names:
             if name == "KNN":
                 score, res = self.solve_knn(X_train, Y_train)
             else:
                 score, res = self.solve_parametric(X_train, Y_train, name)
 
-            # Cap the score for history and leaderboard at 500
-            # display_score = min(score, 500.0)
-            self.model_scores[name] = score
-            self.history_scores[name].append(score)
+            rec_score = score if score is not None else float("inf")
+            self.model_scores[name] = rec_score
+            self.history_scores[name].append(score if score is not None else np.nan)
 
-            adj_score = score + (penalties[name] * 0.5)
-            if adj_score < best_score and score != float("inf"):
-                best_score = adj_score
-                winner_name = name
-                winner_results = res
+            if score is not None:
+                adj_score = score + (penalties.get(name, 0) * 0.5)
+                if adj_score < best_adj_score:
+                    best_adj_score = adj_score
+                    winner_name = name
+                    winner_results = res
 
+        # 4. Update Active Model
         if winner_results:
             self.apply_winner(winner_name, winner_results)
 
     def apply_winner(self, name, results):
         self.active_model_name = name
+        self.active_model_objs = (
+            results  # <--- Add this line to store the sklearn models
+        )
         msg = CalibrationModel()
 
         mapping = {
@@ -289,9 +325,14 @@ class CalibrationLearner(Node):
 
         elif name == "Linear":
             # Feature matrix was [x, y, ones]
-            cx[3] = float(results[0].coef_[0])  # x
-            cx[4] = float(results[1].coef_[1])  # y
-            cx[5] = float(results[0].coef_[2])  # intercept (ones)
+            # results[0] is the model for X error, results[1] is for Y error
+            cx[3] = float(results[0].coef_[0])  # x-pos impact on x-error
+            cx[4] = float(results[0].coef_[1])  # y-pos impact on x-error
+            cx[5] = float(results[0].coef_[2])  # intercept for x-error
+
+            cy[3] = float(results[1].coef_[0])  # x-pos impact on y-error
+            cy[4] = float(results[1].coef_[1])  # y-pos impact on y-error
+            cy[5] = float(results[1].coef_[2])  # intercept for y-error
 
         elif name == "Quadratic":
             # Feature matrix was [x^2, y^2, xy, x, y, ones]
@@ -321,19 +362,28 @@ class CalibrationLearner(Node):
 
         msg.coeffs_x = cx
         msg.coeffs_y = cy
+
+        self.coeffs_x = cx
+        self.coeffs_y = cy
+
         self.model_pub.publish(msg)
 
     def predict_on_grid(self, Xc, Yc):
+        # 1. Handle KNN (Already uses objects)
         if self.active_model_name == "KNN" and self.knn_model_x:
             pts = np.c_[Xc.flatten(), Yc.flatten()]
             px = self.knn_model_x.predict(pts).reshape(Xc.shape)
             py = self.knn_model_y.predict(pts).reshape(Yc.shape)
-        elif self.coeffs_x is not None:
+
+        # 2. Handle Parametric Models using stored objects (The Fix)
+        elif hasattr(self, "active_model_objs") and self.active_model_objs is not None:
             feat = self.get_features(
                 np.c_[Xc.flatten(), Yc.flatten()], self.active_model_name
             )
-            px = (feat @ np.array(self.coeffs_x)).reshape(Xc.shape)
-            py = (feat @ np.array(self.coeffs_y)).reshape(Yc.shape)
+
+            # Use the sklearn object's predict method
+            px = self.active_model_objs[0].predict(feat).reshape(Xc.shape)
+            py = self.active_model_objs[1].predict(feat).reshape(Xc.shape)
         else:
             return np.zeros_like(Xc), np.zeros_like(Yc)
 
@@ -380,7 +430,9 @@ class CalibrationLearner(Node):
         )
 
         # --- LAYER 1: RAW SAMPLES ---
-        if draw_raw and len(gaze_pts) > 0:
+        if draw_raw and len(self.db_gaze) > 0:
+            gaze_pts = np.array(self.db_gaze)
+            err_vecs = np.array(self.db_error)
             angles = np.arctan2(err_vecs[:, 1], err_vecs[:, 0])
             colors = cm.hsv((angles + np.pi) / (2 * np.pi))
             self.ax_main.quiver(
@@ -392,83 +444,60 @@ class CalibrationLearner(Node):
                 angles="xy",
                 scale_units="xy",
                 scale=1,
-                alpha=0.2,
+                alpha=0.1,
                 width=0.001,
             )
 
         # --- LAYER 2: BINNED TRUTH ---
-        avg_x, avg_y = None, None
-        if (draw_binned or draw_pred) and len(gaze_pts) > 0:
-            avg_x, _, _, _ = binned_statistic_2d(
-                gaze_pts[:, 0],
-                gaze_pts[:, 1],
-                err_vecs[:, 0],
-                "median",
-                [x_edges, y_edges],
+        if draw_binned and len(self.grid_data) > 0:
+            bx_centers, by_centers, b_err_x, b_err_y = [], [], [], []
+            for (bx, by), error_list in self.grid_data.items():
+                median_err = np.median(error_list, axis=0)
+                bx_centers.append(bx * self.bin_size + self.bin_size / 2)
+                by_centers.append(by * self.bin_size + self.bin_size / 2)
+                b_err_x.append(median_err[0])
+                b_err_y.append(median_err[1])
+
+            self.ax_main.quiver(
+                bx_centers,
+                by_centers,
+                b_err_x,
+                b_err_y,
+                angles="xy",
+                scale_units="xy",
+                scale=1,
+                color="black",
+                alpha=0.4,
+                width=0.002,
             )
-            avg_y, _, _, _ = binned_statistic_2d(
-                gaze_pts[:, 0],
-                gaze_pts[:, 1],
-                err_vecs[:, 1],
-                "median",
-                [x_edges, y_edges],
-            )
-            if draw_binned:
-                mask = ~np.isnan(avg_x.T)
-                self.ax_main.quiver(
-                    Xc[mask],
-                    Yc[mask],
-                    avg_x.T[mask],
-                    avg_y.T[mask],
-                    angles="xy",
-                    scale_units="xy",
-                    scale=1,
-                    color="gray",
-                    alpha=0.6,
-                    width=0.003,
-                )
 
         # --- LAYER 3: PREDICTION (The Complete Surface) ---
         if draw_pred and self.active_model_name:
             px, py = self.predict_on_grid(Xc, Yc)
-
-            # 1. Initialize Residual Mags with NaN
             residual_mags = np.full(Xc.shape, np.nan)
 
-            # 2. Fill residuals where ground truth exists in our aggregator
-            for (bx, by), truth_vec in self.grid_data.items():
-                iy, ix = by, bx  # Indices in the grid
+            for (bx, by), error_list in self.grid_data.items():
+                iy, ix = by, bx
                 if iy < Xc.shape[0] and ix < Xc.shape[1]:
-                    res_x = truth_vec[0] - px[iy, ix]
-                    res_y = truth_vec[1] - py[iy, ix]
+                    # FIX: Calculate median of the list before comparing to prediction
+                    median_err = np.median(error_list, axis=0)
+                    res_x = median_err[0] - px[iy, ix]
+                    res_y = median_err[1] - py[iy, ix]
                     residual_mags[iy, ix] = np.sqrt(res_x**2 + res_y**2)
 
-            # 3. Create a Manual Color Array
-            # This ensures arrows are drawn even if they have no residual to compare to
-            try:
-                cmap = plt.colormaps.get_cmap("jet")
-            except AttributeError:
-                cmap = plt.get_cmap("jet")
-
-            # Normalize residuals (0 to 50px) for the colormap
+            cmap = plt.get_cmap("jet")
             norm = plt.Normalize(vmin=0, vmax=50)
-            # Map residual magnitudes to RGBA (Result is shape [H, W, 4])
-            # Note: NaNs in the norm/cmap process usually result in the first color or transparent
             final_colors = cmap(norm(residual_mags))
 
-            # 4. Identify "No Data" bins and set them to gray
-            # residual_mags is NaN where no calibration points exist in that bin
             no_data_mask = np.isnan(residual_mags)
-            final_colors[no_data_mask] = [0.7, 0.7, 0.7, 0.3]  # Light Gray, low alpha
+            final_colors[no_data_mask] = [0.7, 0.7, 0.7, 0.2]
 
-            # 5. Plot the full grid
-            # Flatten everything to avoid broadcasting issues
             self.ax_main.quiver(
                 Xc.flatten(),
                 Yc.flatten(),
                 px.flatten(),
                 py.flatten(),
-                color=final_colors.reshape(-1, 4),  # Flatten [H, W, 4] to [N, 4]
+                color=final_colors.reshape(-1, 4),
                 angles="xy",
                 scale_units="xy",
                 scale=1,
@@ -476,7 +505,6 @@ class CalibrationLearner(Node):
                 width=0.004,
             )
 
-        # Final Render Settings
         self.ax_main.set_xlim(0, self.x_max)
         self.ax_main.set_ylim(self.y_max, 0)
         self.ax_main.set_title(f"Active Model: {self.active_model_name}")
@@ -493,9 +521,16 @@ class CalibrationLearner(Node):
         self.ax_tourney.clear()
 
         for name in self.model_names:
-            y_data = self.history_scores[name]
-            if not y_data:
+            # Clean the history: replace inf/nan with a high number (500) for plotting
+            raw_y = np.array(self.history_scores[name], dtype=float)
+
+            if len(raw_y) == 0:
                 continue
+
+            has_data = True
+            y_plot = np.where(np.isfinite(raw_y), raw_y, 500.0)
+            # Cap at 500 so the plot doesn't explode
+            y_plot = np.clip(y_plot, 0, 500)
 
             # Use specific color, make the active model thicker
             is_active = name == self.active_model_name
@@ -504,7 +539,7 @@ class CalibrationLearner(Node):
 
             self.ax_tourney.plot(
                 self.history_time,
-                y_data,
+                y_plot,
                 label=name,
                 color=self.model_colors[name],
                 alpha=alpha,
@@ -515,13 +550,19 @@ class CalibrationLearner(Node):
             if is_active:
                 self.ax_tourney.scatter(
                     self.history_time[-1],
-                    y_data[-1],
+                    y_plot[-1],
                     color=self.model_colors[name],
                     s=40,
                     zorder=5,
                 )
 
-        self.ax_tourney.set_ylim(0, 505)  # Capped at 500 (+ buffer)
+        # self.ax_tourney.set_ylim(
+        #     0,
+        #     max(
+        #         50,
+        #         max(max(scores) for scores in self.history_scores.values() if scores),
+        #     ),
+        # )
         self.ax_tourney.set_xlabel("Time (minutes)")
         self.ax_tourney.set_ylabel("LOOCV Error (pixels)")
         self.ax_tourney.set_title(
