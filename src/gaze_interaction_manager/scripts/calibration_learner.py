@@ -17,6 +17,7 @@ import time
 # Machine Learning Imports
 from sklearn.linear_model import HuberRegressor
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.linear_model import RANSACRegressor, LinearRegression
 
 
 class CalibrationLearner(Node):
@@ -29,17 +30,20 @@ class CalibrationLearner(Node):
         self.declare_parameter("show_raw_samples", True)
         self.declare_parameter("show_prediction", True)
         self.declare_parameter("show_binned_truth", True)
+        self.declare_parameter("use_ransac", True)
 
         # --- Aggregator ---
         self.db_gaze = []
         self.db_error = []
         self.grid_data = {}  # {(bin_x, bin_y): median_error_vector}
-        self.bin_size = 40
+        self.bin_size = 100
         self.x_max, self.y_max = 1600, 1200
 
         # --- Tournament State ---
         self.active_model_name = "Bias"
-        self.model_names = ["Bias", "Linear", "Quadratic", "Conical", "KNN"]
+        self.model_names = ["Bias", "Linear"]
+
+        # self.model_names = ["Bias", "Linear", "Quadratic", "Conical"]
         self.model_scores = {name: float("inf") for name in self.model_names}
         self.coeffs_x = None
         self.coeffs_y = None
@@ -130,18 +134,42 @@ class CalibrationLearner(Node):
             return float("inf"), None
 
         try:
-            # We use fit_intercept=False because our features ALREADY include a column of ones.
-            # This ensures the number of coefficients matches the number of feature columns.
-            reg_x = HuberRegressor(fit_intercept=False, epsilon=1.35).fit(feat, Y[:, 0])
-            reg_y = HuberRegressor(fit_intercept=False, epsilon=1.35).fit(feat, Y[:, 1])
+            if self.get_parameter("use_ransac").value:
+                # RANSAC: Hard rejection of outliers
+                base = LinearRegression(fit_intercept=False)
+                reg_x = RANSACRegressor(estimator=base, min_samples=0.5).fit(
+                    feat, Y[:, 0]
+                )
+                reg_y = RANSACRegressor(estimator=base, min_samples=0.5).fit(
+                    feat, Y[:, 1]
+                )
+            else:
+                # Traditional: Huber (robust weighting)
+                reg_x = HuberRegressor(fit_intercept=False).fit(feat, Y[:, 0])
+                reg_y = HuberRegressor(fit_intercept=False).fit(feat, Y[:, 1])
+
+            # Note: RANSAC objects have 'estimator_' attribute for the underlying fit
+            model_x = reg_x.estimator_ if hasattr(reg_x, "estimator_") else reg_x
+            model_y = reg_y.estimator_ if hasattr(reg_y, "estimator_") else reg_y
+
+            # # We use fit_intercept=False because our features ALREADY include a column of ones.
+            # # This ensures the number of coefficients matches the number of feature columns.
+            # reg_x = HuberRegressor(fit_intercept=False, epsilon=1.35).fit(feat, Y[:, 0])
+            # reg_y = HuberRegressor(fit_intercept=False, epsilon=1.35).fit(feat, Y[:, 1])
 
             # Hat Matrix LOOCV shortcut for certainty/fit quantification
-            XTX_inv = np.linalg.pinv(feat.T @ feat)
-            H = np.sum((feat @ XTX_inv) * feat, axis=1)
-            res_x = Y[:, 0] - reg_x.predict(feat)
-            # Prevent division by zero if H is 1
-            loocv_x = np.mean((res_x / (1 - np.clip(H, 0, 0.99) + 1e-6)) ** 2)
-            return np.sqrt(loocv_x), (reg_x, reg_y)
+            # XTX_inv = np.linalg.pinv(feat.T @ feat)
+            # H = np.sum((feat @ XTX_inv) * feat, axis=1)
+            # res_x = Y[:, 0] - reg_x.predict(feat)
+            # # Prevent division by zero if H is 1
+            # loocv_x = np.mean((res_x / (1 - np.clip(H, 0, 0.99) + 1e-6)) ** 2)
+            # return np.sqrt(loocv_x), (reg_x, reg_y)
+
+            pred_x = reg_x.predict(feat)
+            score = np.sqrt(np.mean((Y[:, 0] - pred_x) ** 2))
+
+            return score, (model_x, model_y)
+
         except:
             return float("inf"), None
 
@@ -190,11 +218,11 @@ class CalibrationLearner(Node):
         self.history_time.append(elapsed_min)
 
         for name in self.model_names:
-            score, res = (
-                self.solve_knn(X_train, Y_train)
-                if name == "KNN"
-                else self.solve_parametric(X_train, Y_train, name)
-            )
+            if name == "KNN":
+                score, res = self.solve_knn(X_train, Y_train)
+            else:
+                score, res = self.solve_parametric(X_train, Y_train, name)
+
             # Cap the score for history and leaderboard at 500
             # display_score = min(score, 500.0)
             self.model_scores[name] = score
@@ -218,18 +246,54 @@ class CalibrationLearner(Node):
             "Linear": CalibrationModel.TYPE_LINEAR,
             "Quadratic": CalibrationModel.TYPE_QUADRATIC,
             "Conical": CalibrationModel.TYPE_CONICAL,
-            "KNN": CalibrationModel.TYPE_KNN_GRID,
+            # "KNN": CalibrationModel.TYPE_KNN_GRID,
         }
         msg.model_type = mapping.get(name, CalibrationModel.TYPE_BIAS)
+        # Feature matrix as [x^2, y^2, xy, x, y, ones]
 
-        if name == "KNN":
-            self.knn_model_x, self.knn_model_y = results
-            msg.coeffs_x, msg.coeffs_y = [], []
-        else:
-            self.coeffs_x = results[0].coef_.tolist()
-            self.coeffs_y = results[1].coef_.tolist()
-            msg.coeffs_x, msg.coeffs_y = self.coeffs_x, self.coeffs_y
+        # Initialize with zeros
+        cx = [0.0] * 6
+        cy = [0.0] * 6
 
+        if name == "Bias":
+            # Feature matrix was [ones], so coef_[0] is the constant offset
+            cx[5] = float(results[0].coef_[0])
+            cy[5] = float(results[1].coef_[0])
+
+        elif name == "Linear":
+            # Feature matrix was [x, y, ones]
+            cx[3] = float(results[0].coef_[0])  # x
+            cx[4] = float(results[1].coef_[1])  # y
+            cx[5] = float(results[0].coef_[2])  # intercept (ones)
+
+        elif name == "Quadratic":
+            # Feature matrix was [x^2, y^2, xy, x, y, ones]
+            # These map 1:1 to our [0, 1, 2, 3, 4, 5] structure
+            cx = [float(c) for c in results[0].coef_]
+            cy = [float(c) for c in results[1].coef_]
+
+        elif name == "Conical":
+            # For conical, since it doesn't fit the [x^2...1] polynomial exactly,
+            # we can still pass the main coefficients or handle it as a special case.
+            # For now, let's just pass the linear/bias parts:
+            cx[3], cx[4], cx[5] = (
+                float(results[0].coef_[0]),
+                float(results[0].coef_[1]),
+                float(results[0].coef_[3]),
+            )
+            cy[3], cy[4], cy[5] = (
+                float(results[1].coef_[0]),
+                float(results[1].coef_[1]),
+                float(results[1].coef_[3]),
+            )
+
+        elif name == "KNN":
+            pass
+            # self.knn_model_x, self.knn_model_y = results
+            # msg.coeffs_x, msg.coeffs_y = [], []
+
+        msg.coeffs_x = cx
+        msg.coeffs_y = cy
         self.model_pub.publish(msg)
 
     def predict_on_grid(self, Xc, Yc):
@@ -252,6 +316,26 @@ class CalibrationLearner(Node):
         if not self.db_gaze:
             return
 
+        # 1. Main Gaze Plot
+        img_main = self.draw_gaze_overlay()
+
+        # 2. Tournament Plot
+        img_tourney = self.draw_tournament_stats()
+
+        # --- Publish Both Images ---
+        msg_main = self.bridge.cv2_to_imgmsg(img_main, "bgr8")
+        msg_main.header.stamp = self.get_clock().now().to_msg()
+        msg_main.header.frame_id = "gaze_debug"
+
+        msg_tourney = self.bridge.cv2_to_imgmsg(img_tourney, "bgr8")
+        msg_tourney.header.stamp = msg_main.header.stamp
+
+        self.image_pub.publish(msg_main)
+        self.tourney_pub.publish(msg_tourney)
+
+    def draw_gaze_overlay(self):
+        self.ax_main.clear()
+
         # Get current toggle states
         draw_raw = self.get_parameter("show_raw_samples").value
         draw_binned = self.get_parameter("show_binned_truth").value
@@ -268,10 +352,8 @@ class CalibrationLearner(Node):
             (x_edges[:-1] + x_edges[1:]) / 2, (y_edges[:-1] + y_edges[1:]) / 2
         )
 
-        self.ax_main.clear()
-
-        # --- LAYER 1: RAW SAMPLES (Colored by angle) ---
-        if draw_raw:
+        # --- LAYER 1: RAW SAMPLES ---
+        if draw_raw and len(gaze_pts) > 0:
             angles = np.arctan2(err_vecs[:, 1], err_vecs[:, 0])
             colors = cm.hsv((angles + np.pi) / (2 * np.pi))
             self.ax_main.quiver(
@@ -283,14 +365,13 @@ class CalibrationLearner(Node):
                 angles="xy",
                 scale_units="xy",
                 scale=1,
-                alpha=0.4,
-                width=0.0015,
+                alpha=0.2,
+                width=0.001,
             )
 
-        # --- LAYER 2: BINNED TRUTH (Median vector per bin, Gray) ---
+        # --- LAYER 2: BINNED TRUTH ---
         avg_x, avg_y = None, None
-        if draw_binned or draw_pred:
-            # We compute this from raw db_gaze to show "Truth" regardless of model
+        if (draw_binned or draw_pred) and len(gaze_pts) > 0:
             avg_x, _, _, _ = binned_statistic_2d(
                 gaze_pts[:, 0],
                 gaze_pts[:, 1],
@@ -305,7 +386,6 @@ class CalibrationLearner(Node):
                 "median",
                 [x_edges, y_edges],
             )
-
             if draw_binned:
                 mask = ~np.isnan(avg_x.T)
                 self.ax_main.quiver(
@@ -321,43 +401,70 @@ class CalibrationLearner(Node):
                     width=0.003,
                 )
 
-        # --- LAYER 3: PREDICTION (Active Tournament Model, Colored by residual) ---
+        # --- LAYER 3: PREDICTION (The Complete Surface) ---
         if draw_pred and self.active_model_name:
             px, py = self.predict_on_grid(Xc, Yc)
 
-            # Color by distance from the binned truth
-            if avg_x is not None:
-                # avg_x is (NX, NY), px is (NY, NX), so we transpose avg to match
-                diff = np.sqrt((px - avg_x.T) ** 2 + (py - avg_y.T) ** 2)
-                diff_c = np.clip(diff, 0, 50)  # Max color at 50px error
-                cmap = cm.jet
-            else:
-                diff_c = "blue"
-                cmap = None
+            # 1. Initialize Residual Mags with NaN
+            residual_mags = np.full(Xc.shape, np.nan)
 
+            # 2. Fill residuals where ground truth exists in our aggregator
+            for (bx, by), truth_vec in self.grid_data.items():
+                iy, ix = by, bx  # Indices in the grid
+                if iy < Xc.shape[0] and ix < Xc.shape[1]:
+                    res_x = truth_vec[0] - px[iy, ix]
+                    res_y = truth_vec[1] - py[iy, ix]
+                    residual_mags[iy, ix] = np.sqrt(res_x**2 + res_y**2)
+
+            # 3. Create a Manual Color Array
+            # This ensures arrows are drawn even if they have no residual to compare to
+            try:
+                cmap = plt.colormaps.get_cmap("jet")
+            except AttributeError:
+                cmap = plt.get_cmap("jet")
+
+            # Normalize residuals (0 to 50px) for the colormap
+            norm = plt.Normalize(vmin=0, vmax=50)
+            # Map residual magnitudes to RGBA (Result is shape [H, W, 4])
+            # Note: NaNs in the norm/cmap process usually result in the first color or transparent
+            final_colors = cmap(norm(residual_mags))
+
+            # 4. Identify "No Data" bins and set them to gray
+            # residual_mags is NaN where no calibration points exist in that bin
+            no_data_mask = np.isnan(residual_mags)
+            final_colors[no_data_mask] = [0.7, 0.7, 0.7, 0.3]  # Light Gray, low alpha
+
+            # 5. Plot the full grid
+            # Flatten everything to avoid broadcasting issues
             self.ax_main.quiver(
-                Xc,
-                Yc,
-                px,
-                py,
-                diff_c,
+                Xc.flatten(),
+                Yc.flatten(),
+                px.flatten(),
+                py.flatten(),
+                color=final_colors.reshape(-1, 4),  # Flatten [H, W, 4] to [N, 4]
                 angles="xy",
                 scale_units="xy",
                 scale=1,
-                cmap=cmap,
                 alpha=0.8,
                 width=0.004,
             )
 
-        # Final Render Settings for Main Plot
+        # Final Render Settings
         self.ax_main.set_xlim(0, self.x_max)
         self.ax_main.set_ylim(self.y_max, 0)
         self.ax_main.set_title(f"Active Model: {self.active_model_name}")
         self.ax_main.set_axis_off()
         self.fig_main.tight_layout(pad=0)
+        self.canvas_main.draw()
 
+        return cv2.cvtColor(
+            np.asarray(self.canvas_main.buffer_rgba()), cv2.COLOR_RGBA2BGR
+        )
+
+    def draw_tournament_stats(self):
         # --- TOURNAMENT SCOREBOARD ---
         self.ax_tourney.clear()
+
         for name in self.model_names:
             y_data = self.history_scores[name]
             if not y_data:
@@ -390,30 +497,16 @@ class CalibrationLearner(Node):
         self.ax_tourney.set_ylim(0, 505)  # Capped at 500 (+ buffer)
         self.ax_tourney.set_xlabel("Time (minutes)")
         self.ax_tourney.set_ylabel("LOOCV Error (pixels)")
-        self.ax_tourney.set_title("Model Performance Over Time")
+        self.ax_tourney.set_title(
+            f"Model Performance Over Time (R: {self.get_parameter('use_ransac').value})"
+        )
         self.ax_tourney.grid(True, linestyle="--", alpha=0.6)
         self.ax_tourney.legend(loc="upper right", fontsize="small")
 
-        # --- Publish Both Images ---
-        self.canvas_main.draw()
         self.canvas_tourney.draw()
-
-        img_main = cv2.cvtColor(
-            np.asarray(self.canvas_main.buffer_rgba()), cv2.COLOR_RGBA2BGR
-        )
-        img_tourney = cv2.cvtColor(
+        return cv2.cvtColor(
             np.asarray(self.canvas_tourney.buffer_rgba()), cv2.COLOR_RGBA2BGR
         )
-
-        msg_main = self.bridge.cv2_to_imgmsg(img_main, "bgr8")
-        msg_main.header.stamp = self.get_clock().now().to_msg()
-        msg_main.header.frame_id = "gaze_debug"
-
-        msg_tourney = self.bridge.cv2_to_imgmsg(img_tourney, "bgr8")
-        msg_tourney.header.stamp = msg_main.header.stamp
-
-        self.image_pub.publish(msg_main)
-        self.tourney_pub.publish(msg_tourney)
 
 
 def main():

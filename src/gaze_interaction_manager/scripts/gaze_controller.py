@@ -63,6 +63,7 @@ class GazeController(Node):
 
         # --- 3. State & Metrics ---
         self.smoothed_x, self.smoothed_y = 0.0, 0.0
+        self.model_type = CalibrationModel.TYPE_BIAS
         self.coeffs_x, self.coeffs_y = np.zeros(6), np.zeros(6)
         self.coeffs_x[5], self.coeffs_y[5] = 0.0, 0.0  # Bias terms
 
@@ -212,7 +213,7 @@ class GazeController(Node):
 
         # --- C. CORRECTION & PUBLISH ---
         if self.get_parameter("compensation_active").value:
-            dx, dy = self.get_quadratic_correction(self.smoothed_x, self.smoothed_y)
+            dx, dy = self.get_correction(self.smoothed_x, self.smoothed_y)
             dx = np.clip(dx, -self.max_offset, self.max_offset)
             dy = np.clip(dy, -self.max_offset, self.max_offset)
         else:
@@ -490,10 +491,6 @@ class GazeController(Node):
         self.rec_start_ts = None
         self.last_valid_btn_ts = 0.0
 
-    def get_quadratic_correction(self, x, y):
-        feats = np.array([x**2, y**2, x * y, x, y, 1.0])
-        return np.dot(self.coeffs_x, feats), np.dot(self.coeffs_y, feats)
-
     def update_latency_metrics(self, lat):
         # lat is in milliseconds
         # Exponential Moving Average for Mean
@@ -532,12 +529,31 @@ class GazeController(Node):
         self.debug_pub_fov.publish(Float32(data=4.0 - offset if in_fov else 3.0))
         self.debug_pub_clean.publish(Float32(data=5.0 - offset if is_clean else 4.0))
 
+    ### Calibration Model Handling ###
     def model_cb(self, msg: CalibrationModel):
         with self._lock:
+            if msg.model_type in [CalibrationModel.TYPE_KNN_GRID]:
+                self.get_logger().warning(
+                    f"Received unsupported model type: {msg.model_type}"
+                )
+                return
+
+            self.model_type = msg.model_type
             self.coeffs_x, self.coeffs_y = np.array(msg.coeffs_x), np.array(
                 msg.coeffs_y
             )
 
+    def get_correction(self, x, y):
+        if self.model_type == CalibrationModel.TYPE_BIAS:
+            return self.coeffs_x[5], self.coeffs_y[5]
+
+        # For all others, use the polynomial expansion
+        # [x^2, y^2, xy, x, y, 1.0]
+        feats = np.array([x**2, y**2, x * y, x, y, 1.0])
+
+        return np.dot(self.coeffs_x, feats), np.dot(self.coeffs_y, feats)
+
+    ### Pupil Event Callbacks ###
     def saccade_cb(self, msg: GazeEvent):
         """Handles precise termination using Pupil Native Events"""
         # Assuming GazeEvent message has start_time_ns based on your FixationEventData example

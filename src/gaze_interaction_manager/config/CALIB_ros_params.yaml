@@ -57,14 +57,24 @@
     axis_threshold: 0.6
     parser_mappings_file: "CALIB_mode_config.inputs.yaml"
 
-
-# /gaze_controller_node:
-#   ros__parameters:
-    
+/gaze_controller_node:
+  ros__parameters:
+    compensation_active : True
+    use_temporal_alignment : False
+    history_length_s : 15.0
+    internal_pipeline_delay_ms : 0.0
+    use_button_termination : True
+    median_window : 20
+    ema_alpha : 0.2
+    edge_margin : 50
+    pad_duration_ms : 100.0
+    terminal_trim_ms : 100.0
+    min_event_duration_ms : 200.0
+    max_offset_px : 200.0
 
 /calibration_learner_node:
   ros__parameters:
     show_binned_truth: True
     show_prediction : True
-    show_raw_samples : False
+    show_raw_samples : True
     publish_debug_image : True
