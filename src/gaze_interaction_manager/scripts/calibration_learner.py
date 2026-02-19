@@ -267,7 +267,7 @@ class CalibrationLearner(Node):
         winner_results = None
 
         # Model complexity penalty (approximate BIC logic)
-        penalties = {"Bias": 1, "Linear": 5, "Conical": 10, "Quadratic": 15, "KNN": 10}
+        penalties = {"Bias": 1, "Linear": 3, "Conical": 10, "Quadratic": 15, "KNN": 10}
 
         # Calculate current time in minutes
         elapsed_min = (
