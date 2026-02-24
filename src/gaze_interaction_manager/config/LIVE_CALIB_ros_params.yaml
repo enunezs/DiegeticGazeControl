@@ -37,7 +37,7 @@
 /aruco_detector:
   ros__parameters:
         aruco_dict : "DICT_4X4_250"
-        marker_size : 0.06641
+        marker_size : 0.0437
         camera_frame : "camera_optical_frame" 
         publish_tf : True
         publish_poses : False
@@ -48,7 +48,6 @@
 /button_finder:
   ros__parameters:
         button_center_strategy : "inverse_square"
-        button_map_path : "src/diegetic_transform_engine/button_maps/ButtonMap - EXCALIB - Reduced.csv"
         button_map_path : "src/diegetic_transform_engine/button_maps/ButtonMap - O-Joy V3.csv"
         # camera_frame_id : "camera_optical_frame"
         # button_frame_id : "button_frame"
@@ -56,11 +55,11 @@
 /command_mapper_node:
   ros__parameters:
     axis_threshold: 0.6
-    parser_mappings_file: "CALIB_mode_config.inputs.yaml"
+    parser_mappings_file: "EMANUEL_mode_config.inputs.yaml"
 
 /gaze_controller_node:
   ros__parameters:
-    compensation_active : True
+    compensation_active : False
     use_temporal_alignment : True
     history_length_s : 15.0
     internal_pipeline_delay_ms : 0.0

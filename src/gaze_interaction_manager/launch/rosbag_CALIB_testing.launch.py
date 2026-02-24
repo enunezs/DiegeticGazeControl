@@ -75,7 +75,6 @@ def generate_launch_description():
     # launch_description.add_action(aruco_visualizer_node)
 
     ### Transform Engine ###
-
     aruco_detector_node = Node(
         package="diegetic_transform_engine",
         executable="aruco_detector.py",

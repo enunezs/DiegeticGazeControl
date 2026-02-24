@@ -467,6 +467,7 @@ class CommandMapper(Node):
         return None, None
 
     def button_callback(self, msg: ButtonStatusMsg):
+        # self.get_logger().info(f"Received button status: button_id={msg.button_id}, button_status={msg.button_status}")
         """
         Process incoming button status messages.
         Updates all button states and triggers appropriate actions.
