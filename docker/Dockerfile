@@ -161,6 +161,12 @@ RUN pip3 install \
     simpleaudio
 
 
+# Nicole installs
+RUN pip3 install \
+    vosk \
+    sounddevice
+
+
 # Network configuration for RTP streams
 RUN echo 'net.core.rmem_max = 134217728' >> /etc/sysctl.conf && \
     echo 'net.core.rmem_default = 65536' >> /etc/sysctl.conf
