@@ -9,7 +9,7 @@ import sounddevice as sd
 from vosk import Model, KaldiRecognizer
 
 # CONFIG
-MODEL_PATH = "vosk-model-small-en-us-0.15"
+MODEL_PATH = "/models/vosk-model-small-en-us-0.15"
 SAMPLE_RATE = 16000
 LISTEN_SECONDS = 4
 WAKE_WORD = "robot"
