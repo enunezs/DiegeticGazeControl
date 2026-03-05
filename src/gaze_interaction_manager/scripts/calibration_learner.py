@@ -18,6 +18,7 @@ import time
 from sklearn.linear_model import HuberRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import RANSACRegressor, LinearRegression
+from sklearn.model_selection import ShuffleSplit
 
 
 class CalibrationLearner(Node):
@@ -32,6 +33,9 @@ class CalibrationLearner(Node):
         self.declare_parameter("show_binned_truth", True)
         self.declare_parameter("use_ransac", True)
 
+        self.declare_parameter("cv_iterations", 5)
+        self.declare_parameter("test_size", 0.1)  # 20% for validation
+
         # --- Aggregator ---
         self.db_gaze = []
         self.db_error = []
@@ -43,7 +47,7 @@ class CalibrationLearner(Node):
         # --- Tournament State ---
         self.active_model_name = "Bias"
         self.active_model_objs = None  # Initialize here
-        self.model_names = ["Bias", "Linear"]
+        self.model_names = ["Bias", "Linear", "Radial", "Polar"]  # "Quadratic"
 
         # self.model_names = ["Bias", "Linear", "Quadratic", "Conical"]
         self.model_scores = {name: float("inf") for name in self.model_names}
@@ -58,11 +62,13 @@ class CalibrationLearner(Node):
         self.history_scores = {name: [] for name in self.model_names}
         # Define fixed colors for models for visual consistency over time
         self.model_colors = {
-            "Bias": "#1f77b4",  # Blue
-            "Linear": "#ff7f0e",  # Orange
-            "Quadratic": "#2ca02c",  # Green
-            "Conical": "#d62728",  # Red
-            "KNN": "#9467bd",  # Purple
+            "Bias": "#1f77b4",
+            "Linear": "#ff7f0e",
+            "Radial": "#e377c2",
+            "Polar": "#17becf",
+            "Quadratic": "#2ca02c",
+            "Conical": "#d62728",
+            "KNN": "#9467bd",
         }
 
         # --- Plotting ---
@@ -155,10 +161,21 @@ class CalibrationLearner(Node):
 
     def get_features(self, X, model_name):
         """Generates feature matrices. IMPORTANT: Includes 'ones' column for intercept."""
+
+        xc, yc = 800, 600
+        dx = X[:, 0] - xc
+        dy = X[:, 1] - yc
+        r = np.sqrt(dx**2 + dy**2).reshape(-1, 1)
+        theta = np.arctan2(dy, dx).reshape(-1, 1)
+
         if model_name == "Bias":
             return np.ones((len(X), 1))
         elif model_name == "Linear":
             return np.c_[X, np.ones(len(X))]
+        elif model_name == "Radial":
+            return np.c_[r, np.ones(len(X))]
+        elif model_name == "Polar":
+            return np.c_[r, np.sin(theta), np.cos(theta), np.ones(len(X))]
         elif model_name == "Quadratic":
             return np.c_[
                 X[:, 0] ** 2,
@@ -169,9 +186,43 @@ class CalibrationLearner(Node):
                 np.ones(len(X)),
             ]
         elif model_name == "Conical":
-            r = np.sqrt((X[:, 0] - 800) ** 2 + (X[:, 1] - 600) ** 2).reshape(-1, 1)
             return np.c_[X, r, np.ones(len(X))]
         return None
+
+    def get_cv_score(self, X, Y, model_name):
+        """Calculates Average Validation Error using Shuffle-Split."""
+        feat = self.get_features(X, model_name)
+        if feat is None or len(X) < feat.shape[1] + 2:
+            return None
+
+        n_iterations = self.get_parameter("cv_iterations").value
+        test_size = self.get_parameter("test_size").value
+
+        # ShuffleSplit handles taking a random sample for validation
+        rs = ShuffleSplit(n_splits=n_iterations, test_size=test_size, random_state=42)
+
+        scores = []
+        try:
+            for train_index, test_index in rs.split(feat):
+                X_train, X_test = feat[train_index], feat[test_index]
+                Y_train, Y_test = Y[train_index], Y[test_index]
+
+                # Fit model (Simplified Linear Regression for CV speed)
+                # Note: We use Huber for the final fit, but standard OLS is fine for CV
+                reg_x = LinearRegression(fit_intercept=False).fit(
+                    X_train, Y_train[:, 0]
+                )
+                reg_y = LinearRegression(fit_intercept=False).fit(
+                    X_train, Y_train[:, 1]
+                )
+
+                pred = np.c_[reg_x.predict(X_test), reg_y.predict(X_test)]
+                err = np.sqrt(np.mean(np.sum((Y_test - pred) ** 2, axis=1)))
+                scores.append(err)
+
+            return np.mean(scores)
+        except:
+            return None
 
     def solve_parametric(self, X, Y, name):
         feat = self.get_features(X, name)
@@ -257,8 +308,8 @@ class CalibrationLearner(Node):
             # This makes the calibration much more stable over time
             Y_train.append(np.median(error_list, axis=0))
 
-        if not X_train:
-            return
+        if not X_train or len(X_train) < 5:  # Not enough data to train any model
+            return None
         X_train, Y_train = np.array(X_train), np.array(Y_train)
 
         # 2. Setup Tournament
@@ -267,7 +318,15 @@ class CalibrationLearner(Node):
         winner_results = None
 
         # Model complexity penalty (approximate BIC logic)
-        penalties = {"Bias": 1, "Linear": 3, "Conical": 10, "Quadratic": 15, "KNN": 10}
+        penalties = {
+            "Bias": 1,
+            "Radial": 2,
+            "Linear": 3,
+            "Polar": 5,
+            "Conical": 10,
+            "Quadratic": 8,
+            "KNN": 10,
+        }
 
         # Calculate current time in minutes
         elapsed_min = (
@@ -277,10 +336,11 @@ class CalibrationLearner(Node):
 
         # 3. Evaluate Models
         for name in self.model_names:
-            if name == "KNN":
-                score, res = self.solve_knn(X_train, Y_train)
-            else:
-                score, res = self.solve_parametric(X_train, Y_train, name)
+            # if name == "KNN":
+            #     score, res = self.solve_knn(X_train, Y_train)
+            # else:
+            #     score, res = self.solve_parametric(X_train, Y_train, name)
+            score = self.get_cv_score(X_train, Y_train, name)
 
             rec_score = score if score is not None else float("inf")
             self.model_scores[name] = rec_score
@@ -291,9 +351,9 @@ class CalibrationLearner(Node):
                 if adj_score < best_adj_score:
                     best_adj_score = adj_score
                     winner_name = name
-                    winner_results = res
 
-        # 4. Update Active Model
+        # 4. Final Fit of the Winner (using all data and robust Regressor)
+        score, winner_results = self.solve_parametric(X_train, Y_train, winner_name)
         if winner_results:
             self.apply_winner(winner_name, winner_results)
 
@@ -529,8 +589,8 @@ class CalibrationLearner(Node):
 
             has_data = True
             y_plot = np.where(np.isfinite(raw_y), raw_y, 500.0)
-            # Cap at 500 so the plot doesn't explode
-            y_plot = np.clip(y_plot, 0, 500)
+            # Cap at 200 so the plot doesn't explode
+            y_plot = np.clip(y_plot, 0, 200)
 
             # Use specific color, make the active model thicker
             is_active = name == self.active_model_name
