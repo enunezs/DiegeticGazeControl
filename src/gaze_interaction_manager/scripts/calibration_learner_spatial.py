@@ -51,7 +51,7 @@ class SpatialReservoir:
 
         for i in range(len(gx_t)):
             # Basic outlier rejection
-            if abs(ex_t[i]) > 250 or abs(ey_t[i]) > 250:
+            if abs(ex_t[i]) > 200 or abs(ey_t[i]) > 200:
                 continue
 
             # Binning
@@ -68,8 +68,8 @@ class SpatialReservoir:
             s_list = list(samples)
             if len(s_list) > self.val_size:
                 # FIFO: Use older data for training, keep newest for "Exam" (Validation)
-                val_list.extend(s_list[-self.val_size :])
-                train_list.extend(s_list[: -self.val_size])
+                val_list.extend(s_list[-self.val_size :])  # Newest for BIC/Val
+                train_list.extend(s_list[: -self.val_size])  # Older for Training
             else:
                 val_list.extend(s_list)
 
@@ -106,6 +106,10 @@ class GazeCorrectionFramework:
         self.current_features = self.master_recipe if self.is_identity else ["bias"]
         # Start simple (Bias) unless it's the raw/identity model
 
+        # Tracking for BIC/Tournament
+        self.bic_history = []
+        self.macro_rmse_history = []
+
         # Screen Constants
         self.feature_library = {
             "identity": lambda dx, dy, r, r2: [],
@@ -134,6 +138,20 @@ class GazeCorrectionFramework:
                 np.ones_like(dx),
             ],
         }
+
+        # Calculate k (Number of features per axis)
+        self.k = 0 if self.is_identity else self._get_k_count()
+
+        if self.is_identity:
+            self.k_total = 0
+        else:
+            A_temp = self._get_matrix(np.array([0]), np.array([0]), self.master_recipe)
+            self.k_total = A_temp.shape[1] * 2
+
+    def _get_k_count(self):
+        # Temp build matrix to count columns
+        A = self._get_matrix(np.array([0]), np.array([0]), self.master_recipe)
+        return A.shape[1]
 
     def _get_matrix(self, dx, dy, features):
         if not features or features == ["identity"]:
@@ -236,8 +254,11 @@ class CalibrationLearner(Node):
                 ("publish_status_profile", True),
                 ("publish_prediction_map", True),
                 ("publish_tournament", True),
+                ("selection_strategy", "RMSE"),  # "BIC" or "RMSE"
                 ("trigger_bins", 12),
                 ("solver", "huber"),
+                ("bic_hysteresis", 15.0),  # Threshold to switch models
+                ("rmse_hysteresis", 2.0),
             ],
         )
 
@@ -248,9 +269,9 @@ class CalibrationLearner(Node):
             "screen_w": 1600,
             "screen_h": 1200,
             "bin_size": 100,
-            "samples_per_bin": 10,
-            "val_size": 2,
-            "thinning_stride": 25,
+            "samples_per_bin": 20,
+            "val_size": 3,
+            "thinning_stride": 15,
             "trigger_bins": self.get_parameter("trigger_bins").value,
             "solver": self.get_parameter("solver").value,
         }
@@ -260,15 +281,15 @@ class CalibrationLearner(Node):
         self.competitors = [
             GazeCorrectionFramework("Raw", ["identity"], self.cfg),
             GazeCorrectionFramework("Bias", ["bias"], self.cfg),
-            GazeCorrectionFramework("Radial", ["bias", "radial_2"], self.cfg),
+            # GazeCorrectionFramework("Radial", ["bias", "radial_2"], self.cfg),
             GazeCorrectionFramework("Conic", ["full_conic"], self.cfg),
+            GazeCorrectionFramework("Sigmoid X+Y", ["sigmoid"], self.cfg),
         ]
 
         self.active_idx = 1
         self.event_count = 0
-        self.start_time = None
         self.bridge = CvBridge()
-        # self.raw_history = []  # Global RMSE for "Identity" baseline
+        self.start_time = None
 
         # 4. ROS Setup
         self.create_subscription(
@@ -300,9 +321,6 @@ class CalibrationLearner(Node):
 
     def segment_cb(self, msg: InteractionSegment):
         # 0. Parse Segment
-        if self.start_time is None:
-            self.start_time = self.get_clock().now()
-
         if len(msg.gaze_samples) != len(msg.target_samples):
             self.get_logger().error("Mismatched sample counts in segment!")
             return
@@ -340,18 +358,59 @@ class CalibrationLearner(Node):
         self.reservoir.add_segment(gx, gy, ex, ey)
         train_pool, val_pool = self.reservoir.get_train_val_split()
 
-        # Phase 3: SHARED TRAINING
+        # Phase 3: Shared Training ###
         for model in self.competitors:
             model.train(train_pool, len(self.reservoir), self.event_count)
 
         self.event_count += 1
 
         # Phase 4: Model selection
-        # TODO: Later
+        self.run_bic_tournament()
 
         # Publish model update and visuals
         self.publish_model_update()
-        self.generate_visuals(gx, gy, ex, ey, train_pool, val_pool)
+        self.generate_visuals(train_pool, val_pool)
+
+    def run_bic_tournament(self):
+        n_bins = len(self.reservoir.bins)
+        if n_bins == 0:
+            return
+
+        strategy = self.get_parameter("selection_strategy").value
+        scores = []
+
+        for i, model in enumerate(self.competitors):
+            # Calculate Macro-Average MSE across all bins
+            bin_mses = []
+            for samples in self.reservoir.bins.values():
+                s = np.array(samples)
+                px, py = model.predict(s[:, 0], s[:, 1])
+                mse = np.mean((s[:, 2] - px) ** 2 + (s[:, 3] - py) ** 2)
+                bin_mses.append(mse)
+
+            macro_mse = np.mean(bin_mses)
+            macro_rmse = np.sqrt(macro_mse)
+            model.macro_rmse_history.append(macro_rmse)
+
+            # BIC = ln(N_bins) * k + N_bins * ln(MSE_macro)
+            k_total = model.k * 2
+            bic = np.log(n_bins) * model.k_total + n_bins * np.log(macro_mse + 1e-6)
+
+            # bic = k_total * np.log(n_bins) + n_bins * np.log(macro_mse + 1e-6)
+            model.bic_history.append(bic)
+            scores.append(bic if strategy == "BIC" else macro_rmse)
+
+        # Hysteresis Logic
+        challenger_idx = np.argmin(scores)
+        hys_key = "bic_hysteresis" if strategy == "BIC" else "rmse_hysteresis"
+        hysteresis = self.get_parameter(hys_key).value
+
+        if scores[challenger_idx] < (scores[self.active_idx] - hysteresis):
+            if self.active_idx != challenger_idx:
+                self.get_logger().info(
+                    f"SWITCH: {self.competitors[self.active_idx].name} -> {self.competitors[challenger_idx].name}"
+                )
+                self.active_idx = challenger_idx
 
     def publish_model_update(self):
         winner = self.competitors[self.active_idx]
@@ -410,84 +469,99 @@ class CalibrationLearner(Node):
         msg.coeffs_y = [float(c) for c in cy]
         self.model_pub.publish(msg)
 
-    def generate_visuals(self, gx, gy, ex, ey, train_pool, val_pool):
-        """Generates 4 separate plots based on parameters."""
-
-        # 1. RESERVOIR QUIVER
+    # ==========================================
+    # VISUALIZATION REFACTOR
+    # ==========================================
+    def generate_visuals(self, train_pool, val_pool):
         if self.get_parameter("publish_data_quiver").value:
-            fig, ax = plt.subplots(figsize=(6, 5))
-            if len(train_pool) > 0:
-                ax.quiver(
-                    train_pool[:, 0],
-                    train_pool[:, 1],
-                    train_pool[:, 2],
-                    train_pool[:, 3],
-                    color="blue",
-                    alpha=0.3,
-                    label="Train",
-                )
-            if len(val_pool) > 0:
-                ax.quiver(
-                    val_pool[:, 0],
-                    val_pool[:, 1],
-                    val_pool[:, 2],
-                    val_pool[:, 3],
-                    color="black",
-                    label="Val",
-                )
-            ax.set_title(f"Reservoir (Bins: {len(self.reservoir)})")
-            self._pub_plt(fig, "quiver")
-
-        # 2. TOURNAMENT
+            self._plot_reservoir(train_pool, val_pool)
         if self.get_parameter("publish_tournament").value:
-            fig, ax = plt.subplots(figsize=(6, 4))
-            for m in self.competitors:
-                ax.plot(
-                    np.cumsum(m.prequential_errors)
-                    / (np.arange(len(m.prequential_errors)) + 1),
-                    label=m.name,
-                )
-            ax.legend()
-            ax.set_title("Tournament AULC")
-            self._pub_plt(fig, "tourney")
-
-        # 3. ADAPTATION PROFILE (Current Winner vs Raw)
+            self._plot_tournament()
         if self.get_parameter("publish_status_profile").value:
-            winner = self.competitors[self.active_idx]
-            raw = self.competitors[0]
-            fig, ax = plt.subplots(figsize=(6, 4))
-            ev = np.arange(len(winner.prequential_errors))
-            ax.plot(ev, winner.prequential_errors, alpha=0.3, color="blue")
+            self._plot_profile()
+        if self.get_parameter("publish_prediction_map").value:
+            self._plot_prediction_field()
+
+    def _plot_reservoir(self, train_pool, val_pool):
+        fig, ax = plt.subplots(figsize=(6, 5))
+        if len(train_pool) > 0:
+            angles = np.arctan2(train_pool[:, 3], train_pool[:, 2])
+            ax.quiver(
+                train_pool[:, 0],
+                train_pool[:, 1],
+                train_pool[:, 2],
+                train_pool[:, 3],
+                color=plt.cm.hsv((angles + np.pi) / (2 * np.pi)),
+                alpha=0.5,
+                scale=1,
+                scale_units="xy",
+            )
+        if len(val_pool) > 0:
+            ax.quiver(
+                val_pool[:, 0],
+                val_pool[:, 1],
+                val_pool[:, 2],
+                val_pool[:, 3],
+                color="black",
+                scale=1,
+                scale_units="xy",
+                width=0.005,
+            )
+        ax.set_title(f"Reservoir ({len(self.reservoir.bins)} Bins)")
+        ax.set_xlim(0, 1600)
+        ax.set_ylim(1200, 0)
+        self._pub_plt(fig, "quiver")
+
+    def _plot_tournament(self):
+        fig, ax = plt.subplots(figsize=(6, 4))
+        strategy = self.get_parameter("selection_strategy").value
+        for m in self.competitors:
+            data = m.bic_history if strategy == "BIC" else m.macro_rmse_history
+            if data:
+                ax.plot(data, label=m.name)
+        ax.set_title(f"Tournament Status ({strategy})")
+        ax.legend(fontsize="x-small")
+        ax.grid(alpha=0.2)
+        self._pub_plt(fig, "tourney")
+
+    def _plot_profile(self):
+        fig, ax = plt.subplots(figsize=(6, 4))
+        winner, raw = self.competitors[self.active_idx], self.competitors[0]
+        if winner.macro_rmse_history:
             ax.plot(
-                ev,
-                np.cumsum(winner.prequential_errors) / (ev + 1),
+                winner.macro_rmse_history,
                 lw=2,
                 color="blue",
-                label="Winner",
+                label=f"Active: {winner.name}",
             )
-            ax.plot(
-                ev, np.cumsum(raw.prequential_errors) / (ev + 1), "r--", label="Raw"
-            )
-            ax.set_title(f"Profile: {winner.name}")
-            self._pub_plt(fig, "profile")
+            ax.plot(raw.macro_rmse_history, "r--", label="Raw Hardware")
+        ax.set_title("Global Macro RMSE Profile")
+        ax.set_ylim(0, 150)
+        ax.legend()
+        ax.grid(alpha=0.2)
+        self._pub_plt(fig, "profile")
 
-        # 4. PREDICTION MAP
-        if self.get_parameter("publish_prediction_map").value:
-            winner = self.competitors[self.active_idx]
-            fig, ax = plt.subplots(figsize=(6, 5))
-            gw, gh = self.cfg["screen_w"], self.cfg["screen_h"]
-            grid_x, grid_y = np.meshgrid(np.linspace(0, gw, 15), np.linspace(0, gh, 12))
-            px, py = winner.predict(grid_x.ravel(), grid_y.ravel())
-            ax.quiver(
-                grid_x,
-                grid_y,
-                px.reshape(grid_x.shape),
-                py.reshape(grid_y.shape),
-                color="green",
-            )
-            ax.set_xlim(0, gw)
-            ax.set_ylim(gh, 0)
-            self._pub_plt(fig, "map")
+    def _plot_prediction_field(self):
+        winner = self.competitors[self.active_idx]
+        fig, ax = plt.subplots(figsize=(6, 5))
+        gw, gh = self.cfg["screen_w"], self.cfg["screen_h"]
+        grid_x, grid_y = np.meshgrid(np.linspace(0, gw, 15), np.linspace(0, gh, 12))
+        px, py = winner.predict(grid_x.ravel(), grid_y.ravel())
+        mag = np.sqrt(px**2 + py**2)
+        ax.quiver(
+            grid_x,
+            grid_y,
+            px.reshape(grid_x.shape),
+            py.reshape(grid_y.shape),
+            mag.reshape(grid_x.shape),
+            cmap="jet",
+            scale=1,
+            scale_units="xy",
+        )
+        ax.set_xlim(0, gw)
+        ax.set_ylim(gh, 0)
+        ax.set_title(f"Correction Field: {winner.name}")
+        self._pub_plt(fig, "map")
 
     def _pub_plt(self, fig, key):
         canvas = FigureCanvasAgg(fig)
