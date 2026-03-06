@@ -168,7 +168,7 @@ class GazeCorrectionFramework:
         if self.is_identity:
             return None
 
-        s_type = self.cfg.get("solver", "huber")
+        s_type = self.cfg.get("solver", "ridge")
         alpha = self.cfg.get("solver_alpha", 0.1)
 
         n_cols = self._get_matrix(
@@ -256,9 +256,9 @@ class CalibrationLearner(Node):
                 ("publish_tournament", True),
                 ("selection_strategy", "RMSE"),  # "BIC" or "RMSE"
                 ("trigger_bins", 12),
-                ("solver", "huber"),
-                ("bic_hysteresis", 15.0),  # Threshold to switch models
-                ("rmse_hysteresis", 2.0),
+                ("solver", "ridge"),  # "ridge", "huber", "linear"
+                ("bic_hysteresis", 5.0),  # Threshold to switch models
+                ("rmse_hysteresis", 1.0),
             ],
         )
 
