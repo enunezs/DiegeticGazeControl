@@ -548,11 +548,44 @@ class GazeController(Node):
         if self.model_type == CalibrationModel.TYPE_BIAS:
             return self.coeffs_x[5], self.coeffs_y[5]
 
-        # For all others, use the polynomial expansion
-        # [x^2, y^2, xy, x, y, 1.0]
-        feats = np.array([x**2, y**2, x * y, x, y, 1.0])
+        cx = self.coeffs_x
+        cy = self.coeffs_y
 
-        return np.dot(self.coeffs_x, feats), np.dot(self.coeffs_y, feats)
+        # Use relative coordinates (dx, dy) because the learner trains on centered data
+        # cx/cy are defined in GazeCorrectionFramework (800, 600)
+        dx = x - 800.0
+        dy = y - 600.0
+
+        # 1. 2nd Order Polynomial Terms
+        dx2, dy2, dxy = dx * dx, dy * dy, dx * dy
+
+        # 2. Sigmoid Terms (Only if coeffs[6] is non-zero)
+        # coeffs[6] = Amplitude, coeffs[7] = Sharpness/Scale
+        sig_x = cx[6] * np.tanh(dx / cx[7]) if len(cx) > 7 and cx[7] != 0 else 0.0
+        sig_y = cy[6] * np.tanh(dy / cy[7]) if len(cy) > 7 and cy[7] != 0 else 0.0
+
+        # 3. Combined Result
+        # [0]=x2, [1]=y2, [2]=xy, [3]=x, [4]=y, [5]=bias
+        corr_x = (
+            (cx[0] * dx2)
+            + (cx[1] * dy2)
+            + (cx[2] * dxy)
+            + (cx[3] * dx)
+            + (cx[4] * dy)
+            + cx[5]
+            + sig_x
+        )
+        corr_y = (
+            (cy[0] * dx2)
+            + (cy[1] * dy2)
+            + (cy[2] * dxy)
+            + (cy[3] * dx)
+            + (cy[4] * dy)
+            + cy[5]
+            + sig_y
+        )
+
+        return corr_x, corr_y
 
     ### Pupil Event Callbacks ###
     def saccade_cb(self, msg: GazeEvent):
