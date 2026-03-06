@@ -133,7 +133,7 @@ class ArucoDetectorNode(Node):
         self.declare_parameter("camera_frame", "camera_optical_frame")
         self.declare_parameter("publish_tf", True)
         self.declare_parameter("publish_poses", True)
-        self.declare_parameter("marker_persistence", 0.5)
+        self.declare_parameter("marker_persistence", 0.2)  # seconds
         self.declare_parameter("filter_min_cutoff", 0.5)
         self.declare_parameter("filter_beta", 0.05)
 

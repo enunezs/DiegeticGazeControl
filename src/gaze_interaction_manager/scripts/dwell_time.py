@@ -167,7 +167,7 @@ class GazeInteractionNode(Node):
         self.processing_frequency = self.get_parameter("processing_frequency").value
 
         # Button cleanup parameters
-        self.declare_parameter("button_timeout_seconds", 2.0)
+        self.declare_parameter("button_timeout_seconds", 0.5)
         self.button_timeout = self.get_parameter("button_timeout_seconds").value
 
         # Debug parameters
@@ -353,8 +353,8 @@ class GazeInteractionNode(Node):
         # Fallback if called by timer
         if dt is None:
             dt = 1.0 / self.processing_frequency
-        # if trigger_stamp is None:
-        # trigger_stamp = self.get_clock().now()
+        if trigger_stamp is None:
+            trigger_stamp = self.last_gaze_stamp
 
         active_buttons: List[ButtonStatus] = []
         status_updates: List[ButtonStatus_msg] = []
