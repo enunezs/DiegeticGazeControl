@@ -117,7 +117,7 @@ def generate_launch_description():
 
     calibration_learner_node = Node(
         package="gaze_interaction_manager",
-        executable="calibration_learner.py",
+        executable="calibration_learner_spatial.py",
         name="calibration_learner_node",
         parameters=[config, {"use_sim_time": use_sim_time}],
     )

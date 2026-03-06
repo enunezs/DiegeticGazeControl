@@ -1,26 +1,34 @@
 #!/usr/bin/env python3
 
+# ROS2 Imports
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from gaze_interaction_manager.msg import InteractionSegment, CalibrationModel
 
+# Other Imports
 import numpy as np
 import cv2
 from cv_bridge import CvBridge
 from collections import deque
 
+# Matplotlib for Visualization
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
-import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
 
+# import matplotlib.cm as cm
 
 # Machine Learning Imports
-from sklearn.linear_model import HuberRegressor, Ridge
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import RANSACRegressor, LinearRegression
-from sklearn.model_selection import ShuffleSplit
+from sklearn.linear_model import (
+    HuberRegressor,
+    Ridge,
+    RANSACRegressor,
+    LinearRegression,
+)
+
+# from sklearn.neighbors import KNeighborsRegressor
+# from sklearn.model_selection import ShuffleSplit
 
 
 # ==========================================
@@ -33,17 +41,20 @@ class SpatialReservoir:
         self.bin_size = cfg.get("bin_size", 100)
         self.max_samples = cfg.get("samples_per_bin", 10)
         self.val_size = cfg.get("val_size", 2)
+        self.stride = cfg.get("thinning_stride", 25)
 
     def add_segment(self, gx, gy, ex, ey):
         """Processes a new segment into the shared spatial bins."""
-        stride = self.cfg.get("thinning_stride", 30)
+        stride = self.stride
+
         gx_t, gy_t, ex_t, ey_t = gx[::stride], gy[::stride], ex[::stride], ey[::stride]
 
         for i in range(len(gx_t)):
-            # Basic outlier rejection before binning
+            # Basic outlier rejection
             if abs(ex_t[i]) > 250 or abs(ey_t[i]) > 250:
                 continue
 
+            # Binning
             bid = (int(gx_t[i] // self.bin_size), int(gy_t[i] // self.bin_size))
             if bid not in self.bins:
                 self.bins[bid] = deque(maxlen=self.max_samples)
@@ -51,16 +62,21 @@ class SpatialReservoir:
             self.bins[bid].append((gx_t[i], gy_t[i], ex_t[i], ey_t[i]))
 
     def get_train_val_split(self):
-        """Returns flattened arrays for training and validation."""
+        """Returns a flattened numpy array of training and validation samples."""
         train_list, val_list = [], []
         for samples in self.bins.values():
             s_list = list(samples)
             if len(s_list) > self.val_size:
+                # FIFO: Use older data for training, keep newest for "Exam" (Validation)
                 val_list.extend(s_list[-self.val_size :])
                 train_list.extend(s_list[: -self.val_size])
             else:
                 val_list.extend(s_list)
+
         return np.array(train_list), np.array(val_list)
+
+    def __len__(self):
+        return len(self.bins)
 
 
 # ==========================================
@@ -72,22 +88,23 @@ class GazeCorrectionFramework:
     Used as a competitor within the Tournament.
     """
 
-    def __init__(self, name, features, config):
+    def __init__(self, name, recipe, config):
         self.name = name
         self.cfg = config
         self.cx, self.cy = self.cfg.get("center_x", 800), self.cfg.get("center_y", 600)
-
         # Internal State (Models and Coefficients)
         self.params = {"x": None, "y": None}
         self.models = {"x": None, "y": None}
+
         self.prequential_errors = []
         self.unlock_moments = {}
+        # self.raw_prequential_errors = []  # Hardware error (px)
 
         # Recipe Definition
-        self.master_recipe = features
+        self.master_recipe = recipe
         self.is_identity = "identity" in self.master_recipe
-        # Start simple (Bias) unless it's the raw/identity model
         self.current_features = self.master_recipe if self.is_identity else ["bias"]
+        # Start simple (Bias) unless it's the raw/identity model
 
         # Screen Constants
         self.feature_library = {
@@ -211,7 +228,20 @@ class CalibrationLearner(Node):
     def __init__(self):
         super().__init__("calibration_learner_reservoir")
 
-        # --- Shared Reservoir ---
+        # 1. Parameters
+        self.declare_parameters(
+            namespace="",
+            parameters=[
+                ("publish_data_quiver", True),
+                ("publish_status_profile", True),
+                ("publish_prediction_map", True),
+                ("publish_tournament", True),
+                ("trigger_bins", 12),
+                ("solver", "huber"),
+            ],
+        )
+
+        # 2. Configuration
         self.cfg = {
             "center_x": 800,
             "center_y": 600,
@@ -221,59 +251,55 @@ class CalibrationLearner(Node):
             "samples_per_bin": 10,
             "val_size": 2,
             "thinning_stride": 25,
-            "trigger_bins": 12,
+            "trigger_bins": self.get_parameter("trigger_bins").value,
+            "solver": self.get_parameter("solver").value,
         }
-        # self.reservoir = SpatialReservoir(self.cfg)
 
-        # --- The Shared Data Structure ---
-        self.reservoir = {}  # (bx, by) -> deque
-        self.raw_history = []  # Global RMSE for "Identity" baseline
-
-        # --- Competitors ---
+        # 3. State
+        self.reservoir = SpatialReservoir(self.cfg)
         self.competitors = [
             GazeCorrectionFramework("Raw", ["identity"], self.cfg),
             GazeCorrectionFramework("Bias", ["bias"], self.cfg),
             GazeCorrectionFramework("Radial", ["bias", "radial_2"], self.cfg),
             GazeCorrectionFramework("Conic", ["full_conic"], self.cfg),
         ]
+
         self.active_idx = 1
         self.event_count = 0
-
-        # --- ROS Setup ---
-
-        ## Toggles for visualization layers
-        self.declare_parameter("publish_data_quiver", True)
-        self.declare_parameter("show_raw_samples", True)
-        self.declare_parameter("show_prediction", True)
-        self.declare_parameter("show_binned_truth", True)
-        self.declare_parameter("use_ransac", False)
-
-        self.declare_parameter("cv_iterations", 5)
-        self.declare_parameter("test_size", 0.1)  # 20% for validation
-
-        # --- ROS Setup ---
+        self.start_time = None
         self.bridge = CvBridge()
+        # self.raw_history = []  # Global RMSE for "Identity" baseline
+
+        # 4. ROS Setup
         self.create_subscription(
             InteractionSegment, "calibration/interaction_segment", self.segment_cb, 10
         )
         self.model_pub = self.create_publisher(
             CalibrationModel, "calibration/model_update", 10
         )
-        self.image_pub = self.create_publisher(Image, "calibration/data_quiver", 10)
 
-        self.tourney_pub = self.create_publisher(
-            Image, "calibration/tournament_status", 10
-        )
+        # Modular Publishers
+        self.pubs = {
+            "quiver": self.create_publisher(
+                Image, "calibration/viz/data_reservoir", 10
+            ),
+            "profile": self.create_publisher(
+                Image, "calibration/viz/adaptation_profile", 10
+            ),
+            "map": self.create_publisher(Image, "calibration/viz/prediction_map", 10),
+            "tourney": self.create_publisher(Image, "calibration/viz/tournament", 10),
+        }
 
         self.get_logger().info("Tournament Calibration Learner Initialized.")
 
         # --- Plotting ---
-        self.fig_main, self.ax_main = plt.subplots(figsize=(8, 6), dpi=100)
-        self.fig_tourney, self.ax_tourney = plt.subplots(figsize=(6, 4), dpi=100)
-        self.canvas_main = FigureCanvasAgg(self.fig_main)
-        self.canvas_tourney = FigureCanvasAgg(self.fig_tourney)
+        # self.fig_main, self.ax_main = plt.subplots(figsize=(8, 6), dpi=100)
+        # self.fig_tourney, self.ax_tourney = plt.subplots(figsize=(6, 4), dpi=100)
+        # self.canvas_main = FigureCanvasAgg(self.fig_main)
+        # self.canvas_tourney = FigureCanvasAgg(self.fig_tourney)
 
     def segment_cb(self, msg: InteractionSegment):
+        # 0. Parse Segment
         if self.start_time is None:
             self.start_time = self.get_clock().now()
 
@@ -283,16 +309,14 @@ class CalibrationLearner(Node):
 
         # TODO: not append if sample error greater than 200
 
-        # 1. Parse Segment
         gx = np.array([p.x for p in msg.gaze_samples])
         gy = np.array([p.y for p in msg.gaze_samples])
         tx = np.array([p.x for p in msg.target_samples])
         ty = np.array([p.y for p in msg.target_samples])
-
         # Error relative to target (Ground Truth)
         ex, ey = gx - tx, gy - ty
 
-        # 2. Phase 1: Prequential Evaluation (TEST)
+        ### Phase 1: Prequential Evaluation ###
         # Evaluate all models BEFORE they learn from this segment
         best_aulc = float("inf")
         for i, model in enumerate(self.competitors):
@@ -304,48 +328,30 @@ class CalibrationLearner(Node):
 
             model.prequential_errors.append(rmse)
 
-            # Winner selection (exclude 'Raw')
+            # TODO: not here. Should be based on cv scores within the training phase, not the prequential error of the single segment. This is too noisy and reactive.
+            # Winner Selection (AULC)
             if i > 0:
                 aulc = np.mean(model.prequential_errors)
                 if aulc < best_aulc:
                     best_aulc = aulc
                     self.active_idx = i
 
-        # 3. Phase 2: Update Shared Reservoir (DATA MANAGEMENT)
-        stride = self.cfg["thinning_stride"]
-        gx_t, gy_t, ex_t, ey_t = gx[::stride], gy[::stride], ex[::stride], ey[::stride]
+        ### Phase 2: Update Shared Reservoir ###
+        self.reservoir.add_segment(gx, gy, ex, ey)
+        train_pool, val_pool = self.reservoir.get_train_val_split()
 
-        for i in range(len(gx_t)):
-            if abs(ex_t[i]) > 400 or abs(ey_t[i]) > 400:
-                continue
-            bid = (
-                int(gx_t[i] // self.cfg["bin_size"]),
-                int(gy_t[i] // self.cfg["bin_size"]),
-            )
-            if bid not in self.reservoir:
-                self.reservoir[bid] = deque(maxlen=self.cfg["samples_per_bin"])
-            self.reservoir[bid].append((gx_t[i], gy_t[i], ex_t[i], ey_t[i]))
-
-        # 4. PHASE 3: SHARED TRAINING
-        # Gather all data from bins once
-        train_pool = []
-        for samples in self.reservoir.values():
-            s_list = list(samples)
-            # Use Stratified Split logic (Newest for Val, Older for Train)
-            if len(s_list) > self.cfg["val_size"]:
-                train_pool.extend(s_list[: -self.cfg["val_size"]])
-            else:
-                train_pool.extend(s_list)
-
-        train_data = np.array(train_pool)
-        n_bins = len(self.reservoir)
-
+        # Phase 3: SHARED TRAINING
         for model in self.competitors:
-            model.train(train_data, n_bins, self.event_count)
+            model.train(train_pool, len(self.reservoir), self.event_count)
 
         self.event_count += 1
+
+        # Phase 4: Model selection
+        # TODO: Later
+
+        # Publish model update and visuals
         self.publish_model_update()
-        self.publish_visuals(gx, gy, ex, ey)
+        self.generate_visuals(gx, gy, ex, ey, train_pool, val_pool)
 
     def publish_model_update(self):
         winner = self.competitors[self.active_idx]
@@ -354,10 +360,8 @@ class CalibrationLearner(Node):
 
         msg = CalibrationModel()
         # Initialize 6-slot coefficients with zeros
-        cx = [0.0] * 6
-        cy = [0.0] * 6
+        cx, cy = [0.0] * 6, [0.0] * 6
         px, py = winner.params["x"], winner.params["y"]
-
         W, H = 800.0, 600.0
 
         if winner.name == "Bias":
@@ -372,9 +376,9 @@ class CalibrationLearner(Node):
 
         elif winner.name == "Radial":
             msg.model_type = CalibrationModel.TYPE_CONICAL  # Re-using type 3 for Radial
-            # Recipe: [(dx*r2)/W^3, (dy*r2)/H^3, 1] (Example based on your radial_2)
-            cx[0], cx[5] = px[0] / (W**3), px[2]
-            cy[1], cy[5] = py[1] / (H**3), py[2]
+            # Recipe ["bias", "radial_2"]: index 0=bias, 1=radial_x, 2=radial_y
+            cx[0], cx[5] = px[1] / (W**3), px[0]
+            cy[1], cy[5] = py[2] / (H**3), py[0]
 
         elif winner.name == "Conic":
             msg.model_type = CalibrationModel.TYPE_QUADRATIC
@@ -406,156 +410,91 @@ class CalibrationLearner(Node):
         msg.coeffs_y = [float(c) for c in cy]
         self.model_pub.publish(msg)
 
-    def publish_visuals(self, gx, gy, ex, ey):
-        winner = self.competitors[self.active_idx]
-        raw = self.competitors[0]
+    def generate_visuals(self, gx, gy, ex, ey, train_pool, val_pool):
+        """Generates 4 separate plots based on parameters."""
 
-        # Use Agg backend for speed & thread safety
-        fig = plt.figure(figsize=(12, 5))
-        gs = gridspec.GridSpec(1, 2, width_ratios=[1, 1])
+        # 1. RESERVOIR QUIVER
+        if self.get_parameter("publish_data_quiver").value:
+            fig, ax = plt.subplots(figsize=(6, 5))
+            if len(train_pool) > 0:
+                ax.quiver(
+                    train_pool[:, 0],
+                    train_pool[:, 1],
+                    train_pool[:, 2],
+                    train_pool[:, 3],
+                    color="blue",
+                    alpha=0.3,
+                    label="Train",
+                )
+            if len(val_pool) > 0:
+                ax.quiver(
+                    val_pool[:, 0],
+                    val_pool[:, 1],
+                    val_pool[:, 2],
+                    val_pool[:, 3],
+                    color="black",
+                    label="Val",
+                )
+            ax.set_title(f"Reservoir (Bins: {len(self.reservoir)})")
+            self._pub_plt(fig, "quiver")
 
-        # Subplot 1: Tournament Curve
-        ax_t = fig.add_subplot(gs[0])
-        ev_r = np.arange(len(winner.prequential_errors))
-        ax_t.plot(
-            np.cumsum(raw.prequential_errors) / (ev_r + 1), "r--", label="Raw Hardware"
-        )
-        ax_t.plot(
-            np.cumsum(winner.prequential_errors) / (ev_r + 1),
-            "b-",
-            lw=2,
-            label=f"Active: {winner.name}",
-        )
-        ax_t.set_title("AULC Progress")
-        ax_t.legend()
+        # 2. TOURNAMENT
+        if self.get_parameter("publish_tournament").value:
+            fig, ax = plt.subplots(figsize=(6, 4))
+            for m in self.competitors:
+                ax.plot(
+                    np.cumsum(m.prequential_errors)
+                    / (np.arange(len(m.prequential_errors)) + 1),
+                    label=m.name,
+                )
+            ax.legend()
+            ax.set_title("Tournament AULC")
+            self._pub_plt(fig, "tourney")
 
-        # Subplot 2: Spatial Field
-        ax_f = fig.add_subplot(gs[1])
-        gw, gh = self.cfg["screen_w"], self.cfg["screen_h"]
-        gx_g, gy_g = np.meshgrid(np.linspace(0, gw, 15), np.linspace(0, gh, 12))
-        px, py = winner.predict(gx_g.ravel(), gy_g.ravel())
-        ax_f.quiver(
-            gx_g,
-            gy_g,
-            px.reshape(gx_g.shape),
-            py.reshape(gy_g.shape),
-            color="green",
-            scale=1,
-            scale_units="xy",
-        )
-        ax_f.set_xlim(0, gw)
-        ax_f.set_ylim(gh, 0)
-        ax_f.set_title("Current Field")
+        # 3. ADAPTATION PROFILE (Current Winner vs Raw)
+        if self.get_parameter("publish_status_profile").value:
+            winner = self.competitors[self.active_idx]
+            raw = self.competitors[0]
+            fig, ax = plt.subplots(figsize=(6, 4))
+            ev = np.arange(len(winner.prequential_errors))
+            ax.plot(ev, winner.prequential_errors, alpha=0.3, color="blue")
+            ax.plot(
+                ev,
+                np.cumsum(winner.prequential_errors) / (ev + 1),
+                lw=2,
+                color="blue",
+                label="Winner",
+            )
+            ax.plot(
+                ev, np.cumsum(raw.prequential_errors) / (ev + 1), "r--", label="Raw"
+            )
+            ax.set_title(f"Profile: {winner.name}")
+            self._pub_plt(fig, "profile")
 
-        # Convert and Publish
+        # 4. PREDICTION MAP
+        if self.get_parameter("publish_prediction_map").value:
+            winner = self.competitors[self.active_idx]
+            fig, ax = plt.subplots(figsize=(6, 5))
+            gw, gh = self.cfg["screen_w"], self.cfg["screen_h"]
+            grid_x, grid_y = np.meshgrid(np.linspace(0, gw, 15), np.linspace(0, gh, 12))
+            px, py = winner.predict(grid_x.ravel(), grid_y.ravel())
+            ax.quiver(
+                grid_x,
+                grid_y,
+                px.reshape(grid_x.shape),
+                py.reshape(grid_y.shape),
+                color="green",
+            )
+            ax.set_xlim(0, gw)
+            ax.set_ylim(gh, 0)
+            self._pub_plt(fig, "map")
+
+    def _pub_plt(self, fig, key):
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
         img = cv2.cvtColor(np.asarray(canvas.buffer_rgba()), cv2.COLOR_RGBA2BGR)
-        self.image_pub.publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
-
-        plt.clf()
+        self.pubs[key].publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
         plt.close(fig)
-
-    def publish_plots(self, cur_gx, cur_gy, cur_ex, cur_ey):
-        # --- DRAW TOURNAMENT (Line Chart with Shading) ---
-        self.fig_tourney.clear()
-        ax = self.fig_tourney.add_subplot(111)
-
-        active = self.models[self.active_model_name]
-        raw = self.models["Raw"]
-
-        ev_range = np.arange(len(active.prequential_errors))
-        raw_aulc = np.cumsum(raw.prequential_errors) / (ev_range + 1)
-        mod_aulc = np.cumsum(active.prequential_errors) / (ev_range + 1)
-
-        ax.plot(raw_aulc, color="firebrick", ls="--", label="Raw Baseline")
-        ax.plot(mod_aulc, color="navy", lw=2, label=f"Active: {self.active_model_name}")
-
-        # Gain/Loss Shading
-        ax.fill_between(
-            ev_range,
-            raw_aulc,
-            mod_aulc,
-            where=(mod_aulc <= raw_aulc),
-            color="skyblue",
-            alpha=0.3,
-        )
-        ax.fill_between(
-            ev_range,
-            raw_aulc,
-            mod_aulc,
-            where=(mod_aulc > raw_aulc),
-            color="hotpink",
-            alpha=0.3,
-        )
-
-        ax.set_title("Learning Progress (AULC)")
-        ax.set_ylim(0, 150)
-        ax.legend(loc="upper right")
-
-        # Convert to ROS Image
-        canvas = FigureCanvasAgg(self.fig_tourney)
-        canvas.draw()
-        img = cv2.cvtColor(np.asarray(canvas.buffer_rgba()), cv2.COLOR_RGBA2BGR)
-        self.tourney_pub.publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
-
-        # --- DRAW QUIVER (Spatial View) ---
-        self.fig_main.clear()
-        gs = gridspec.GridSpec(1, 2)
-        ax_q = self.fig_main.add_subplot(gs[0])
-        ax_f = self.fig_main.add_subplot(gs[1])
-
-        # Quiver Panel (Current Reservoir + Current Segment)
-        train_pool, val_pool = active.get_reservoir_split()
-        if len(train_pool) > 0:
-            ax_q.quiver(
-                train_pool[:, 0],
-                train_pool[:, 1],
-                train_pool[:, 2],
-                train_pool[:, 3],
-                color="blue",
-                alpha=0.3,
-                scale=1,
-                scale_units="xy",
-            )
-        ax_q.quiver(
-            cur_gx,
-            cur_gy,
-            cur_ex,
-            cur_ey,
-            color="black",
-            scale=1,
-            scale_units="xy",
-            label="Last Segment",
-        )
-        ax_q.set_xlim(0, 1600)
-        ax_q.set_ylim(1200, 0)
-        ax_q.set_title("Spatial Reservoir")
-
-        # Field Panel
-        gx_grid, gy_grid = np.meshgrid(
-            np.linspace(0, 1600, 15), np.linspace(0, 1200, 10)
-        )
-        px, py = active.predict(gx_grid.ravel(), gy_grid.ravel())
-        ax_f.quiver(
-            gx_grid,
-            gy_grid,
-            px.reshape(gx_grid.shape),
-            py.reshape(gy_grid.shape),
-            color="green",
-            scale=1,
-            scale_units="xy",
-        )
-        ax_f.set_xlim(0, 1600)
-        ax_f.set_ylim(1200, 0)
-        ax_f.set_title(f"Field: {self.active_model_name}")
-
-        canvas_main = FigureCanvasAgg(self.fig_main)
-        canvas_main.draw()
-        img_main = cv2.cvtColor(
-            np.asarray(canvas_main.buffer_rgba()), cv2.COLOR_RGBA2BGR
-        )
-        self.image_pub.publish(self.bridge.cv2_to_imgmsg(img_main, "bgr8"))
 
 
 def main():
