@@ -8,7 +8,36 @@
 ./docker/1_run_Nicole.sh
 ```
 
-# Run the code
+docker start quirky_mendel
+docker exec -it quirky_mendel bash
+
+cd /root/ws/DiegeticGazeControl
+
+# Speech system package (need to be here to run the supervisor and ASR nodes):
+
+cd src/speech_system/speech_system
+
+# Open supervisor and ASR node:
+
+nano src/speech_system/speech_system/asr_node.py
+
+# do the same for supervisor_node.py
+
+# After editing need to build again:
+
+colcon build
+source install/setup.bash
+
+# Source ROS2 workspace
+
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+# Run nodes:
+
+ros2 run speech_system supervisor_node
+
+# In another terminal, run the following command to start the ASR node:
 
 In the terminal, run the following command to start the ROS2 nodes:
 

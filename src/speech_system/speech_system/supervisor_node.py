@@ -1,3 +1,4 @@
+import rclpy
 
 from rclpy.node import Node
 
@@ -21,10 +22,12 @@ class SupervisorNode(Node):
     """
 
     def __init__(self):
-       #  self.get_logger().info("NEW VERSION OF SUPERVISOR LOADED")
+
         # Initialize ROS2 node
 
         super().__init__('supervisor_node')
+
+        self.get_logger().info("NEW VERSION OF SUPERVISOR LOADED")
 
         # SYSTEM STATE INITIALISATION: The system starts in LISTENING mode
 
@@ -65,23 +68,8 @@ class SupervisorNode(Node):
         # Clean up the incoming text
 
         text = msg.data.strip().lower()
-
-        self.get_logger().info(f"Heard: {text}")
-       
-        # Always allow START
-        if "start" in text:
-            self.process_command(text)
-            return
-
-        # Only process commands if system is LISTENING
-
-        if self.system_state == "LISTENING":
-
-            self.process_command(text)
-
-        else:
-
-            self.get_logger().info("Ignoring speech (System in IDLE state)")
+        self.get_logger().info(f"Received speech: {text}")
+        self.process_command(text)
 
     # COMMAND PROCESSING FUNCTION
 
@@ -127,7 +115,7 @@ class SupervisorNode(Node):
 
             self.get_logger().info("No valid command detected")
 
-# MAIN 
+# MAIN
 
 def main(args=None):
 
@@ -155,4 +143,4 @@ def main(args=None):
 if __name__ == '__main__':
 
     main()
- 
+
