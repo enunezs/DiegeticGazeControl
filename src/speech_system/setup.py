@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
           'supervisor_node = speech_system.supervisor_node:main',
           'asr_node = speech_system.asr_node:main',
- ],
+          'robot_actions = speech_system.robot_actions:main',
+        ],
     },
 )

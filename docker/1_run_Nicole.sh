@@ -11,7 +11,7 @@ docker run -it --env=DISPLAY=$DISPLAY \
 	--env="QT_X11_NO_MITSHM=1" \
 	--net=host \
 	--volume $(pwd):/root/ws/DiegeticGazeControl \
-	--volume /home/emanuel/Documents/NicoleThings/SpeechSynthesisModels:/models \
+	--volume /home/emanuel/Documents/NicoleThings/SpeechSynthesisModels:/root/models \
 	--volume /dev/shm:/dev/shm \
 	--cap-add=NET_ADMIN \
 	--cap-add=NET_RAW \

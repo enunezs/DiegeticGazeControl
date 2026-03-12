@@ -11,6 +11,16 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
+
+# Install python scripts
+install(PROGRAMS
+  scripts/supervisor_node2.py
+  scripts/automatic_speech_recognition_node.py
+  # scripts/robot_actions.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

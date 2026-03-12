@@ -1,6 +1,7 @@
-import rclpy
+#!/usr/bin/env python3
 
-import os
+
+import rclpy
 
 from rclpy.node import Node
 
@@ -8,9 +9,6 @@ from std_msgs.msg import String
 
 
 class SupervisorNode(Node):
-
-    def speak(self, text):
-        os.system(f'espeak "{text}"')
 
     """
 
@@ -88,7 +86,6 @@ class SupervisorNode(Node):
             self.system_state = "IDLE"
 
             self.get_logger().info("System State changed to IDLE")
-            self.speak("System State changed to IDLE")
 
             msg.data = "stop"
 
@@ -101,7 +98,6 @@ class SupervisorNode(Node):
             self.system_state = "LISTENING"
 
             self.get_logger().info("System State changed to LISTENING")
-            self.speak("System state changed to LISTENING")
 
             msg.data = "start"
 

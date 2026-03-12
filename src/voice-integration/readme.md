@@ -1,12 +1,24 @@
 # Set up
 
-1. Open file explorer, go to `/home/emanuel/Documents/ROS2_Workspaces`
+1. Open file explorer, go to `/home/emanuel/Documents/ROS2_Workspaces/Nicole_DiegeticGazeControl`
 2. Open a terminal in this directory
 3. Run the following command to install the required dependencies:
 
 ```bash
 ./docker/1_run_Nicole.sh
 ```
+
+4. To run the ROS2 nodes, follow the instructions below:
+
+```bash
+ros2 run voice-integration supervisor_node2
+
+or
+
+ros2 run voice-integration automatic_speech_recognition_node
+```
+
+---
 
 docker start quirky_mendel
 docker exec -it quirky_mendel bash
@@ -44,6 +56,10 @@ In the terminal, run the following command to start the ROS2 nodes:
 ```bash
 python3 src/voice-integration/scripts/voice_integration1.py
 ```
+
+# Testing robot's response:
+
+ros2 topic pub /j2n6s300_driver/in/cartesian_velocity geometry_msgs/Twist "{linear: {x: 0.1}}"
 
 # Saving to git in vscode:
 
