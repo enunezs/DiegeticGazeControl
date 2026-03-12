@@ -83,7 +83,8 @@ class ArucoDetectorNode(Node):
         self.static_broadcaster = StaticTransformBroadcaster(self)
 
         self.load_config()
-        self.last_marker_poses = {}
+        self.last_marker_poses = {} # {marker_id: {'pose': Pose, 'stamp': float_timestamp}}
+
         self.filters = {}
 
         # --- IMPORTANT: Publish the bridge between Robot and Marker ---
@@ -133,7 +134,7 @@ class ArucoDetectorNode(Node):
         self.declare_parameter("camera_frame", "camera_optical_frame")
         self.declare_parameter("publish_tf", True)
         self.declare_parameter("publish_poses", True)
-        self.declare_parameter("marker_persistence", 0.2)  # seconds
+        self.declare_parameter("marker_persistence", 0.35)  # seconds
         self.declare_parameter("filter_min_cutoff", 0.5)
         self.declare_parameter("filter_beta", 0.05)
 
@@ -200,10 +201,30 @@ class ArucoDetectorNode(Node):
         aruco_dict_name = self.config.get("aruco_dict", "DICT_4X4_100")
         if hasattr(cv2.aruco, aruco_dict_name):
             aruco_dict_id = getattr(cv2.aruco, aruco_dict_name)
-            self.aruco_dict = cv2.aruco.Dictionary_get(aruco_dict_id)
         else:
-            self.aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_100)
+            aruco_dict_id = cv2.aruco.DICT_4X4_100
+
+        self.aruco_dict = cv2.aruco.Dictionary_get(aruco_dict_id)
         self.detector_params = cv2.aruco.DetectorParameters_create()
+
+        ### TUNING FOR DISTANT MARKERS ON FISHEYE LENSES ###
+        # 1. Allow for "curved" edges (Critical for fisheye). Default is 0.03. 
+        self.detector_params.polygonalApproxAccuracyRate = 0.08 
+        # 2. Corner Subpixel Refinement
+        self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
+        # 3. Handle small markers at distance
+        self.detector_params.minMarkerPerimeterRate = 0.01 
+
+        ### TUNING FOR HIGHER FPS (LESS CRISP MARKER DETECTION) ###
+        # 2. Increase Adaptive Thresholding resolution
+        # Small markers get "washed out" in the thresholding step. 
+        # Increasing the step size and range helps find the tiny black/white transitions.
+        self.detector_params.adaptiveThreshWinSizeMin = 3
+        self.detector_params.adaptiveThreshWinSizeMax = 23
+        self.detector_params.adaptiveThreshWinSizeStep = 5
+        # 3. Increase the "Corner Refinement" window
+        # For distant markers, the corner is blurry. A slightly larger window helps find it.
+        self.detector_params.cornerRefinementWinSize = 5
         self.marker_size = self.config.get("marker_size", 0.05)
 
     def camera_info_callback(self, msg):
@@ -251,11 +272,18 @@ class ArucoDetectorNode(Node):
 
     def detect_markers(self, image, header):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # Apply CLAHE to improve local contrast
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        gray = clahe.apply(gray)
+
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray, self.aruco_dict, parameters=self.detector_params
         )
 
         current_header = header
+        # Calculate current message time in seconds
+        t_curr = header.stamp.sec + header.stamp.nanosec * 1e-9
+
         # current_header.stamp = self.get_clock().now().to_msg() # Use glasses time!
         # Only TFs should use current time
 
@@ -264,6 +292,7 @@ class ArucoDetectorNode(Node):
 
         marker_array.header.frame_id = self.config["camera_frame"]
         marker_array.markers = []
+
         detected_ids = set()
 
         t_curr = header.stamp.sec + header.stamp.nanosec * 1e-9
@@ -301,6 +330,12 @@ class ArucoDetectorNode(Node):
                 marker.pose.orientation.y = quat_filtered[1]
                 marker.pose.orientation.z = quat_filtered[2]
                 marker.pose.orientation.w = quat_filtered[3]
+
+                self.last_marker_poses[marker_id] = {
+                    "pose": marker.pose,
+                    "stamp": t_curr
+                }
+
                 marker_array.markers.append(marker)
                 detected_ids.add(marker_id)
 
@@ -331,17 +366,28 @@ class ArucoDetectorNode(Node):
                     )
 
         # Persistence for lost markers
-        now = self.get_clock().now()
-        for marker_id, (self.pose_msg, ts) in self.last_marker_poses.items():
+        ids_to_delete = []
+        for marker_id, data in self.last_marker_poses.items():
             if marker_id not in detected_ids:
-                elapsed = (now - ts).nanoseconds / 1e9
+                elapsed = (t_curr - data["stamp"])
+
                 if elapsed <= self.marker_persistence:
-                    # Approximate time by adding elapsed to header stamp
-                    self.pose_msg.header = header
-                    self.marker_pose_pub.publish(self.pose_msg)
-                    marker_array.markers.append(
-                        Marker(id=int(marker_id), pose=self.pose_msg.pose)
-                    )
+                    # Keep marker alive: add to the array being published
+                    persistent_marker = Marker()
+                    persistent_marker.id = int(marker_id)
+                    persistent_marker.pose = data["pose"]
+                    marker_array.markers.append(persistent_marker)
+
+                    if self.config.get("publish_poses", True):
+                        ps = PoseStamped()
+                        ps.header = header
+                        ps.pose = data["pose"]
+                        self.marker_pose_pub.publish(ps)
+                else:
+                    ids_to_delete.append(marker_id)
+
+        for marker_id in ids_to_delete:
+            del self.last_marker_poses[marker_id]
 
         self.aruco_marker_array_pub.publish(marker_array)
 
