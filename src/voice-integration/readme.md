@@ -18,6 +18,20 @@ or
 ros2 run voice-integration automatic_speech_recognition_node
 ```
 
+## Robot communication
+
+To simulate a message being sent to the robot, run the following command in a terminal:
+
+```bash
+ros2 topic pub /waypoint_trigger std_msgs/msg/String "data: 'Go'"  --once
+```
+
+To get the current robot position, run:
+
+ros2 topic echo /j2n6s300_driver/out/tool_pose
+
+PENDING: Add instructions on how to launch
+
 ---
 
 docker start quirky_mendel

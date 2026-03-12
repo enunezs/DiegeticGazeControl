@@ -16,7 +16,7 @@ find_package(ament_cmake REQUIRED)
 install(PROGRAMS
   scripts/supervisor_node2.py
   scripts/automatic_speech_recognition_node.py
-  # scripts/robot_actions.py
+  scripts/robot_actions.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
