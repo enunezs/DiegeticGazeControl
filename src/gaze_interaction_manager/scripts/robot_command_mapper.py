@@ -154,7 +154,6 @@ class CommandMapper(Node):
         self.current_velocity_params: Dict = {}
         
         # Finger pose control
-        self.finger_pub = self.create_publisher(Float64MultiArray, '/teleop/finger_velocity', 10)
         self.current_finger_params = {} # Tracks currently held finger buttons
 
         self._init_publishers()
@@ -164,7 +163,8 @@ class CommandMapper(Node):
         self._init_mode_mappings()
         
         # Timer to publish velocity continuously at 100 Hz
-        self.vel_publish_timer = self.create_timer(1.0 / PUBLISH_RATE_HZ, self._publish_velocity_tick)
+        self.robot_vel_publish_timer = self.create_timer(1.0 / PUBLISH_RATE_HZ, self._publish_velocity_tick)
+
 
 
 
@@ -176,15 +176,19 @@ class CommandMapper(Node):
         - /teleop/mode_command -> String (Commands to change control modes)
 
         """
-        self.vel_pub = self.create_publisher(TwistStamped, '/teleop/cartesian_velocity', 10)
+        self.robot_vel_pub = self.create_publisher(TwistStamped, '/teleop/cartesian_velocity', 10)
+        self.finger_vel_pub = self.create_publisher(Float64MultiArray, '/teleop/finger_velocity', 10)
         
-        self.pose_pub = self.create_publisher(Path, '/teleop/waypoint_path', 10)
+        self.path_pose_pub = self.create_publisher(Path, '/teleop/waypoint_path', 10)
+        self.finger_poses_pub = self.create_publisher(Float64MultiArray, '/teleop/waypoint_fingers', 10)
         
         self.sys_pub = self.create_publisher(String, '/teleop/system', 10)
         self.mode_cmd_pub = self.create_publisher(String, '/teleop/mode_command', 10)
 
+
         # Publisher for button sound events
         self.button_sound_pub = self.create_publisher(Int32, '/button_events', 10)
+
 
     def _init_subscribers(self):
         """Initialize all ROS subscribers:
@@ -309,7 +313,9 @@ class CommandMapper(Node):
                     calibration_route.append(
                         {"x": x, "y": y, "z": z,
                         "roll": rot["roll"], "pitch": rot["pitch"], "yaw": rot["yaw"],
-                        "time": time_per_waypoint}
+                        "time": time_per_waypoint,
+                        "fingers": [6000.0, 6000.0, 6000.0]  # no finger movement for now
+                        }
                     )
                     self.get_logger().debug(f"Added waypoint at x={x}, y={y}, z={z}, roll={rot['roll']}, pitch={rot['pitch']}")
 
@@ -329,111 +335,6 @@ class CommandMapper(Node):
         }
 
         return calibration_route_dict
-
-    def calculate_calibration_route(self) -> Dict[str, Dict]:
-        """Define a waypoint demo route for calibration purposes.
-        The route visits predefined positions in space.
-        """
-
-        far_x = 0.50
-        close_x = 0.25
-        mid_x = (far_x + close_x) / 2.0
-
-        away_y = -0.20
-        proximal_y = 0.20
-        mid_y = (away_y + proximal_y) / 2.0
-
-        low_z = 0.22
-        high_z = 0.40
-        mid_z = (low_z + high_z) / 2.0
-
-        rotation =  {"roll": -180-20, "pitch": -5, "yaw": 180-10}
-        time_per_waypoint = 10.0
-        # We need to define a route for all possible permutations of the positions
-        calibration_route = []
-
-        # Generate waypoints for all combinations 2X2X2:
-        # * x: far, mid, close
-        # * y: away, mid, proximal
-        # * z: low, mid, high
-        # for x in [far_x, close_x]:
-        #     for y in [away_y, proximal_y]:
-        #         for z in [low_z, high_z]:
-        
-        for x in [far_x, mid_x, close_x]:
-            for y in [away_y, mid_y, proximal_y]:
-                for z in [low_z, mid_z, high_z]:
-                    calibration_route.append(
-                        {"x": x, "y": y, "z": z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint}
-                    )
-                    self.get_logger().debug(f"Added calibration waypoint at x={x}, y={y}, z={z}")
-                    # break  # IGNORE --- only one waypoint per button for now
-                # break  # IGNORE --- only one waypoint per button for now
-            # break  # IGNORE --- only one waypoint per button for now
-        self.get_logger().info(f"Generated {len(calibration_route)} calibration waypoints.")
-
-        # # Generate waypoints for all combinations 3X3X3:
-        # # * x: far, mid, close
-        # # * y: away, mid, proximal
-        # # * z: low, mid, high
-        # for x in [far_x, mid_x, close_x]:
-        #     for y in [away_y, mid_y, proximal_y]:
-        #         for z in [low_z, mid_z, high_z]:+
-
-        #             calibration_route[f"WaypointDemo_{x}_{y}_{z}"] = {
-        #                 "action_type": "waypoint_demo",
-        #                 "waypoints": [
-        #                     {"x": x, "y": y, "z": z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint}
-        #                 ],
-        #                 "reference_frame": "j2n6s300_link_base"
-        #             }
-        
-        # # Emanuel strategy
-        # calibration_route = {
-        #     "WaypointDemo": { 
-        #         "*": {
-        #             "action_type": "waypoint_demo",  # special handler
-        #             "waypoints": [  # hardcoded demo for now
-        #                 {"x": far_x, "y": away_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
-        #                 {"x": far_x, "y": proximal_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
-        #                 {"x": close_x, "y": away_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
-        #                 {"x": close_x, "y": proximal_y, "z": low_z, "roll": rotation["roll"], "pitch": rotation["pitch"], "yaw": rotation["yaw"], "time": time_per_waypoint},
-        #             ],
-        #             "reference_frame": "j2n6s300_link_base"
-        #         }
-        #     }
-        # }
-
-
-        ### shuffle
-        shuffled_waypoints = list(calibration_route)
-        shuffle(shuffled_waypoints) # from random import shuffle
-        calibration_route = shuffled_waypoints
-        self.get_logger().info(f"Shuffled calibration route waypoints.")
-
-        # Finish shapping
-        calibration_route = {
-            "*": {
-                "action_type": "waypoint_demo",
-                "reference_frame": "j2n6s300_link_base",
-                "waypoints": [wp for wp in calibration_route]
-            }
-        }
-
-        """
-          Y: # WaypointDemo
-        "*":
-        action_type: waypoint_demo
-        reference_frame: j2n6s300_link_base
-        waypoints:
-            - { x: 0.50,  y: 0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
-            - { x: 0.50,  y:-0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
-            - { x: 0.30,  y: 0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
-            - { x: 0.30,  y:-0.20,  z: 0.22, roll: -200, pitch: -5, yaw: 170, time: 5.0 }
-
-        """        
-
-        return calibration_route
 
     def mode_callback(self, msg: String):
         """Handle mode change notifications:"""
@@ -518,6 +419,8 @@ class CommandMapper(Node):
             # Trigger discrete actions
             if action_type == "discrete":
                 self._publish_discrete_command(params)
+            if action_type == "discrete_finger":
+                self._publish_discrete_finger_command(params)
             elif action_type == "system":
                 self._publish_system_command(params)
             elif action_type == "mode":
@@ -609,7 +512,7 @@ class CommandMapper(Node):
             twist.twist.angular.y = 0.0
             twist.twist.angular.z = 0.0
         
-        self.vel_pub.publish(twist)
+        self.robot_vel_pub.publish(twist)
 
         # NEW: Finger Publishing
         f_msg = Float64MultiArray()
@@ -627,7 +530,7 @@ class CommandMapper(Node):
         else:
             f_msg.data = [0.0, 0.0, 0.0]
         
-        self.finger_pub.publish(f_msg)
+        self.finger_vel_pub.publish(f_msg)
 
     def _publish_discrete_command(self, params: Dict):
         """
@@ -642,10 +545,11 @@ class CommandMapper(Node):
         axis = params.get("axis", "z")
         reference_frame = params.get("reference_frame", "j2n6s300_link_base")
         
+
         pose = PoseStamped()
         pose.header.stamp = self.get_clock().now().to_msg()
         pose.header.frame_id = reference_frame
-        
+
         # Check if this is a rotation (rx, ry, rz) or translation (x, y, z)
         if axis.startswith("r"):
             # Discrete rotation
@@ -691,8 +595,12 @@ class CommandMapper(Node):
             self.get_logger().info(
                 f"Published discrete translation: axis={axis} step_m={step_m} frame={reference_frame}"
             )
-        
-        self.pose_pub.publish(pose)
+        path = Path()
+        path.header = pose.header
+        path.header.frame_id = reference_frame
+        path.poses = [pose]
+
+        self.path_pose_pub.publish(pose)
 
     def _publish_system_command(self, params: Dict):
         """
@@ -740,6 +648,9 @@ class CommandMapper(Node):
         path_msg.header.stamp = self.get_clock().now().to_msg()
         path_msg.header.frame_id = reference_frame
         
+        # And finger target message
+        finger_msg = Float64MultiArray()
+        finger_targets_flattened = []
 
         target_time = self.get_clock().now().to_msg()
         target_time = Time.from_msg(target_time)
@@ -775,9 +686,19 @@ class CommandMapper(Node):
             pose_stamped.pose.orientation.w = float(quat[3])
             
             path_msg.poses.append(pose_stamped)
+
+            # Finger targets (if defined)
+            f_target = wp.get("fingers", [0.0, 0.0, 0.0]) # no velocity change if not defined
+            finger_targets_flattened.extend([float(val) for val in f_target])
+
         
-        # Publish path
-        self.pose_pub.publish(path_msg)
+        # Publish paths
+        finger_msg = Float64MultiArray()
+
+        finger_msg.data = finger_targets_flattened
+        self.finger_poses_pub.publish(finger_msg)
+        self.path_pose_pub.publish(path_msg)
+
         self.get_logger().info(
             f"Published waypoint path with {len(waypoints)} waypoints to /teleop/waypoint_path"
         )
