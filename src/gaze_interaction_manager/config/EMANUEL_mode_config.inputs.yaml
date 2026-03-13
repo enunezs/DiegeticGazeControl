@@ -45,6 +45,11 @@ mode_mappings:
   A:        {"*": {action_type: mode, mode_cmd: toggle_next}}
   B:        {"*": {action_type: mode, mode_cmd: toggle_next}}
 
+  # Close all
+  X: { "*":{action_type: finger , fingers: [1, 2, 3], speed: 500.0} }
+  # Open all
+  Y: { "*":{action_type: finger , fingers: [1, 2, 3], speed: -500.0} }
+
   UpHybridRe:
     translation: {action_type: velocity, axis: z, speed: 1.0, reference_frame: j2n6s300_link_base}
     rotation:    {action_type: velocity, axis: rx, speed: -1.0, reference_frame: j2n6s300_link_6}

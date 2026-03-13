@@ -2,7 +2,7 @@
 # command_mapper.py
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String, Int32
+from std_msgs.msg import String, Int32, Float64MultiArray
 from geometry_msgs.msg import TwistStamped, PoseStamped
 from nav_msgs.msg import Path   
 from builtin_interfaces.msg import Time
@@ -153,6 +153,10 @@ class CommandMapper(Node):
         # Velocity tracking
         self.current_velocity_params: Dict = {}
         
+        # Finger pose control
+        self.finger_pub = self.create_publisher(Float64MultiArray, '/teleop/finger_velocity', 10)
+        self.current_finger_params = {} # Tracks currently held finger buttons
+
         self._init_publishers()
         self._init_subscribers()
         
@@ -533,6 +537,7 @@ class CommandMapper(Node):
         """
         held_buttons = self.button_state_mgr.get_all_held_buttons()
         
+        # 1. Handle Arm Velocity 
         # Find the last held velocity button
         velocity_button = None
         for button_id in held_buttons:
@@ -544,7 +549,18 @@ class CommandMapper(Node):
         # If no velocity buttons held, clear velocity
         if velocity_button is None:
             self.current_velocity_params = {}
-
+        
+        # 2. Handle Finger Velocity
+        finger_button = None
+        for button_id in held_buttons:
+            action_type, params = self.get_action_for_button(button_id)
+            if action_type == "finger":
+                finger_button = button_id
+                self.current_finger_params = params
+            
+        if finger_button is None:
+            self.current_finger_params = {}
+        
     def _publish_velocity_tick(self):
         """
         Periodically publish velocity commands at 100 Hz.
@@ -594,6 +610,24 @@ class CommandMapper(Node):
             twist.twist.angular.z = 0.0
         
         self.vel_pub.publish(twist)
+
+        # NEW: Finger Publishing
+        f_msg = Float64MultiArray()
+        if self.current_finger_params:
+            params = self.current_finger_params
+            speed = float(params.get("speed", 0.0))
+            # 'fingers' can be a list in YAML like [1, 2, 3]
+            target_fingers = params.get("fingers", [1, 2, 3]) 
+            
+            vels = [0.0, 0.0, 0.0]
+            for f_idx in target_fingers:
+                if 1 <= f_idx <= 3:
+                    vels[f_idx-1] = speed
+            f_msg.data = vels
+        else:
+            f_msg.data = [0.0, 0.0, 0.0]
+        
+        self.finger_pub.publish(f_msg)
 
     def _publish_discrete_command(self, params: Dict):
         """
