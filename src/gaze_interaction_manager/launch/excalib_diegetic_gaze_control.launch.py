@@ -78,7 +78,7 @@ def generate_launch_description():
     ### TODO: Lets go
     calibration_learner_node = Node(
         package="gaze_interaction_manager",
-        executable="calibration_learner_spatial.py",
+        executable="spatial_calibration_learner.py",
         name="calibration_learner_node",
         parameters=[config],
     )

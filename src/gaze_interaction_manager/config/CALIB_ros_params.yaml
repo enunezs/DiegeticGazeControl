@@ -48,7 +48,7 @@
 /button_finder:
   ros__parameters:
         button_center_strategy : "inverse_square"
-        button_map_path : "src/diegetic_transform_engine/button_maps/ButtonMap - EXCALIB - Reduced.csv"
+        # button_map_path : "src/diegetic_transform_engine/button_maps/ButtonMap - EXCALIB - Reduced.csv"
         button_map_path : "src/diegetic_transform_engine/button_maps/ButtonMap - O-Joy V3.csv"
         # camera_frame_id : "camera_optical_frame"
         # button_frame_id : "button_frame"
@@ -57,6 +57,21 @@
   ros__parameters:
     axis_threshold: 0.6
     parser_mappings_file: "CALIB_mode_config.inputs.yaml"
+
+
+/dwell_time:
+  ros__parameters:
+    interaction_mode: "dwell_time" #  "immediate"  # Activate immediately on hover
+    dwell_duration_seconds: 0.5
+    activation_threshold : 0.7
+    hover_threshold : 0.2
+    deactivation_threshold : 0.3
+    processing_mode: 'gaze_driven'
+    processing_frequency : 30 
+    button_timeout_seconds: 0.5
+    publish_debug_image: False
+    verbose_logging: False
+
 
 /gaze_controller_node:
   ros__parameters:

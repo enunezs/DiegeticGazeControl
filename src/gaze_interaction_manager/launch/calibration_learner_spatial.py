@@ -72,9 +72,10 @@ class GazeCorrectionFramework:
     Used as a competitor within the Tournament.
     """
 
-    def __init__(self, name, features, config):
+    def __init__(self, name, features, config, trigger_bins=15):
         self.name = name
         self.cfg = config
+        self.trigger_bins = trigger_bins
         self.cx, self.cy = self.cfg.get("center_x", 800), self.cfg.get("center_y", 600)
 
         # Internal State (Models and Coefficients)
@@ -97,10 +98,17 @@ class GazeCorrectionFramework:
             "lin_y": lambda dx, dy, r, r2: [dy / self.cy],
             "quad_x": lambda dx, dy, r, r2: [(dx**2 * np.sign(dx)) / self.cx**2],
             "quad_y": lambda dx, dy, r, r2: [(dy**2 * np.sign(dy)) / self.cy**2],
+            'cross_xy':   lambda dx, dy, r, r2: [(dx * dy) / (self.cx * self.cy)],
+
+            'radial':    lambda dx, dy, r, r2: [(dx * r) / self.cx**2, (dy * r) / self.cy**2],
+            # 'rad_simple': lambda dx, dy, r, r2: [dx * r, dy * r], 
             "radial_2": lambda dx, dy, r, r2: [
                 (dx * r2) / self.cx**3,
                 (dy * r2) / self.cy**3,
             ],
+            # 'rad_scale_2': lambda dx, dy, r, r2: [dx * r2, dy * r2], 
+            'radial_universal': lambda dx, dy, r, r2: [(dx*r2)/self.cx**3, (dy*r2)/self.cy**3, dx/self.cx, dy/self.cy, np.ones_like(dx)],
+
             "full_conic": lambda dx, dy, r, r2: [
                 dx**2 / self.cx**2,
                 dy**2 / self.cy**2,
@@ -116,6 +124,10 @@ class GazeCorrectionFramework:
                 np.tanh(dy / 300),
                 np.ones_like(dx),
             ],
+            'cub_x':      lambda dx, dy, r, r2: [(dx**3) / self.cx**3],
+            'cub_y':      lambda dx, dy, r, r2: [(dy**3) / self.cy**3],
+            'tangent_x':  lambda dx, dy, r, r2: [(2*dx*dy) / self.cx**2, (r2 + 2*dx**2) / self.cx**2],
+            'tangent_y':  lambda dx, dy, r, r2: [(r2 + 2*dy**2) / self.cy**2, (2*dx*dy) / self.cy**2]
         }
 
     def _get_matrix(self, dx, dy, features):
@@ -171,9 +183,7 @@ class GazeCorrectionFramework:
             return
 
         # Step 1: Handle model graduation (Bias -> Master Recipe)
-        if self.current_features == ["bias"] and n_bins >= self.cfg.get(
-            "trigger_bins", 15
-        ):
+        if self.current_features == ["bias"] and n_bins >= self.trigger_bins:
             self.current_features = self.master_recipe
             self.unlock_moments["activation"] = event_idx
             self.models = {"x": None, "y": None}  # Reset solvers for shape change
@@ -221,7 +231,7 @@ class CalibrationLearner(Node):
             "samples_per_bin": 10,
             "val_size": 2,
             "thinning_stride": 25,
-            "trigger_bins": 12,
+            # "trigger_bins": 12,
         }
         # self.reservoir = SpatialReservoir(self.cfg)
 
@@ -231,10 +241,14 @@ class CalibrationLearner(Node):
 
         # --- Competitors ---
         self.competitors = [
-            GazeCorrectionFramework("Raw", ["identity"], self.cfg),
-            GazeCorrectionFramework("Bias", ["bias"], self.cfg),
-            GazeCorrectionFramework("Radial", ["bias", "radial_2"], self.cfg),
-            GazeCorrectionFramework("Conic", ["full_conic"], self.cfg),
+            GazeCorrectionFramework("Raw", ["identity"], self.cfg, trigger_bins=0),
+            GazeCorrectionFramework("Bias", ["bias"], self.cfg, trigger_bins=4),
+            GazeCorrectionFramework("Basic Radial", ["bias", "radial_2"], self.cfg, trigger_bins=15),
+            GazeCorrectionFramework("Complete Radial", ["radial_universal","bias"], self.cfg, trigger_bins=25),
+            GazeCorrectionFramework("Conic", ["bias", "full_conic"], self.cfg, trigger_bins=15),
+            GazeCorrectionFramework("Radial + Sigmoid", ["bias", "sigmoid"], self.cfg, trigger_bins=15),
+            GazeCorrectionFramework("Hybrid", ["bias", "sigmoid", "tangent_x", "tangent_y"], self.cfg, trigger_bins=15),
+
         ]
         self.active_idx = 1
         self.event_count = 0
