@@ -40,8 +40,8 @@ class SpatialReservoir:
         self.bins = {}  # (bx, by) -> deque
         self.bin_size = cfg.get("bin_size", 100)
         self.max_samples = cfg.get("samples_per_bin", 10)
-        self.val_size = cfg.get("val_size", 2)
-        self.stride = cfg.get("thinning_stride", 25)
+        self.val_size = cfg.get("val_size", 3)
+        self.stride = cfg.get("thinning_stride", 15)
 
     def add_segment(self, gx, gy, ex, ey):
         """Processes a new segment into the shared spatial bins."""
@@ -51,7 +51,7 @@ class SpatialReservoir:
 
         for i in range(len(gx_t)):
             # Basic outlier rejection
-            if abs(ex_t[i]) > 200 or abs(ey_t[i]) > 200:
+            if abs(ex_t[i]) > 150 or abs(ey_t[i]) > 150:
                 continue
 
             # Binning
@@ -122,6 +122,10 @@ class GazeCorrectionFramework:
                 (dx * r2) / self.cx**3,
                 (dy * r2) / self.cy**3,
             ],
+            "radial_unit": lambda dx, dy, r, r2: [
+                dx / (r + 1e-6), 
+                dy / (r + 1e-6)
+            ],
             "full_conic": lambda dx, dy, r, r2: [
                 dx**2 / self.cx**2,
                 dy**2 / self.cy**2,
@@ -168,7 +172,7 @@ class GazeCorrectionFramework:
         if self.is_identity:
             return None
 
-        s_type = self.cfg.get("solver", "huber")
+        s_type = self.cfg.get("solver", "ridge")
         alpha = self.cfg.get("solver_alpha", 0.1)
 
         n_cols = self._get_matrix(
@@ -255,10 +259,10 @@ class CalibrationLearner(Node):
                 ("publish_prediction_map", True),
                 ("publish_tournament", True),
                 ("selection_strategy", "RMSE"),  # "BIC" or "RMSE"
-                ("trigger_bins", 10),
+                # ("trigger_bins", 10),
                 ("solver", "ridge"),  # "huber", "ridge", "linear"
                 # ("solver_alpha", 1.0),  # TODO: Regularization strength for Ridge
-                ("bic_hysteresis", 15.0),  # Threshold to switch models
+                ("bic_hysteresis", 3.0),  # Threshold to switch models
                 ("rmse_hysteresis", 2.0),
             ],
         )
@@ -270,21 +274,22 @@ class CalibrationLearner(Node):
             "screen_w": 1600,
             "screen_h": 1200,
             "bin_size": 100,
-            "samples_per_bin": 20,
+            "samples_per_bin": 30,
             "val_size": 3,
             "thinning_stride": 15,
-            "trigger_bins": self.get_parameter("trigger_bins").value,
+            # "trigger_bins": self.get_parameter("trigger_bins").value,
             "solver": self.get_parameter("solver").value,
         }
 
         # 3. State
         self.reservoir = SpatialReservoir(self.cfg)
         self.competitors = [
-            GazeCorrectionFramework("Raw", ["identity"], self.cfg),
-            GazeCorrectionFramework("Bias", ["bias"], self.cfg),
-            GazeCorrectionFramework("Radial", ["bias", "radial_2"], self.cfg),
-            GazeCorrectionFramework("Conic", ["bias","full_conic"], self.cfg),
-            # GazeCorrectionFramework("Sigmoid X+Y", ["bias","sigmoid"], self.cfg),
+            GazeCorrectionFramework("Raw", ["identity"], self.cfg | {"trigger_bins": 0}),
+            GazeCorrectionFramework("Bias", ["bias"], self.cfg  | {"trigger_bins": 0}) ,
+            GazeCorrectionFramework("Simple Radial", ["bias", "radial_unit"], self.cfg  | {"trigger_bins": 5}),
+            GazeCorrectionFramework("Complete Radial", ["bias", "radial_2"], self.cfg  | {"trigger_bins": 20}),
+            GazeCorrectionFramework("Conic", ["bias","full_conic"], self.cfg  | {"trigger_bins": 40}),
+            GazeCorrectionFramework("Sigmoid X+Y", ["bias","sigmoid"], self.cfg  | {"trigger_bins": 15}),
         ]
 
         self.active_idx = 1

@@ -360,10 +360,10 @@ class ArucoDetectorNode(Node):
                     self.pose_msg.header = header
                     self.pose_msg.pose = marker.pose
                     self.marker_pose_pub.publish(self.pose_msg)
-                    self.last_marker_poses[marker_id] = (
-                        self.pose_msg,
-                        self.get_clock().now(),
-                    )
+                    self.last_marker_poses[marker_id] = {
+                        "pose": marker.pose,
+                        "stamp": t_curr
+                    }
 
         # Persistence for lost markers
         ids_to_delete = []

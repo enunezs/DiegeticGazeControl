@@ -48,6 +48,7 @@ class GazeController(Node):
         self.declare_parameter("max_offset_px", 200.0)
         self.declare_parameter("compensation_active", False)
         self.declare_parameter("use_temporal_alignment", False)
+        self.declare_parameter("sticky_button_interaction", False) # New Parameter
 
         # --- 2. Circular Buffers ---
         # Gaze History: [timestamp, x, y]
@@ -176,18 +177,10 @@ class GazeController(Node):
                 and self.edge_margin < msg.y < 1200 - self.edge_margin
             )
 
-            # is_clean = (
-            #     in_fov
-            #     and not self.in_saccade
-            #     and not self.in_blink
-            #     # and not event_padding_active
-            # )
-
             # If gaze becomes "dirty", terminate segment immediately
             if self.is_recording and not in_fov:
-                # trim_s = self.get_parameter("terminal_trim_ms").value / 1000.0
-                # self.finalize_and_send_segment(ts - trim_s)
-                self._trigger_segment_end(ts, reason="OUT_OF_FOV")
+                if not self.get_parameter("sticky_button_interaction").value:
+                    self._trigger_segment_end(ts, reason="OUT_OF_FOV")
 
             # Debug signals
             # self.publish_debug_signals(in_fov, is_clean)
@@ -269,12 +262,20 @@ class GazeController(Node):
 
             elif not is_active and self.is_recording:
                 # Falling Edge: Button Release
-                if self.get_parameter("use_button_termination").value:
 
-                    trim_s = self.get_parameter("terminal_trim_ms").value / 1000.0
-                    end_point = self.last_valid_btn_ts - trim_s
-                    self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
-                    # self.finalize_and_send_segment(end_point)
+                # Check the new "Sticky" parameter
+                is_sticky = self.get_parameter("sticky_button_interaction").value
+
+                if not is_sticky:
+                    if self.get_parameter("use_button_termination").value:
+
+                        trim_s = self.get_parameter("terminal_trim_ms").value / 1000.0
+                        end_point = self.last_valid_btn_ts - trim_s
+                        self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
+                else:
+                    pass
+                    self.get_logger().debug("Sticky mode: Ignoring button release, waiting for physiological signal.")
+
 
     def finalize_and_send_segment(self, end_ts):
         """Extracts 200Hz gaze slice and interpolates 30Hz button ground truth."""

@@ -57,9 +57,23 @@
     axis_threshold: 0.6
     parser_mappings_file: "EMANUEL_mode_config.inputs.yaml"
 
+/dwell_time:
+  ros__parameters:
+    interaction_mode: "dwell_time" #  "immediate"  # Activate immediately on hover
+    dwell_duration_seconds: 0.4
+    activation_threshold : 0.7
+    hover_threshold : 0.2
+    deactivation_threshold : 0.3
+    processing_mode: 'gaze_driven'
+    processing_frequency : 30 
+    button_timeout_seconds: 0.5
+    publish_debug_image: False
+    verbose_logging: False
+
+
 /gaze_controller_node:
   ros__parameters:
-    compensation_active : False
+    compensation_active : True
     use_temporal_alignment : True
     history_length_s : 15.0
     internal_pipeline_delay_ms : 0.0
@@ -67,10 +81,14 @@
     median_window : 20
     ema_alpha : 0.2
     edge_margin : 50
-    pad_duration_ms : 100.0
-    terminal_trim_ms : 100.0
-    min_event_duration_ms : 200.0
+    pad_duration_ms : 50.0
+    terminal_trim_ms : 50.0
+    min_event_duration_ms : 100.0
     max_offset_px : 200.0
+    sticky_button_interaction : True
+    use_fallback_saccade : True
+    fallback_saccade_threshold_px : 150.0
+
 
 /calibration_learner_node:
   ros__parameters:

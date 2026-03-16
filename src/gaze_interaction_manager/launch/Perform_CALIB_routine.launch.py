@@ -18,7 +18,7 @@ def generate_launch_description():
     launch_description = LaunchDescription()
 
     config = os.path.join(
-        get_package_share_directory("pupil_neon_ros"), "config", "params.yaml"
+        get_package_share_directory("pupil_neon_ros"), "config", "LIVE_CALIB_ros_params.yaml"
     )
 
     ### Pupil Glasses ###
@@ -71,6 +71,33 @@ def generate_launch_description():
 
     ### Gaze Interaction Manager ###
 
+    dwell_time_node = Node(
+        package="gaze_interaction_manager",
+        executable="dwell_time.py",
+        name="dwell_time_node",
+        arguments=["__log_level:=debug"],
+        output="screen",
+        parameters=[config],
+    )
+    launch_description.add_action(dwell_time_node)
+
+    controller_node = Node(
+        package="gaze_interaction_manager",
+        executable="gaze_controller.py",
+        name="gaze_controller_node",
+        parameters=[config],
+    )
+    launch_description.add_action(controller_node)
+
+    ### TODO: Lets go
+    calibration_learner_node = Node(
+        package="gaze_interaction_manager",
+        executable="spatial_calibration_learner.py",
+        name="calibration_learner_node",
+        parameters=[config],
+    )
+    launch_description.add_action(calibration_learner_node)
+
     config = os.path.join(
         get_package_share_directory("gaze_interaction_manager"),
         "config",
@@ -88,13 +115,13 @@ def generate_launch_description():
     )
     launch_description.add_action(joy_command_mapper_node)
 
-    controller_node = Node(
+    joy_node = Node(
         package="joy",
         executable="joy_node",
         name="joy_node",
         parameters=[config],
     )
-    launch_description.add_action(controller_node)
+    launch_description.add_action(joy_node)
 
     # audio_feedback_node = Node(
     #     package="feedback_tools",
