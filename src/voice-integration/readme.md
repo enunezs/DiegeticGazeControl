@@ -17,12 +17,28 @@ This project does...
 4. To run the ROS2 nodes, follow the instructions below:
 
 ```bash
-ros2 run voice-integration supervisor_node2
+ros2 run voice-integration supervisor_node2.py
 
 or
 
-ros2 run voice-integration automatic_speech_recognition_node
+ros2 run voice-integration automatic_speech_recognition_node.py
 ```
+
+or
+
+ros2 run voice-integration robot_actions.py
+
+### Open command logger
+
+cat command_log.csv
+
+or
+
+libreoffice command_log.csv
+
+# Watch log update live
+
+tail -f command_log.csv
 
 ### Robot communication
 
@@ -45,8 +61,6 @@ colcon build --packages-select jacoarm-ros2 && source install/setup.bash
 ros2 launch jacoarm-ros2 jaco_with_moveit.launch.py
 ```
 
-
-
 If everything is correct, a window with Rviz will pop, and the robot hand should open
 
 6. Repeat 1-3 on a new terminal, and run:
@@ -66,7 +80,6 @@ The robot will now move to point down. You can now send messages to the /waypoin
 ```bash
 ros2 topic pub /waypoint_trigger std_msgs/msg/String "data: 'Go'"  --once
 ```
-
 
 # Other stuff
 
