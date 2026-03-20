@@ -165,9 +165,6 @@ class CommandMapper(Node):
         # Timer to publish velocity continuously at 100 Hz
         self.robot_vel_publish_timer = self.create_timer(1.0 / PUBLISH_RATE_HZ, self._publish_velocity_tick)
 
-
-
-
     def _init_publishers(self):
         """Initialize all ROS publishers:
         - /teleop/cartesian_velocity -> TwistStamped (Velocity and frame of reference for movement)
@@ -188,7 +185,6 @@ class CommandMapper(Node):
 
         # Publisher for button sound events
         self.button_sound_pub = self.create_publisher(Int32, '/button_events', 10)
-
 
     def _init_subscribers(self):
         """Initialize all ROS subscribers:
@@ -242,7 +238,7 @@ class CommandMapper(Node):
         self.mode_mappings = cfg.get("mode_mappings", {})
 
         # Add calibration waypoint demo
-        calibration_route = self.calculate_calibration_route_EX()
+        calibration_route = self.calculate_calibration_route()
         self.mode_mappings["Y"] = calibration_route
 
         self.get_logger().info(f"Loaded {len(self.mode_mappings)} mode sets from {filename}")
@@ -253,7 +249,7 @@ class CommandMapper(Node):
             self.get_logger().debug(f"Button {button_id}: modes = {list(modes.keys())}")
 
 
-    def calculate_calibration_route_EX(self) -> Dict[str, Dict]:
+    def calculate_calibration_route(self) -> Dict[str, Dict]:
         """Define a waypoint demo route for calibration purposes.
         The route visits predefined positions in space with orientations
         adapted depending on x and z.

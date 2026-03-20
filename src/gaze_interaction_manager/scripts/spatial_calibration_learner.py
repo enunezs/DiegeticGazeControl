@@ -27,6 +27,11 @@ from sklearn.linear_model import (
     LinearRegression,
 )
 
+import os
+import csv
+from sensor_msgs.msg import Joy
+# from rcl_py.time import Time
+
 # from sklearn.neighbors import KNeighborsRegressor
 # from sklearn.model_selection import ShuffleSplit
 
@@ -245,7 +250,6 @@ class GazeCorrectionFramework:
             self.models["y"].coef_,
         )
 
-
 class CalibrationLearner(Node):
     def __init__(self):
         super().__init__("calibration_learner_reservoir")
@@ -264,6 +268,8 @@ class CalibrationLearner(Node):
                 # ("solver_alpha", 1.0),  # TODO: Regularization strength for Ridge
                 ("bic_hysteresis", 3.0),  # Threshold to switch models
                 ("rmse_hysteresis", 2.0),
+                ("joy_button_index", 10), # For recording, default to 'A' or 'X' button
+                ("error_log_filename", "gaze_error_log.csv"),
             ],
         )
 
@@ -273,9 +279,9 @@ class CalibrationLearner(Node):
             "center_y": 600,
             "screen_w": 1600,
             "screen_h": 1200,
-            "bin_size": 100,
+            "bin_size": 200,
             "samples_per_bin": 30,
-            "val_size": 3,
+            "val_size": 5,
             "thinning_stride": 15,
             # "trigger_bins": self.get_parameter("trigger_bins").value,
             "solver": self.get_parameter("solver").value,
@@ -318,6 +324,17 @@ class CalibrationLearner(Node):
         }
 
         self.get_logger().info("Tournament Calibration Learner Initialized.")
+
+        # 5. Prepare error log
+        self.joy_btn_idx = self.get_parameter("joy_button_index").value
+        self.log_path = self.get_parameter("error_log_filename").value
+        self.last_button_state = 0 # For debouncing (rising edge detection)
+        self.create_subscription(
+            Joy, "joy", self.joy_callback, 10
+        )
+
+        # Prepare CSV File
+        self._init_error_log()
 
         # --- Plotting ---
         # self.fig_main, self.ax_main = plt.subplots(figsize=(8, 6), dpi=100)
@@ -576,6 +593,67 @@ class CalibrationLearner(Node):
         self.pubs[key].publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
         plt.close(fig)
 
+
+    def _init_error_log(self):
+        """Creates the CSV file and writes headers if it doesn't exist."""
+        if not os.path.exists(self.log_path):
+            with open(self.log_path, 'w', newline='') as f:
+                writer = csv.writer(f)
+                header = [
+                    "timestamp_ros", 
+                    "event_count", 
+                    "active_model", 
+                    "num_bins", 
+                    "total_samples"
+                ]
+                # Add columns for every competitor's current score
+                for m in self.competitors:
+                    header.append(f"{m.name}_score")
+                writer.writerow(header)
+
+    def joy_callback(self, msg: Joy):
+        """Listens for the 'calibration is wrong' button press."""
+        current_state = msg.buttons[self.joy_btn_idx]
+
+        # Detect Rising Edge (0 -> 1)
+        if current_state == 1 and self.last_button_state == 0:
+            self.get_logger().warn("USER REPORTED CALIBRATION FAILURE!")
+            self.log_error_event()
+        
+        self.last_button_state = current_state
+
+    def log_error_event(self):
+        """Saves the current internal state of the calibration to a CSV."""
+        now = self.get_clock().now().to_msg()
+        timestamp = f"{now.sec}.{now.nanosec}"
+        
+        active_model = self.competitors[self.active_idx]
+        strategy = self.get_parameter("selection_strategy").value
+        
+        # Gather data
+        row = [
+            timestamp,
+            self.event_count,
+            active_model.name,
+            len(self.reservoir.bins),
+            sum(len(b) for b in self.reservoir.bins.values())
+        ]
+        
+        # Append scores for all models to see if the 'correct' model was close
+        for m in self.competitors:
+            score = 0.0
+            if strategy == "BIC":
+                score = m.bic_history[-1] if m.bic_history else 0.0
+            else:
+                score = m.macro_rmse_history[-1] if m.macro_rmse_history else 0.0
+            row.append(score)
+
+        # Write to file
+        with open(self.log_path, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(row)
+            
+        self.get_logger().info(f"Event logged to {self.log_path}")
 
 def main():
     rclpy.init()

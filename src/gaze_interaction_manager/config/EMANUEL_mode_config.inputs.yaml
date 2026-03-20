@@ -24,31 +24,31 @@ mode_mappings:
     translation: {action_type: velocity, axis: y, speed: -1.0, reference_frame: j2n6s300_link_base}
     rotation:    {action_type: velocity, axis: ry, speed: 1.0,  reference_frame: j2n6s300_link_6}
 
-  SwitchRef1:
-    "*": {action_type: mode, mode_cmd: toggle_next}
+  # SwitchRef1:
+  #   "*": {action_type: mode, mode_cmd: toggle_next}
 
-  SwitchRef2:
-    translation: {action_type: mode, mode_cmd: rotation}
-    rotation:    {action_type: mode, mode_cmd: translation}
+  # SwitchRef2:
+  #   translation: {action_type: mode, mode_cmd: rotation}
+  #   rotation:    {action_type: mode, mode_cmd: translation}
 
-  S1X_+1: {"*": {action_type: velocity, axis: x, speed: 1.0,  reference_frame: j2n6s300_link_base}}
-  S1X_-1: {"*": {action_type: velocity, axis: x, speed: -1.0, reference_frame: j2n6s300_link_base}}
-  S1Y_+1: {"*": {action_type: velocity, axis: y, speed: 1.0,  reference_frame: j2n6s300_link_base}}
-  S1Y_-1: {"*": {action_type: velocity, axis: y, speed: -1.0, reference_frame: j2n6s300_link_base}}
-  TR:     {"*": {action_type: velocity, axis: z, speed: 1.0,  reference_frame: j2n6s300_link_base}}
-  TL:     {"*": {action_type: velocity, axis: z, speed: -1.0, reference_frame: j2n6s300_link_base}}
+  # S1X_+1: {"*": {action_type: velocity, axis: x, speed: 1.0,  reference_frame: j2n6s300_link_base}}
+  # S1X_-1: {"*": {action_type: velocity, axis: x, speed: -1.0, reference_frame: j2n6s300_link_base}}
+  # S1Y_+1: {"*": {action_type: velocity, axis: y, speed: 1.0,  reference_frame: j2n6s300_link_base}}
+  # S1Y_-1: {"*": {action_type: velocity, axis: y, speed: -1.0, reference_frame: j2n6s300_link_base}}
+  # TR:     {"*": {action_type: velocity, axis: z, speed: 1.0,  reference_frame: j2n6s300_link_base}}
+  # TL:     {"*": {action_type: velocity, axis: z, speed: -1.0, reference_frame: j2n6s300_link_base}}
 
-  S1RotZ_+1: {"*": {action_type: discrete, axis: rz, step_deg: 30.0,  reference_frame: j2n6s300_link_base}}
-  S1RotZ_-1: {"*": {action_type: discrete, axis: rz, step_deg: -30.0, reference_frame: j2n6s300_link_base}}
+  # S1RotZ_+1: {"*": {action_type: discrete, axis: rz, step_deg: 30.0,  reference_frame: j2n6s300_link_base}}
+  # S1RotZ_-1: {"*": {action_type: discrete, axis: rz, step_deg: -30.0, reference_frame: j2n6s300_link_base}}
 
-  S1Reset:  {"*": {action_type: system, cmd: reset_pose}}
-  A:        {"*": {action_type: mode, mode_cmd: toggle_next}}
-  B:        {"*": {action_type: mode, mode_cmd: toggle_next}}
+  # S1Reset:  {"*": {action_type: system, cmd: reset_pose}}
+  # A:        {"*": {action_type: mode, mode_cmd: toggle_next}}
+  # B:        {"*": {action_type: mode, mode_cmd: toggle_next}}
 
   # Close all
-  X: { "*":{action_type: finger , fingers: [1, 2, 3], speed: 500.0} }
+  A: { "*":{action_type: finger , fingers: [1, 2, 3], speed: 2000.0} }
   # Open all
-  Y: { "*":{action_type: finger , fingers: [1, 2, 3], speed: -500.0} }
+  B: { "*":{action_type: finger , fingers: [1, 2, 3], speed: -2000.0} }
 
   UpHybridRe:
     translation: {action_type: velocity, axis: z, speed: 1.0, reference_frame: j2n6s300_link_base}

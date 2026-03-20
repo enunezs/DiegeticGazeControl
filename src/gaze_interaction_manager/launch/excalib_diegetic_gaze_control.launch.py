@@ -136,5 +136,14 @@ def generate_launch_description():
     #     parameters=[config],
     # )
     # launch_description.add_action(pupil_visuals_node)
+    
+    # For error reporting
+    joy_node = Node(
+        package="joy",
+        executable="joy_node",
+        name="joy_node",
+        parameters=[config],
+    )
+    launch_description.add_action(joy_node)
 
     return launch_description
