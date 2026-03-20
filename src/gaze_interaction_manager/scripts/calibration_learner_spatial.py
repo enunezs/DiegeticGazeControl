@@ -255,10 +255,11 @@ class CalibrationLearner(Node):
                 ("publish_prediction_map", True),
                 ("publish_tournament", True),
                 ("selection_strategy", "RMSE"),  # "BIC" or "RMSE"
-                ("trigger_bins", 12),
-                ("solver", "ridge"),  # "ridge", "huber", "linear"
-                ("bic_hysteresis", 5.0),  # Threshold to switch models
-                ("rmse_hysteresis", 1.0),
+                ("trigger_bins", 10),
+                ("solver", "ridge"),  # "huber", "ridge", "linear"
+                # ("solver_alpha", 1.0),  # TODO: Regularization strength for Ridge
+                ("bic_hysteresis", 15.0),  # Threshold to switch models
+                ("rmse_hysteresis", 2.0),
             ],
         )
 
@@ -281,9 +282,9 @@ class CalibrationLearner(Node):
         self.competitors = [
             GazeCorrectionFramework("Raw", ["identity"], self.cfg),
             GazeCorrectionFramework("Bias", ["bias"], self.cfg),
-            # GazeCorrectionFramework("Radial", ["bias", "radial_2"], self.cfg),
-            GazeCorrectionFramework("Conic", ["full_conic"], self.cfg),
-            GazeCorrectionFramework("Sigmoid X+Y", ["sigmoid"], self.cfg),
+            GazeCorrectionFramework("Radial", ["bias", "radial_2"], self.cfg),
+            GazeCorrectionFramework("Conic", ["bias", "full_conic"], self.cfg),
+            # GazeCorrectionFramework("Sigmoid X+Y", ["bias","sigmoid"], self.cfg),
         ]
 
         self.active_idx = 1
