@@ -328,7 +328,7 @@ class GazeCorrectionFramework:
         A = self._get_matrix(dx, dy, self.current_features)
         return A @ self.params["x"], A @ self.params["y"]
 
-    def train(self, train_samples, n_bins, event_idx):
+    def train(self, split_data, n_bins, event_idx):
         if self.is_identity:
             return
 
@@ -455,6 +455,7 @@ class CalibrationLearner(Node):
             "thinning_stride": 10,
             # "trigger_bins": self.get_parameter("trigger_bins").value, # TODO: Formalize or remove later
             "solver": self.get_parameter("solver").value,
+            "solver_alpha": self.get_parameter("solver_alpha").value,
             "cv_strategy": self.get_parameter("cv_strategy").value,
             "n_folds": self.get_parameter("n_folds").value,
             "spatial_val_ratio": self.get_parameter("spatial_val_ratio").value,
@@ -588,11 +589,13 @@ class CalibrationLearner(Node):
 
         ### Phase 2: Update Shared Reservoir ###
         self.reservoir.add_segment(gx, gy, ex, ey)
-        train_pool, val_pool = self.reservoir.get_split()
+        split_data = self.reservoir.get_split()
+        
+        # train_pool, val_pool 
 
         # Phase 3: Shared Training ###
         for model in self.competitors:
-            model.train(train_pool, len(self.reservoir), self.event_count)
+            model.train(split_data, len(self.reservoir), self.event_count)
 
         self.event_count += 1
 
@@ -602,7 +605,7 @@ class CalibrationLearner(Node):
         # Publish model update and visuals
         self.publish_model_update()
         train_flat, val_flat = self.reservoir._get_stratified_split()
-        self.generate_visuals(train_pool, val_pool)
+        self.generate_visuals(train_flat, val_flat)
 
     def run_selection_tournament(self):
         n_bins = len(self.reservoir.bins)

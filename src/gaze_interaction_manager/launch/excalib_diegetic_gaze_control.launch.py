@@ -107,15 +107,15 @@ def generate_launch_description():
     )
     launch_description.add_action(audio_feedback_node)
 
-    # visuals_node_2d = Node(
-    #     package="feedback_tools",
-    #     executable="2D_visuals.py",
-    #     name="visualizer_2d_node",
-    #     arguments=["__log_level:=debug"],
-    #     output="screen",
-    #     parameters=[{"use_camera_background": True}],
-    # )
-    # launch_description.add_action(visuals_node_2d)
+    visuals_node_2d = Node(
+        package="feedback_tools",
+        executable="2D_visuals.py",
+        name="visualizer_2d_node",
+        arguments=["__log_level:=debug"],
+        output="screen",
+        parameters=[{"use_camera_background": True}],
+    )
+    launch_description.add_action(visuals_node_2d)
 
     visuals_node_3d = Node(
         package="feedback_tools",

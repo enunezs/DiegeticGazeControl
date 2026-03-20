@@ -1,7 +1,8 @@
+# Model Type Enums
 uint8 TYPE_BIAS=0
-uint8 TYPE_LINEAR=1
-uint8 TYPE_QUADRATIC=2
-uint8 TYPE_CONICAL=3
+uint8 TYPE_QUADRATIC=1
+uint8 TYPE_RADIAL_UNIVERSAL=2
+uint8 TYPE_SIGMOIDAL=3
 uint8 TYPE_KNN_GRID=4
 
 uint8 model_type
