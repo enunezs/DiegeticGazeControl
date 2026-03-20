@@ -10,7 +10,10 @@ from gaze_interaction_manager.msg import InteractionSegment, CalibrationModel
 import numpy as np
 import cv2
 from cv_bridge import CvBridge
+import random
 from collections import deque
+import os
+import csv
 
 # Matplotlib for Visualization
 import matplotlib.pyplot as plt
@@ -30,6 +33,7 @@ from sklearn.linear_model import (
 import os
 import csv
 from sensor_msgs.msg import Joy
+
 # from rcl_py.time import Time
 
 # from sklearn.neighbors import KNeighborsRegressor
@@ -43,15 +47,14 @@ class SpatialReservoir:
     def __init__(self, cfg):
         self.cfg = cfg
         self.bins = {}  # (bx, by) -> deque
-        self.bin_size = cfg.get("bin_size", 100)
-        self.max_samples = cfg.get("samples_per_bin", 10)
-        self.val_size = cfg.get("val_size", 3)
+        self.bin_size = cfg.get("bin_size", 150)
+        self.max_samples = cfg.get("samples_per_bin", 50)
+        self.val_size = cfg.get("val_size", 10)
         self.stride = cfg.get("thinning_stride", 15)
 
     def add_segment(self, gx, gy, ex, ey):
         """Processes a new segment into the shared spatial bins."""
         stride = self.stride
-
         gx_t, gy_t, ex_t, ey_t = gx[::stride], gy[::stride], ex[::stride], ey[::stride]
 
         for i in range(len(gx_t)):
@@ -66,22 +69,128 @@ class SpatialReservoir:
 
             self.bins[bid].append((gx_t[i], gy_t[i], ex_t[i], ey_t[i]))
 
-    def get_train_val_split(self):
-        """Returns a flattened numpy array of training and validation samples."""
+    def get_split(self):
+        """Routes to the requested CV strategy."""
+        strategy = self.cfg.get("cv_strategy", "stratified")
+
+        if strategy == "spatial_block":
+            return self._get_spatial_block_split()
+        elif strategy == "kfolds_spatial_block":
+            return self._get_spatial_kfolds_iterator()
+        else:
+            return self._get_stratified_split()
+
+    def _get_stratified_split(self):
+        """Standard FIFO split: newest samples in bin are validation."""
         train_list, val_list = [], []
         for samples in self.bins.values():
             s_list = list(samples)
             if len(s_list) > self.val_size:
-                # FIFO: Use older data for training, keep newest for "Exam" (Validation)
-                val_list.extend(s_list[-self.val_size :])  # Newest for BIC/Val
-                train_list.extend(s_list[: -self.val_size])  # Older for Training
+                val_list.extend(s_list[-self.val_size :])
+                train_list.extend(s_list[: -self.val_size])
             else:
                 val_list.extend(s_list)
-
         return np.array(train_list), np.array(val_list)
+
+    def _get_spatial_block_split(self):
+        """Selects entire bins for validation and buffers neighbors."""
+        all_bin_ids = list(self.bins.keys())
+        if len(all_bin_ids) < 5:
+            return self._get_stratified_split()
+
+        val_ratio = self.cfg.get("spatial_val_ratio", 0.2)
+        n_val_bins = max(1, int(len(all_bin_ids) * val_ratio))
+        test_bin_ids = set(random.sample(all_bin_ids, n_val_bins))
+
+        buffer_bin_ids = set()
+        include_diagonals = self.cfg.get("cv_include_diagonals", False)
+
+        for bx, by in test_bin_ids:
+            neighbors = [(bx + 1, by), (bx - 1, by), (bx, by + 1), (bx, by - 1)]
+            if include_diagonals:
+                neighbors += [
+                    (bx + 1, by + 1),
+                    (bx - 1, by - 1),
+                    (bx + 1, by - 1),
+                    (bx - 1, by + 1),
+                ]
+            for nb in neighbors:
+                if nb in self.bins and nb not in test_bin_ids:
+                    buffer_bin_ids.add(nb)
+
+        train_list, val_list = [], []
+        for bid, samples in self.bins.items():
+            if bid in test_bin_ids:
+                val_list.extend(list(samples))
+            elif bid in buffer_bin_ids:
+                continue
+            else:
+                train_list.extend(list(samples))
+
+        if not train_list:
+            return self._get_stratified_split()
+        return np.array(train_list), np.array(val_list)
+
+    def _get_spatial_kfolds_iterator(self):
+        """Systematic spatial interleaving for K-Folds."""
+        all_bin_ids = list(self.bins.keys())
+        n_folds = self.cfg.get("n_folds", 5)
+        include_diagonals = self.cfg.get("cv_include_diagonals", False)
+
+        if len(all_bin_ids) < n_folds * 2:
+            return [self._get_stratified_split()]
+
+        folds_map = {i: [] for i in range(n_folds)}
+        for bx, by in all_bin_ids:
+            fold_idx = (bx + by) % n_folds
+            folds_map[fold_idx].append((bx, by))
+
+        kfolds_data = []
+        for k in range(n_folds):
+            test_bin_ids = set(folds_map[k])
+            buffer_bin_ids = set()
+            for bx, by in test_bin_ids:
+                neighbors = [(bx + 1, by), (bx - 1, by), (bx, by + 1), (bx, by - 1)]
+                if include_diagonals:
+                    neighbors += [
+                        (bx + 1, by + 1),
+                        (bx - 1, by - 1),
+                        (bx + 1, by - 1),
+                        (bx - 1, by + 1),
+                    ]
+                for nb in neighbors:
+                    if nb in self.bins and nb not in test_bin_ids:
+                        buffer_bin_ids.add(nb)
+
+            train_l, val_l = [], []
+            for bid, samples in self.bins.items():
+                if bid in test_bin_ids:
+                    val_l.extend(list(samples))
+                elif bid in buffer_bin_ids:
+                    continue
+                else:
+                    train_l.extend(list(samples))
+
+            if train_l and val_l:
+                kfolds_data.append((np.array(train_l), np.array(val_l)))
+        return kfolds_data
 
     def __len__(self):
         return len(self.bins)
+
+    # def get_train_val_split(self):
+    #     """Returns a flattened numpy array of training and validation samples."""
+    #     train_list, val_list = [], []
+    #     for samples in self.bins.values():
+    #         s_list = list(samples)
+    #         if len(s_list) > self.val_size:
+    #             # FIFO: Use older data for training, keep newest for "Exam" (Validation)
+    #             val_list.extend(s_list[-self.val_size :])  # Newest for BIC/Val
+    #             train_list.extend(s_list[: -self.val_size])  # Older for Training
+    #         else:
+    #             val_list.extend(s_list)
+
+    #     return np.array(train_list), np.array(val_list)
 
 
 # ==========================================
@@ -109,10 +218,11 @@ class GazeCorrectionFramework:
         self.master_recipe = recipe
         self.is_identity = "identity" in self.master_recipe
         self.current_features = self.master_recipe if self.is_identity else ["bias"]
-        # Start simple (Bias) unless it's the raw/identity model
 
         # Tracking for BIC/Tournament
         self.bic_history = []
+        self.aic_history = []
+
         self.macro_rmse_history = []
 
         # Screen Constants
@@ -123,14 +233,23 @@ class GazeCorrectionFramework:
             "lin_y": lambda dx, dy, r, r2: [dy / self.cy],
             "quad_x": lambda dx, dy, r, r2: [(dx**2 * np.sign(dx)) / self.cx**2],
             "quad_y": lambda dx, dy, r, r2: [(dy**2 * np.sign(dy)) / self.cy**2],
-            "radial_2": lambda dx, dy, r, r2: [
+            # Radial Linear: Correction scales with distance (Expansion/Contraction)
+            "radial": lambda dx, dy, r, r2: [
+                (dx * r) / self.cx**2,
+                (dy * r) / self.cy**2,
+            ],
+            "radial_quad": lambda dx, dy, r, r2: [
                 (dx * r2) / self.cx**3,
                 (dy * r2) / self.cy**3,
             ],
-            "radial_unit": lambda dx, dy, r, r2: [
-                dx / (r + 1e-6), 
-                dy / (r + 1e-6)
+            "radial_universal": lambda dx, dy, r, r2: [
+                (dx * r2) / self.cx**3,
+                (dy * r2) / self.cy**3,
+                dx / self.cx,
+                dy / self.cy,
+                np.ones_like(dx),
             ],
+            # "radial_unit": lambda dx, dy, r, r2: [dx / (r + 1e-6), dy / (r + 1e-6)],
             "full_conic": lambda dx, dy, r, r2: [
                 dx**2 / self.cx**2,
                 dy**2 / self.cy**2,
@@ -178,11 +297,10 @@ class GazeCorrectionFramework:
             return None
 
         s_type = self.cfg.get("solver", "ridge")
-        alpha = self.cfg.get("solver_alpha", 0.1)
+        alpha = self.cfg.get("solver_alpha", 1.0)
+        A_temp = self._get_matrix(np.array([0]), np.array([0]), self.current_features)
+        n_cols = A_temp.shape[1]
 
-        n_cols = self._get_matrix(
-            np.array([0]), np.array([0]), self.current_features
-        ).shape[1]
         m = self.models.get(key)
 
         if s_type == "huber":
@@ -214,7 +332,7 @@ class GazeCorrectionFramework:
         if self.is_identity:
             return
 
-        # Step 1: Handle model graduation (Bias -> Master Recipe)
+        # Step 1: Handle model graduation as per number of samples
         if self.current_features == ["bias"] and n_bins >= self.cfg.get(
             "trigger_bins", 15
         ):
@@ -223,10 +341,52 @@ class GazeCorrectionFramework:
             self.models = {"x": None, "y": None}  # Reset solvers for shape change
 
         # Step 2: Solver Fit
-        if len(train_samples) < 3:
+        # Handle K-Folds vs Single Split
+
+        # Handle K-Folds vs Single Split
+        if isinstance(split_data, list):
+            fold_mses, all_params_x, all_params_y = [], [], []
+            for train_samples, val_samples in split_data:
+                if len(train_samples) < 3:
+                    continue
+
+                t_dx, t_dy = (
+                    train_samples[:, 0] - self.cx,
+                    train_samples[:, 1] - self.cy,
+                )
+                A_train = self._get_matrix(t_dx, t_dy, self.current_features)
+                mx, my = self._get_solver("x"), self._get_solver("y")
+                mx.fit(A_train, train_samples[:, 2])
+                my.fit(A_train, train_samples[:, 3])
+
+                v_dx, v_dy = val_samples[:, 0] - self.cx, val_samples[:, 1] - self.cy
+                A_val = self._get_matrix(v_dx, v_dy, self.current_features)
+                pvx, pvy = A_val @ mx.coef_, A_val @ my.coef_
+                fold_mses.append(
+                    np.mean(
+                        (val_samples[:, 2] - pvx) ** 2 + (val_samples[:, 3] - pvy) ** 2
+                    )
+                )
+                all_params_x.append(mx.coef_)
+                all_params_y.append(my.coef_)
+
+            if fold_mses:
+                self.params["x"] = np.mean(all_params_x, axis=0)
+                self.params["y"] = np.mean(all_params_y, axis=0)
+                self._last_cv_mse = np.mean(fold_mses)
+
+            # Optional: Production retrain on all data
+            if self.cfg.get("retrain_on_full_data", True):
+                full_data = np.concatenate([ts for ts, _ in split_data], axis=0)
+                self._simple_fit(full_data)
+        else:
+            train_samples, _ = split_data
+            self._simple_fit(train_samples)
+
+    def _simple_fit(self, data):
+        if len(data) < 3:
             return
 
-        data = np.array(train_samples)
         train_gx, train_gy, train_ex, train_ey = (
             data[:, 0],
             data[:, 1],
@@ -236,19 +396,18 @@ class GazeCorrectionFramework:
         train_dx, train_dy = train_gx - self.cx, train_gy - self.cy
 
         A = self._get_matrix(train_dx, train_dy, self.current_features)
+
         mx, my = self._get_solver("x"), self._get_solver("y")
 
-        # self.params["x"], self.params["y"] = mx.coef_, my.coef_
-
         # Fit models
-        self.models["x"] = mx.fit(A, train_ex)
-        self.models["y"] = my.fit(A, train_ey)
+        self.models["x"], self.models["y"] = mx.fit(A, train_ex), my.fit(A, train_ey)
 
         # Save coefficients
         self.params["x"], self.params["y"] = (
             self.models["x"].coef_,
             self.models["y"].coef_,
         )
+
 
 class CalibrationLearner(Node):
     def __init__(self):
@@ -258,17 +417,28 @@ class CalibrationLearner(Node):
         self.declare_parameters(
             namespace="",
             parameters=[
+                # Plotting Toggles
                 ("publish_data_quiver", True),
                 ("publish_status_profile", True),
                 ("publish_prediction_map", True),
                 ("publish_tournament", True),
+                # Selection and switching logic
                 ("selection_strategy", "RMSE"),  # "BIC" or "RMSE"
-                # ("trigger_bins", 10),
+                (
+                    "cv_strategy",
+                    "kfolds_spatial_block",
+                ),  # "stratified", "spatial_block", "kfolds_spatial_block"
+                ("n_folds", 5),
+                ("spatial_val_ratio", 0.2),
+                ("cv_include_diagonals", True),
+                ("retrain_on_full_data", False),
+                # Regressor settings
                 ("solver", "ridge"),  # "huber", "ridge", "linear"
-                # ("solver_alpha", 1.0),  # TODO: Regularization strength for Ridge
+                ("solver_alpha", 1.0),  # TODO: Regularization strength for Ridge
+                # ("trigger_bins", 10),
                 ("bic_hysteresis", 3.0),  # Threshold to switch models
                 ("rmse_hysteresis", 2.0),
-                ("joy_button_index", 10), # For recording, default to 'A' or 'X' button
+                ("joy_button_index", 10),  # For recording, default to 'A' or 'X' button
                 ("error_log_filename", "gaze_error_log.csv"),
             ],
         )
@@ -279,23 +449,40 @@ class CalibrationLearner(Node):
             "center_y": 600,
             "screen_w": 1600,
             "screen_h": 1200,
-            "bin_size": 200,
-            "samples_per_bin": 30,
-            "val_size": 5,
-            "thinning_stride": 15,
-            # "trigger_bins": self.get_parameter("trigger_bins").value,
+            "bin_size": 150,
+            "samples_per_bin": 50,
+            "val_size": 15,
+            "thinning_stride": 10,
+            # "trigger_bins": self.get_parameter("trigger_bins").value, # TODO: Formalize or remove later
             "solver": self.get_parameter("solver").value,
+            "cv_strategy": self.get_parameter("cv_strategy").value,
+            "n_folds": self.get_parameter("n_folds").value,
+            "spatial_val_ratio": self.get_parameter("spatial_val_ratio").value,
+            "cv_include_diagonals": self.get_parameter("cv_include_diagonals").value,
+            "retrain_on_full_data": self.get_parameter("retrain_on_full_data").value,
         }
 
         # 3. State
         self.reservoir = SpatialReservoir(self.cfg)
         self.competitors = [
-            GazeCorrectionFramework("Raw", ["identity"], self.cfg | {"trigger_bins": 0}),
-            GazeCorrectionFramework("Bias", ["bias"], self.cfg  | {"trigger_bins": 0}) ,
-            GazeCorrectionFramework("Simple Radial", ["bias", "radial_unit"], self.cfg  | {"trigger_bins": 5}),
-            GazeCorrectionFramework("Complete Radial", ["bias", "radial_2"], self.cfg  | {"trigger_bins": 20}),
-            GazeCorrectionFramework("Conic", ["bias","full_conic"], self.cfg  | {"trigger_bins": 40}),
-            GazeCorrectionFramework("Sigmoid X+Y", ["bias","sigmoid"], self.cfg  | {"trigger_bins": 15}),
+            GazeCorrectionFramework(
+                "Raw", ["identity"], self.cfg | {"trigger_bins": 0}
+            ),
+            GazeCorrectionFramework("Bias", ["bias"], self.cfg | {"trigger_bins": 0}),
+            GazeCorrectionFramework(
+                "Simple Radial", ["bias", "radial"], self.cfg | {"trigger_bins": 5}
+            ),
+            GazeCorrectionFramework(
+                "Complete Radial",
+                ["bias", "radial_universal"],
+                self.cfg | {"trigger_bins": 20},
+            ),
+            GazeCorrectionFramework(
+                "Conic", ["bias", "full_conic"], self.cfg | {"trigger_bins": 40}
+            ),
+            GazeCorrectionFramework(
+                "Sigmoid X+Y", ["bias", "sigmoid"], self.cfg | {"trigger_bins": 15}
+            ),
         ]
 
         self.active_idx = 1
@@ -328,13 +515,36 @@ class CalibrationLearner(Node):
         # 5. Prepare error log
         self.joy_btn_idx = self.get_parameter("joy_button_index").value
         self.log_path = self.get_parameter("error_log_filename").value
-        self.last_button_state = 0 # For debouncing (rising edge detection)
-        self.create_subscription(
-            Joy, "joy", self.joy_callback, 10
-        )
+        self.last_button_state = 0  # For debouncing (rising edge detection)
+        self.create_subscription(Joy, "joy", self.joy_callback, 10)
 
         # Prepare CSV File
         self._init_error_log()
+        self.get_logger().info(
+            f"Tournament Initialized. CV Strategy: {self.cfg['cv_strategy']}"
+        )
+        self.get_logger().info(
+            f"Model Selection Strategy: {self.get_parameter('selection_strategy').value}"
+        )
+        self.get_logger().info(
+            f"Solvers: {self.cfg['solver']} with alpha={self.cfg['solver_alpha']}"
+        )
+        self.get_logger().info(
+            f"Hysteresis Thresholds - BIC: {self.get_parameter('bic_hysteresis').value}, RMSE: {self.get_parameter('rmse_hysteresis').value}"
+        )
+        self.get_logger().info("--- Competitors: ---")
+        for m in self.competitors:
+            self.get_logger().info(
+                f" - {m.name} (Features: {m.master_recipe}, Trigger Bins: {m.cfg['trigger_bins']})"
+            )
+        self.get_logger().info(
+            f"Spatial Reservoir Config: Bin Size={self.cfg['bin_size']}, Max Samples/Bin={self.cfg['samples_per_bin']}, Validation Size/Bin={self.cfg['val_size']}, Thinning Stride={self.cfg['thinning_stride']}"
+        )
+        self.get_logger().info(f"--- Error Logging ---")
+        self.get_logger().info(
+            f"Joy Button Index for Error Logging: {self.joy_btn_idx}"
+        )
+        self.get_logger().info(f"Error Log Path: {self.log_path}")
 
         # --- Plotting ---
         # self.fig_main, self.ax_main = plt.subplots(figsize=(8, 6), dpi=100)
@@ -366,20 +576,19 @@ class CalibrationLearner(Node):
                 rmse = np.sqrt(np.mean((ex - px) ** 2 + (ey - py) ** 2))
             else:
                 rmse = np.sqrt(np.mean(ex**2 + ey**2))
-
             model.prequential_errors.append(rmse)
 
-            # TODO: not here. Should be based on cv scores within the training phase, not the prequential error of the single segment. This is too noisy and reactive.
-            # Winner Selection (AULC)
-            if i > 0:
-                aulc = np.mean(model.prequential_errors)
-                if aulc < best_aulc:
-                    best_aulc = aulc
-                    self.active_idx = i
+            # # TODO: not here. Should be based on cv scores within the training phase, not the prequential error of the single segment. This is too noisy and reactive.
+            # # Winner Selection (AULC)
+            # if i > 0:
+            #     aulc = np.mean(model.prequential_errors)
+            #     if aulc < best_aulc:
+            #         best_aulc = aulc
+            #         self.active_idx = i
 
         ### Phase 2: Update Shared Reservoir ###
         self.reservoir.add_segment(gx, gy, ex, ey)
-        train_pool, val_pool = self.reservoir.get_train_val_split()
+        train_pool, val_pool = self.reservoir.get_split()
 
         # Phase 3: Shared Training ###
         for model in self.competitors:
@@ -388,13 +597,14 @@ class CalibrationLearner(Node):
         self.event_count += 1
 
         # Phase 4: Model selection
-        self.run_bic_tournament()
+        self.run_selection_tournament()
 
         # Publish model update and visuals
         self.publish_model_update()
+        train_flat, val_flat = self.reservoir._get_stratified_split()
         self.generate_visuals(train_pool, val_pool)
 
-    def run_bic_tournament(self):
+    def run_selection_tournament(self):
         n_bins = len(self.reservoir.bins)
         if n_bins == 0:
             return
@@ -418,10 +628,16 @@ class CalibrationLearner(Node):
             # BIC = ln(N_bins) * k + N_bins * ln(MSE_macro)
             k_total = model.k * 2
             bic = np.log(n_bins) * model.k_total + n_bins * np.log(macro_mse + 1e-6)
+            # AIC = 2 * k - 2 * ln(Likelihood), where Likelihood ~ exp(-N_bins * MSE_macro)
+            aic = 2 * model.k_total + n_bins * np.log(macro_mse + 1e-6)
 
             # bic = k_total * np.log(n_bins) + n_bins * np.log(macro_mse + 1e-6)
             model.bic_history.append(bic)
-            scores.append(bic if strategy == "BIC" else macro_rmse)
+            model.aic_history.append(aic)
+            scores.append(
+                bic if strategy == "BIC" else aic if strategy == "AIC" else macro_rmse
+            )
+            # Pending to add AIC
 
         # Hysteresis Logic
         challenger_idx = np.argmin(scores)
@@ -458,7 +674,7 @@ class CalibrationLearner(Node):
 
         elif winner.name == "Radial":
             msg.model_type = CalibrationModel.TYPE_CONICAL  # Re-using type 3 for Radial
-            # Recipe ["bias", "radial_2"]: index 0=bias, 1=radial_x, 2=radial_y
+            # Recipe ["bias", "radial_quad"]: index 0=bias, 1=radial_x, 2=radial_y
             cx[0], cx[5] = px[1] / (W**3), px[0]
             cy[1], cy[5] = py[2] / (H**3), py[0]
 
@@ -487,6 +703,7 @@ class CalibrationLearner(Node):
             # Recipe: [tanh(dx/400), tanh(dy/300), 1]
             cx[3], cx[5] = px[0], px[2]
             cy[4], cy[5] = py[1], py[2]
+        # TODO: Add simple radial
 
         msg.coeffs_x = [float(c) for c in cx]
         msg.coeffs_y = [float(c) for c in cy]
@@ -530,7 +747,9 @@ class CalibrationLearner(Node):
                 scale_units="xy",
                 width=0.005,
             )
-        ax.set_title(f"Reservoir ({len(self.reservoir.bins)} Bins)")
+        ax.set_title(
+            f"Reservoir ({len(self.reservoir.bins)} Bins) - {self.cfg['cv_strategy']}"
+        )
         ax.set_xlim(0, 1600)
         ax.set_ylim(1200, 0)
         self._pub_plt(fig, "quiver")
@@ -593,18 +812,17 @@ class CalibrationLearner(Node):
         self.pubs[key].publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
         plt.close(fig)
 
-
     def _init_error_log(self):
         """Creates the CSV file and writes headers if it doesn't exist."""
         if not os.path.exists(self.log_path):
-            with open(self.log_path, 'w', newline='') as f:
+            with open(self.log_path, "w", newline="") as f:
                 writer = csv.writer(f)
                 header = [
-                    "timestamp_ros", 
-                    "event_count", 
-                    "active_model", 
-                    "num_bins", 
-                    "total_samples"
+                    "timestamp_ros",
+                    "event_count",
+                    "active_model",
+                    "num_bins",
+                    "total_samples",
                 ]
                 # Add columns for every competitor's current score
                 for m in self.competitors:
@@ -619,41 +837,44 @@ class CalibrationLearner(Node):
         if current_state == 1 and self.last_button_state == 0:
             self.get_logger().warn("USER REPORTED CALIBRATION FAILURE!")
             self.log_error_event()
-        
+
         self.last_button_state = current_state
 
     def log_error_event(self):
         """Saves the current internal state of the calibration to a CSV."""
         now = self.get_clock().now().to_msg()
         timestamp = f"{now.sec}.{now.nanosec}"
-        
+
         active_model = self.competitors[self.active_idx]
         strategy = self.get_parameter("selection_strategy").value
-        
+
         # Gather data
         row = [
             timestamp,
             self.event_count,
             active_model.name,
             len(self.reservoir.bins),
-            sum(len(b) for b in self.reservoir.bins.values())
+            sum(len(b) for b in self.reservoir.bins.values()),
         ]
-        
+
         # Append scores for all models to see if the 'correct' model was close
         for m in self.competitors:
             score = 0.0
             if strategy == "BIC":
                 score = m.bic_history[-1] if m.bic_history else 0.0
+            elif strategy == "AIC":
+                score = m.aic_history[-1] if m.aic_history else 0.0
             else:
                 score = m.macro_rmse_history[-1] if m.macro_rmse_history else 0.0
             row.append(score)
 
         # Write to file
-        with open(self.log_path, 'a', newline='') as f:
+        with open(self.log_path, "a", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(row)
-            
+
         self.get_logger().info(f"Event logged to {self.log_path}")
+
 
 def main():
     rclpy.init()
