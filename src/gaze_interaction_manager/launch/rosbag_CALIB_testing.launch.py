@@ -30,7 +30,7 @@ def generate_launch_description():
     config = os.path.join(
         get_package_share_directory("gaze_interaction_manager"),
         "config",
-        "CALIB_ros_params.yaml",
+        "recording_CALIB_ros_params.yaml",
     )
 
     ### Pupil Glasses ###
@@ -117,7 +117,7 @@ def generate_launch_description():
 
     calibration_learner_node = Node(
         package="gaze_interaction_manager",
-        executable="calibration_learner_spatial.py",
+        executable="spatial_calibration_learner.py",
         name="calibration_learner_node",
         parameters=[config, {"use_sim_time": use_sim_time}],
     )

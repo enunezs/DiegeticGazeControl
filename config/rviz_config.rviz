@@ -1,6 +1,6 @@
 Panels:
   - Class: rviz_common/Displays
-    Help Height: 0
+    Help Height: 70
     Name: Displays
     Property Tree Widget:
       Expanded:
@@ -12,10 +12,9 @@ Panels:
         - /Image2/Topic1
         - /Image3
         - /Image4
-        - /Image5
         - /Image5/Topic1
       Splitter Ratio: 0.5
-    Tree Height: 364
+    Tree Height: 70
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -60,17 +59,29 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        aruco_100:
+        aruco_109:
+          Value: true
+        aruco_130:
+          Value: true
+        aruco_17:
+          Value: true
+        aruco_172:
           Value: true
         aruco_190:
           Value: true
-        aruco_87:
+        aruco_241:
           Value: true
-        aruco_88:
+        aruco_32:
           Value: true
-        aruco_89:
+        aruco_37:
+          Value: true
+        aruco_85:
+          Value: true
+        aruco_90:
           Value: true
         aruco_91:
+          Value: true
+        aruco_92:
           Value: true
         aruco_93:
           Value: true
@@ -82,20 +93,6 @@ Visualization Manager:
           Value: true
         aruco_97:
           Value: true
-        aruco_98:
-          Value: true
-        aruco_99:
-          Value: true
-        bt_CloserHybridRe:
-          Value: true
-        bt_DownHybridRe:
-          Value: true
-        bt_FartherHybridRe:
-          Value: true
-        bt_LeftHybridRe:
-          Value: true
-        bt_RightHybridRe:
-          Value: true
         bt_Target_A:
           Value: true
         bt_Target_B:
@@ -104,47 +101,19 @@ Visualization Manager:
           Value: true
         bt_Target_D:
           Value: true
-        bt_UpHybridRe:
+        bt_Target_E:
+          Value: true
+        bt_Target_F:
+          Value: true
+        bt_Target_G:
+          Value: true
+        bt_Target_H:
+          Value: true
+        bt_Target_Main:
           Value: true
         camera_optical_frame:
           Value: true
-        coarse_target:
-          Value: true
         j2n6s300_end_effector:
-          Value: true
-        j2n6s300_link_1:
-          Value: true
-        j2n6s300_link_2:
-          Value: true
-        j2n6s300_link_3:
-          Value: true
-        j2n6s300_link_4:
-          Value: true
-        j2n6s300_link_5:
-          Value: true
-        j2n6s300_link_6:
-          Value: true
-        j2n6s300_link_base:
-          Value: true
-        j2n6s300_link_finger_1:
-          Value: true
-        j2n6s300_link_finger_2:
-          Value: true
-        j2n6s300_link_finger_3:
-          Value: true
-        j2n6s300_link_finger_tip_1:
-          Value: true
-        j2n6s300_link_finger_tip_2:
-          Value: true
-        j2n6s300_link_finger_tip_3:
-          Value: true
-        post_user_compensation:
-          Value: true
-        root:
-          Value: true
-        target_orientation_ghost:
-          Value: true
-        world:
           Value: true
       Marker Scale: 0.05000000074505806
       Name: TF
@@ -152,103 +121,60 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          camera_optical_frame:
-            aruco_100:
-              {}
-            aruco_190:
-              {}
-            aruco_87:
-              {}
-            aruco_88:
-              {}
-            aruco_89:
-              {}
-            aruco_93:
-              {}
-            aruco_94:
-              {}
-            aruco_95:
-              {}
-            aruco_96:
-              {}
-            aruco_97:
-              {}
-            aruco_98:
-              {}
-            aruco_99:
-              {}
-            bt_CloserHybridRe:
-              {}
-            bt_DownHybridRe:
-              {}
-            bt_FartherHybridRe:
-              {}
-            bt_LeftHybridRe:
-              {}
-            bt_RightHybridRe:
-              {}
-            bt_Target_A:
-              {}
-            bt_Target_B:
-              {}
-            bt_Target_C:
-              {}
-            bt_Target_D:
-              {}
-            bt_UpHybridRe:
-              {}
-          root:
-            j2n6s300_link_base:
-              coarse_target:
+        j2n6s300_end_effector:
+          aruco_91:
+            camera_optical_frame:
+              aruco_109:
                 {}
-              j2n6s300_link_1:
-                j2n6s300_link_2:
-                  j2n6s300_link_3:
-                    j2n6s300_link_4:
-                      j2n6s300_link_5:
-                        j2n6s300_link_6:
-                          j2n6s300_end_effector:
-                            aruco_91:
-                              {}
-                          j2n6s300_link_finger_1:
-                            j2n6s300_link_finger_tip_1:
-                              {}
-                          j2n6s300_link_finger_2:
-                            j2n6s300_link_finger_tip_2:
-                              {}
-                          j2n6s300_link_finger_3:
-                            j2n6s300_link_finger_tip_3:
-                              {}
-              post_user_compensation:
+              aruco_130:
                 {}
-              target_orientation_ghost:
+              aruco_17:
+                {}
+              aruco_172:
+                {}
+              aruco_190:
+                {}
+              aruco_241:
+                {}
+              aruco_32:
+                {}
+              aruco_37:
+                {}
+              aruco_85:
+                {}
+              aruco_90:
+                {}
+              aruco_92:
+                {}
+              aruco_93:
+                {}
+              aruco_94:
+                {}
+              aruco_95:
+                {}
+              aruco_96:
+                {}
+              aruco_97:
+                {}
+              bt_Target_A:
+                {}
+              bt_Target_B:
+                {}
+              bt_Target_C:
+                {}
+              bt_Target_D:
+                {}
+              bt_Target_E:
+                {}
+              bt_Target_F:
+                {}
+              bt_Target_G:
+                {}
+              bt_Target_H:
+                {}
+              bt_Target_Main:
                 {}
       Update Interval: 0
-      Value: true
-    - Class: rviz_default_plugins/MarkerArray
-      Enabled: true
-      Name: MarkerArray
-      Namespaces:
-        aruco_markers: true
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /visuals/aruco_markers
-      Value: true
-    - Class: rviz_default_plugins/MarkerArray
-      Enabled: true
-      Name: MarkerArray
-      Namespaces:
-        diegetic_buttons: true
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /visuals/diegetic_buttons
       Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
@@ -260,10 +186,35 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
+        Value: /visuals/aruco_markers
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /visuals/diegetic_buttons
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        eye_axes: true
+        eyes: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
         Value: /visuals/eye_markers
       Value: true
     - Class: rviz_default_plugins/Image
-      Enabled: false
+      Enabled: true
       Max Value: 1
       Median window: 5
       Min Value: 0
@@ -275,7 +226,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /visuals/debug_image
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/Image
       Enabled: true
       Max Value: 1
@@ -332,6 +283,20 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /calibration/viz/tournament
       Value: true
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Image
+      Normalize Range: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /gaze_controller/live_debug_canvas
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -378,7 +343,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.3763100206851959
+      Distance: 1.6420261859893799
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -406,7 +371,7 @@ Window Geometry:
   Hide Right Dock: true
   Image:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd000000040000000000000265000001a7fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000001f9000001a7000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006500000002c6000000da0000002800ffffff000000010000010f00000379fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003b00000379000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000738000001b8fc0100000006fb0000000a0049006d0061006700650100000000000001e20000005a00fffffffb0000000a0049006d00610067006501000001e8000001460000005a00fffffffb0000000a0049006d0061006700650100000334000001ff0000005a00fffffffb0000000a0049006d0061006700650100000539000001ff0000005a00fffffffb0000000a0049006d00610067006501000003c00000037e0000000000000000fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073800000037fc0100000002fb0000000800540069006d00650100000000000007380000025300fffffffb0000000800540069006d00650100000000000004500000000000000000000004cd000001a700000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd000000040000000000000265000001a7fc020000000afb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000001f9000000c7000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006500000002c6000000da0000002800fffffffb0000000a0049006d00610067006501000002c6000000da0000002800ffffff000000010000010f00000379fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003b00000379000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000738000001b8fc0100000006fb0000000a0049006d0061006700650100000000000001e20000005a00fffffffb0000000a0049006d00610067006501000001e8000001460000005a00fffffffb0000000a0049006d0061006700650100000334000001ff0000005a00fffffffb0000000a0049006d0061006700650100000539000001ff0000005a00fffffffb0000000a0049006d00610067006501000003c00000037e0000000000000000fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073800000037fc0100000002fb0000000800540069006d00650100000000000007380000025300fffffffb0000000800540069006d00650100000000000004500000000000000000000004cd000001a700000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:

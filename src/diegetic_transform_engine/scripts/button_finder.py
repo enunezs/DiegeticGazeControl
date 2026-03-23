@@ -319,6 +319,7 @@ class DiegeticButtonPublisher(Node):
 
         if not self.camera_info_received:
             self.get_logger().debug("Camera calibration not yet received, skipping")
+            return  # <--- ADD THIS RETURN STATEMENT
 
         # 1. Capture the EXACT timestamp of the markers (derived from the camera frame)
         # We must use this stamp for everything in this cycle.

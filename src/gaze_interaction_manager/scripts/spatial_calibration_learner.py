@@ -51,6 +51,7 @@ class SpatialReservoir:
         self.max_samples = cfg.get("samples_per_bin", 50)
         self.val_size = cfg.get("val_size", 10)
         self.stride = cfg.get("thinning_stride", 15)
+        self.val_ratio = cfg.get("val_size", 10) / self.max_samples
 
     def add_segment(self, gx, gy, ex, ey):
         """Processes a new segment into the shared spatial bins."""
@@ -83,13 +84,26 @@ class SpatialReservoir:
     def _get_stratified_split(self):
         """Standard FIFO split: newest samples in bin are validation."""
         train_list, val_list = [], []
+
+        # Every Nth sample goes to validation (e.g., if ratio is 0.2, every 5th)
+        # Using a fixed step ensures consistent distribution
+        # val_step = int(1.0 / self.val_ratio) if self.val_ratio > 0 else 100
+        val_step = max(2, int(self.max_samples / self.val_size))
+
         for samples in self.bins.values():
             s_list = list(samples)
-            if len(s_list) > self.val_size:
-                val_list.extend(s_list[-self.val_size :])
-                train_list.extend(s_list[: -self.val_size])
-            else:
-                val_list.extend(s_list)
+            for i, sample in enumerate(s_list):
+                # Interleave: every val_step-th sample goes to validation
+                if i % val_step == 0:
+                    val_list.append(sample)
+                else:
+                    train_list.append(sample)
+
+        # Fallback: if data is extremely sparse and val_list is empty,
+        # swap one from train to val so solvers don't crash.
+        if len(train_list) > 0 and len(val_list) == 0:
+            val_list.append(train_list.pop())
+
         return np.array(train_list), np.array(val_list)
 
     def _get_spatial_block_split(self):
@@ -231,9 +245,11 @@ class GazeCorrectionFramework:
             "bias": lambda dx, dy, r, r2: [np.ones_like(dx)],
             "lin_x": lambda dx, dy, r, r2: [dx / self.cx],
             "lin_y": lambda dx, dy, r, r2: [dy / self.cy],
-            "quad_x": lambda dx, dy, r, r2: [(dx**2 * np.sign(dx)) / self.cx**2],
-            "quad_y": lambda dx, dy, r, r2: [(dy**2 * np.sign(dy)) / self.cy**2],
+            # "quad_x": lambda dx, dy, r, r2: [(dx**2 * np.sign(dx)) / self.cx**2], # TODO: Sign flipping problem!
+            # "quad_y": lambda dx, dy, r, r2: [(dy**2 * np.sign(dy)) / self.cy**2],
             # Radial Linear: Correction scales with distance (Expansion/Contraction)
+            # This creates a "stretching" or "shrinking" effect towards/away from center
+            "radial_concentric": lambda dx, dy, r, r2: [dx / self.cx, dy / self.cy],
             "radial": lambda dx, dy, r, r2: [
                 (dx * r) / self.cx**2,
                 (dy * r) / self.cy**2,
@@ -243,11 +259,11 @@ class GazeCorrectionFramework:
                 (dy * r2) / self.cy**3,
             ],
             "radial_universal": lambda dx, dy, r, r2: [
-                (dx * r2) / self.cx**3,
-                (dy * r2) / self.cy**3,
-                dx / self.cx,
-                dy / self.cy,
-                np.ones_like(dx),
+                (dx * r) / self.cx**2,  # px[0] -> Maps to cx[8]
+                (dy * r) / self.cy**2,  # px[1] -> Maps to cy[8]
+                dx / self.cx,  # px[2] -> Maps to cx[3]
+                dy / self.cy,  # px[3] -> Maps to cy[4]
+                np.ones_like(dx),  # px[4] -> Maps to bias cx[5]
             ],
             # "radial_unit": lambda dx, dy, r, r2: [dx / (r + 1e-6), dy / (r + 1e-6)],
             "full_conic": lambda dx, dy, r, r2: [
@@ -325,6 +341,19 @@ class GazeCorrectionFramework:
             return np.zeros_like(gx), np.zeros_like(gy)
 
         dx, dy = gx - self.cx, gy - self.cy
+        if self.name == "Radial Concentric":
+
+            if len(self.params["x"]) == 1:
+                return np.full_like(gx, self.params["x"][0]), np.full_like(
+                    gy, self.params["y"][0]
+                )
+
+            # Force decoupling: X correction uses dx, Y correction uses dy
+            # params[0] is bias, params[1] is the radial component
+            px = self.params["x"][0] + self.params["x"][1] * (dx / self.cx)
+            py = self.params["y"][0] + self.params["y"][1] * (dy / self.cy)
+            return px, py
+
         A = self._get_matrix(dx, dy, self.current_features)
         return A @ self.params["x"], A @ self.params["y"]
 
@@ -395,18 +424,31 @@ class GazeCorrectionFramework:
         )
         train_dx, train_dy = train_gx - self.cx, train_gy - self.cy
 
-        A = self._get_matrix(train_dx, train_dy, self.current_features)
+        if self.name == "Radial Concentric" and self.current_features != ["bias"]:
+            # Solve X and Y using ONLY their respective radial components
+            Ax = np.column_stack([np.ones_like(train_dx), train_dx / self.cx])
+            Ay = np.column_stack([np.ones_like(train_dy), train_dy / self.cy])
 
-        mx, my = self._get_solver("x"), self._get_solver("y")
+            mx, my = self._get_solver("x"), self._get_solver("y")
+            self.models["x"] = mx.fit(Ax, train_ex)
+            self.models["y"] = my.fit(Ay, train_ey)
+            self.params["x"], self.params["y"] = (
+                self.models["x"].coef_,
+                self.models["y"].coef_,
+            )
+        else:
 
-        # Fit models
-        self.models["x"], self.models["y"] = mx.fit(A, train_ex), my.fit(A, train_ey)
-
-        # Save coefficients
-        self.params["x"], self.params["y"] = (
-            self.models["x"].coef_,
-            self.models["y"].coef_,
-        )
+            A = self._get_matrix(train_dx, train_dy, self.current_features)
+            mx, my = self._get_solver("x"), self._get_solver("y")
+            # Fit models
+            self.models["x"], self.models["y"] = mx.fit(A, train_ex), my.fit(
+                A, train_ey
+            )
+            # Save coefficients
+            self.params["x"], self.params["y"] = (
+                self.models["x"].coef_,
+                self.models["y"].coef_,
+            )
 
 
 class CalibrationLearner(Node):
@@ -451,8 +493,8 @@ class CalibrationLearner(Node):
             "screen_h": 1200,
             "bin_size": 150,
             "samples_per_bin": 50,
-            "val_size": 15,
-            "thinning_stride": 10,
+            "val_size": 10,
+            "thinning_stride": 5,
             # "trigger_bins": self.get_parameter("trigger_bins").value, # TODO: Formalize or remove later
             "solver": self.get_parameter("solver").value,
             "solver_alpha": self.get_parameter("solver_alpha").value,
@@ -471,19 +513,27 @@ class CalibrationLearner(Node):
             ),
             GazeCorrectionFramework("Bias", ["bias"], self.cfg | {"trigger_bins": 0}),
             GazeCorrectionFramework(
-                "Simple Radial", ["bias", "radial"], self.cfg | {"trigger_bins": 5}
+                "Linear", ["bias", "lin_x", "lin_y"], self.cfg | {"trigger_bins": 0}
             ),
             GazeCorrectionFramework(
-                "Complete Radial",
+                "Radial Concentric",
+                ["bias", "radial_concentric"],
+                self.cfg | {"trigger_bins": 5},
+            ),
+            # GazeCorrectionFramework(
+            #     "Simple Radial", ["bias", "radial"], self.cfg | {"trigger_bins": 5}
+            # ),
+            GazeCorrectionFramework(
+                "Radial Complete",
                 ["bias", "radial_universal"],
                 self.cfg | {"trigger_bins": 20},
             ),
             GazeCorrectionFramework(
                 "Conic", ["bias", "full_conic"], self.cfg | {"trigger_bins": 40}
             ),
-            GazeCorrectionFramework(
-                "Sigmoid X+Y", ["bias", "sigmoid"], self.cfg | {"trigger_bins": 15}
-            ),
+            # GazeCorrectionFramework(
+            #     "Sigmoid X+Y", ["bias", "sigmoid"], self.cfg | {"trigger_bins": 15}
+            # ),
         ]
 
         self.active_idx = 1
@@ -566,7 +616,8 @@ class CalibrationLearner(Node):
         tx = np.array([p.x for p in msg.target_samples])
         ty = np.array([p.y for p in msg.target_samples])
         # Error relative to target (Ground Truth)
-        ex, ey = gx - tx, gy - ty
+        # ex, ey = gx - tx, gy - ty
+        ex, ey = tx - gx, ty - gy  # Target - Gaze
 
         ### Phase 1: Prequential Evaluation ###
         # Evaluate all models BEFORE they learn from this segment
@@ -590,8 +641,8 @@ class CalibrationLearner(Node):
         ### Phase 2: Update Shared Reservoir ###
         self.reservoir.add_segment(gx, gy, ex, ey)
         split_data = self.reservoir.get_split()
-        
-        # train_pool, val_pool 
+
+        # train_pool, val_pool
 
         # Phase 3: Shared Training ###
         for model in self.competitors:
@@ -660,10 +711,12 @@ class CalibrationLearner(Node):
             return
 
         msg = CalibrationModel()
-        # Initialize 6-slot coefficients with zeros
-        cx, cy = [0.0] * 6, [0.0] * 6
+        # Initialize 9-slot coefficients with zeros [x2, y2, xy, x, y, bias, sigmoid_amp, sigmoid_scale, radial_coeff]
+        cx, cy = [0.0] * 9, [0.0] * 9
+
         px, py = winner.params["x"], winner.params["y"]
-        W, H = 800.0, 600.0
+
+        W, H = 800.0, 600.0  # Normalization constants used in training
 
         if winner.name == "Bias":
             msg.model_type = CalibrationModel.TYPE_BIAS
@@ -671,42 +724,62 @@ class CalibrationLearner(Node):
 
         elif winner.name == "Linear":
             msg.model_type = CalibrationModel.TYPE_LINEAR
-            # Recipe: [dx/W, dy/H, 1]
-            cx[3], cx[4], cx[5] = px[0] / W, px[1] / H, px[2]
-            cy[3], cy[4], cy[5] = py[0] / W, py[1] / H, py[2]
+            # Recipe: ["bias", "lin_x", "lin_y"] -> [1, dx/W, dy/H]
+            cx[5], cx[3], cx[4] = px[0], px[1] / W, px[2] / H
+            cy[5], cy[3], cy[4] = py[0], py[1] / W, py[2] / H
 
-        elif winner.name == "Radial":
-            msg.model_type = CalibrationModel.TYPE_CONICAL  # Re-using type 3 for Radial
-            # Recipe ["bias", "radial_quad"]: index 0=bias, 1=radial_x, 2=radial_y
-            cx[0], cx[5] = px[1] / (W**3), px[0]
-            cy[1], cy[5] = py[2] / (H**3), py[0]
+        elif winner.name == "Radial Concentric":
+            msg.model_type = CalibrationModel.TYPE_LINEAR
+            # Special case: Decoupled solves
+
+            if len(winner.params["x"]) > 1:
+                # Recipe: Decoupled ["bias", "radial_concentric"]
+                cx[3], cx[5] = float(px[1] / W), float(px[0])
+                cy[4], cy[5] = float(py[1] / H), float(py[0])
+            else:
+                cx[5], cy[5] = float(px[0]), float(py[0])
+
+        elif winner.name == "Radial Complete":
+            msg.model_type = CalibrationModel.TYPE_RADIAL_UNIVERSAL
+            # Recipe: ["bias", "radial_universal"]
+            # We map the primary radial term (dx*r) to index 8
+            # and the linear/bias terms to 3, 4, 5
+
+            # [dx*r2/W3, dy*r2/H3, dx/W, dy/H, bias]
+            cx[8], cx[3], cx[5] = px[0] / (W**2), px[2] / W, px[4]
+            cy[8], cy[4], cy[5] = py[1] / (H**2), py[3] / H, py[4]
 
         elif winner.name == "Conic":
             msg.model_type = CalibrationModel.TYPE_QUADRATIC
-            # Recipe: [dx2/W2, dy2/H2, dxdy/WH, dx/W, dy/H, 1]
-            cx = [
+            # Recipe: ["bias", "full_conic"]
+            # Full conic order: [dx2/W2, dy2/H2, dxdy/WH, dx/W, dy/H, bias]
+            cx[0], cx[1], cx[2], cx[3], cx[4], cx[5] = (
                 px[0] / (W**2),
                 px[1] / (H**2),
                 px[2] / (W * H),
                 px[3] / W,
                 px[4] / H,
                 px[5],
-            ]
-            cy = [
+            )
+            cy[0], cy[1], cy[2], cy[3], cy[4], cy[5] = (
                 py[0] / (W**2),
                 py[1] / (H**2),
                 py[2] / (W * H),
                 py[3] / W,
                 py[4] / H,
                 py[5],
-            ]
+            )
 
-        elif winner.name == "Sigmoid":
-            msg.model_type = 4  # TYPE_KNN_GRID slots
-            # Recipe: [tanh(dx/400), tanh(dy/300), 1]
-            cx[3], cx[5] = px[0], px[2]
-            cy[4], cy[5] = py[1], py[2]
-        # TODO: Add simple radial
+        elif winner.name == "Sigmoid X+Y":
+            msg.model_type = CalibrationModel.TYPE_SIGMOIDAL
+            # Recipe: [tanh(dx/400), tanh(dy/300), bias]
+            cx[6] = float(px[0])  # Amplitude
+            cx[7] = W / 2  # Fixed Scale from the recipe
+            cx[5] = float(px[2])  # Bias
+
+            cy[6] = float(py[1])  # Amplitude
+            cy[7] = H / 2  # Fixed Scale from the recipe
+            cy[5] = float(py[2])  # Bias
 
         msg.coeffs_x = [float(c) for c in cx]
         msg.coeffs_y = [float(c) for c in cy]
@@ -727,6 +800,17 @@ class CalibrationLearner(Node):
 
     def _plot_reservoir(self, train_pool, val_pool):
         fig, ax = plt.subplots(figsize=(6, 5))
+
+        # --- ADD BIN MARKS (GRID) ---
+        bin_size = self.cfg["bin_size"]
+        # Set ticks at every bin interval
+        ax.set_xticks(np.arange(0, self.cfg["screen_w"] + bin_size, bin_size))
+        ax.set_yticks(np.arange(0, self.cfg["screen_h"] + bin_size, bin_size))
+        # Style the grid to look like "marks"
+        ax.grid(True, which="both", color="gray", linestyle="--", alpha=0.4)
+        # Optional: hide tick labels if it gets too crowded
+        ax.tick_params(axis="both", which="major", labelsize=8)
+
         if len(train_pool) > 0:
             angles = np.arctan2(train_pool[:, 3], train_pool[:, 2])
             ax.quiver(
@@ -748,10 +832,10 @@ class CalibrationLearner(Node):
                 color="black",
                 scale=1,
                 scale_units="xy",
-                width=0.005,
+                width=0.0015,
             )
         ax.set_title(
-            f"Reservoir ({len(self.reservoir.bins)} Bins) - {self.cfg['cv_strategy']}"
+            f"Reservoir ({len(self.reservoir.bins)} Bins) - {self.cfg['cv_strategy']} Pointing from gaze to target"
         )
         ax.set_xlim(0, 1600)
         ax.set_ylim(1200, 0)

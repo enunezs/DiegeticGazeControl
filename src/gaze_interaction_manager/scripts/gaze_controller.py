@@ -28,27 +28,42 @@ class GazeController(Node):
         self.get_logger().info("Gaze Controller Node Initialized")
 
         # --- 1. Parameters ---
-        self.declare_parameter("history_length_s", 15.0)
+        # Filtering
+        self.declare_parameter("history_length_s", 5.0)
         self.declare_parameter("internal_pipeline_delay_ms", 0.0)
-        self.declare_parameter(
-            "use_button_termination", True
-        )  # If False, only gaze events end segments
         self.declare_parameter("median_window", 20)
         self.declare_parameter("ema_alpha", 0.2)
         self.declare_parameter("edge_margin", 50)
 
+        # Timing properties
         self.declare_parameter(
             "pad_duration_ms", 100.0
         )  # Padding for trimming the START of event
         self.declare_parameter(
             "terminal_trim_ms", 100.0
         )  # Padding for trimming the END of event
-
         self.declare_parameter("min_event_duration_ms", 200.0)
-        self.declare_parameter("max_offset_px", 200.0)
-        self.declare_parameter("compensation_active", False)
-        self.declare_parameter("use_temporal_alignment", False)
-        self.declare_parameter("sticky_button_interaction", False) # New Parameter
+
+        self.declare_parameter("compensation_active", True)
+        self.declare_parameter("max_compensation_px", 200.0)
+        self.declare_parameter("use_temporal_alignment", True)
+        self.declare_parameter("sticky_button_interaction", True)
+        self.declare_parameter(
+            "use_button_termination", False  # TODO: Repeated!
+        )  # If False, only gaze events end segments
+
+        # --- New Visualization Parameters ---
+        self.declare_parameter("viz_enabled", True)
+        self.declare_parameter("viz_show_raw", True)
+        self.declare_parameter("viz_show_corrected", True)
+        self.declare_parameter("viz_show_history", True)
+        self.declare_parameter("viz_show_buttons", True)
+        self.declare_parameter("viz_show_vectors", True)
+        self.declare_parameter("viz_show_field", True)
+
+        self.declare_parameter(
+            "viz_history_limit", 50
+        )  # Number of past gaze points to show
 
         # --- 2. Circular Buffers ---
         # Gaze History: [timestamp, x, y]
@@ -109,6 +124,11 @@ class GazeController(Node):
             Image, "gaze_controller/interaction_plot", 10
         )  # New Viz Pub
 
+        # New Publisher for the Live Debug Image
+        self.live_viz_pub = self.create_publisher(
+            Image, "gaze_controller/live_debug_canvas", 10
+        )
+
         # --- 5. Subscriptions ---
         self.create_subscription(GazeData, "pupil_glasses/gaze_data", self.gaze_cb, 10)
         self.create_subscription(
@@ -130,7 +150,7 @@ class GazeController(Node):
         self.median_window = self.get_parameter("median_window").value
         self.ema_alpha = self.get_parameter("ema_alpha").value
         self.edge_margin = self.get_parameter("edge_margin").value
-        self.max_offset = self.get_parameter("max_offset_px").value
+        self.max_compensation = self.get_parameter("max_compensation_px").value
 
         self.pad_samples = int(
             (self.get_parameter("pad_duration_ms").value / 1000.0) * self.hz_gaze
@@ -207,19 +227,20 @@ class GazeController(Node):
         # --- C. CORRECTION & PUBLISH ---
         if self.get_parameter("compensation_active").value:
             dx, dy = self.get_correction(self.smoothed_x, self.smoothed_y)
-            dx = np.clip(dx, -self.max_offset, self.max_offset)
-            dy = np.clip(dy, -self.max_offset, self.max_offset)
+            dx = np.clip(dx, -self.max_compensation, self.max_compensation)
+            dy = np.clip(dy, -self.max_compensation, self.max_compensation)
         else:
             dx, dy = 0.0, 0.0
 
         out_msg = PointStamped()
         out_msg.header = msg.header
-        out_msg.point = Point(x=self.smoothed_x - dx, y=self.smoothed_y - dy, z=0.0)
+        out_msg.point = Point(x=self.smoothed_x + dx, y=self.smoothed_y + dy, z=0.0)
         self.corrected_gaze_pub.publish(out_msg)
 
     def button_cb(self, msg: ButtonStatus):
         """
-        Triggered at ~30Hz. Performs the heavy time-matching and error calculation.
+        Triggered at ~30Hz. P
+        erforms the heavy time-matching and error calculation.
         """
 
         with self._lock:
@@ -274,8 +295,207 @@ class GazeController(Node):
                         self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
                 else:
                     pass
-                    self.get_logger().debug("Sticky mode: Ignoring button release, waiting for physiological signal.")
+                    self.get_logger().debug(
+                        "Sticky mode: Ignoring button release, waiting for physiological signal."
+                    )
 
+            # 5. Trigger Visualization
+            if self.get_parameter("viz_enabled").value:
+                self.publish_live_debug_plot(msg)
+
+    def publish_live_debug_plot(self, current_btn_msg: ButtonStatus):
+        # Create a black canvas (1600x1200 scaled down for performance if needed)
+        # We'll use 800x600 for the actual image to save bandwidth, but map coords
+        scale = 0.5
+        W, H = int(1600 * scale), int(1200 * scale)
+        canvas = np.zeros((H, W, 3), dtype=np.uint8)
+
+        def to_kv(x, y):
+            return int(x * scale), int(y * scale)
+
+        # --- LAYER 1: COMPENSATION VECTOR FIELD (Bottom Layer) ---
+        if self.get_parameter("viz_show_field").value:
+            grid_step = 100  # Pixels in 1600x1200 space
+            for gy in range(0, 1200, grid_step):
+                for gx in range(0, 1600, grid_step):
+                    # Get the correction this node is CURRENTLY applying
+                    dx, dy = self.get_correction(float(gx), float(gy))
+
+                    p_start = to_kv(gx, gy)
+                    # We subtract dx/dy because that's how the gaze is corrected
+                    p_end = to_kv(gx + dx, gy + dy)
+
+                    # Draw subtle grey arrows for the field
+                    cv2.arrowedLine(
+                        canvas, p_start, p_end, (40, 40, 40), 1, tipLength=0.3
+                    )
+
+        bin_size = 150  # Matches your Learner config
+        grid_color = (30, 30, 30)
+        for gx in range(0, 1600, bin_size):
+            cv2.line(canvas, to_kv(gx, 0), to_kv(gx, 1200), grid_color, 1)
+        for gy in range(0, 1200, bin_size):
+            cv2.line(canvas, to_kv(0, gy), to_kv(1600, gy), grid_color, 1)
+
+        # 2. DRAW BUTTONS (Target)
+        if self.get_parameter("viz_show_buttons").value:
+            b = current_btn_msg.button
+
+            # Check if we have valid corner data (4 points)
+            if len(b.x_points) == 4 and len(b.y_points) == 4:
+                # Determine color based on active status
+                # Bright Green if active, Dark Red if inactive
+                color = (
+                    (0, 255, 0)
+                    if current_btn_msg.button_status == ButtonStatus.BUTTON_ACTIVE
+                    else (0, 0, 150)
+                )
+
+                # Create a list of points: [(x1, y1), (x2, y2), (x3, y3), (x4, y4)]
+                # and scale them to the debug canvas size
+                pts = []
+                for i in range(4):
+                    px, py = to_kv(b.x_points[i], b.y_points[i])
+                    pts.append([px, py])
+
+                # Convert to a numpy array of shape (4, 1, 2) and type int32 for OpenCV
+                pts_arr = np.array(pts, np.int32).reshape((-1, 1, 2))
+
+                # Draw the closed quadrilateral
+                cv2.polylines(
+                    canvas, [pts_arr], isClosed=True, color=color, thickness=2
+                )
+
+                # Draw the ID label at the button's center
+                center = to_kv(b.center_x, b.center_y)
+                cv2.putText(
+                    canvas,
+                    f"ID:{b.button_id}",
+                    (center[0] - 20, center[1]),  # Offset slightly to center text
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.4,
+                    color,
+                    1,
+                )
+                # and a circle
+                cv2.circle(canvas, center, 5, color, -1)
+
+        # 3. DRAW GAZE HISTORY (The 'Tail')
+        if self.get_parameter("viz_show_history").value:
+            hist_len = self.get_parameter("viz_history_limit").value
+            # Get last N samples from circular buffer
+            idx = (
+                np.arange(self.gaze_ptr - hist_len, self.gaze_ptr)
+                % self.gaze_buffer_size
+            )
+            history = self.gaze_history[idx]
+
+            for i in range(len(history) - 1):
+                p1 = to_kv(history[i, 1], history[i, 2])
+                p2 = to_kv(history[i + 1, 1], history[i + 1, 2])
+                if history[i, 0] > 0:  # Check if timestamp is valid
+                    alpha = i / len(history)  # Fade effect
+                    cv2.line(canvas, p1, p2, (255, 100, 0), 1)
+
+        # 4. DRAW RAW AND CORRECTED GAZE
+        # Use latest smoothed values calculated in gaze_cb
+        raw_x, raw_y = self.smoothed_x, self.smoothed_y
+
+        # Calculate correction for the current formula
+        dx, dy = self.get_correction(raw_x, raw_y)
+        corr_x, corr_y = raw_x + dx, raw_y + dy
+
+        p_raw = to_kv(raw_x, raw_y)
+        p_corr = to_kv(corr_x, corr_y)
+
+        if (
+            self.get_parameter("viz_show_vectors").value
+            and current_btn_msg._button_status == ButtonStatus.BUTTON_ACTIVE
+        ):
+
+            b = current_btn_msg.button
+            btn_center = to_kv(b.center_x, b.center_y)
+
+            # 1. Calculate the Error Vector (from RAW Sensor to Target)
+            error_x = b.center_x - raw_x
+            error_y = b.center_y - raw_y
+
+            # 2. Calculate Angle (matches Reservoir: atan2(y, x))
+            angle = np.arctan2(error_y, error_x)
+            hue = int(((angle + np.pi) / (2 * np.pi)) * 179)
+            hsv_color = np.uint8([[[hue, 255, 255]]])
+            bgr_color = cv2.cvtColor(hsv_color, cv2.COLOR_HSV2BGR)[0][0]
+            vector_color = (int(bgr_color[0]), int(bgr_color[1]), int(bgr_color[2]))
+
+            # 3. Draw the line and a small target circle with the synced color
+            cv2.line(canvas, p_raw, btn_center, vector_color, 2)
+            cv2.circle(canvas, btn_center, 4, vector_color, -1)
+
+            # 4. Draw Dot at Target center with the same color
+            cv2.circle(canvas, btn_center, 5, vector_color, -1)
+
+            # 5. Label with the distance from CORRECTED gaze to Target
+            # Calculate distance for the label
+            dist = np.sqrt(error_x**2 + error_y**2)
+            cv2.putText(
+                canvas,
+                f"Err: {dist:.1f}px",
+                (p_raw[0] + 15, p_raw[1] - 15),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                vector_color,  # Text matches the vector color
+                1,
+            )
+        if self.get_parameter("viz_show_raw").value:
+            cv2.drawMarker(canvas, p_raw, (0, 0, 255), cv2.MARKER_TILTED_CROSS, 15, 2)
+
+        if self.get_parameter("viz_show_corrected").value:
+            cv2.drawMarker(canvas, p_corr, (255, 255, 255), cv2.MARKER_CROSS, 20, 2)
+            # Add a circle too in orange
+            cv2.circle(canvas, p_corr, 4, (0, 165, 255), -1)
+
+        if current_btn_msg._button_status == ButtonStatus.BUTTON_ACTIVE:
+            # 1. Calculate Distances to Target
+            dist_raw = np.sqrt((raw_x - b.center_x) ** 2 + (raw_y - b.center_y) ** 2)
+            dist_corr = np.sqrt((corr_x - b.center_x) ** 2 + (corr_y - b.center_y) ** 2)
+
+            # 2. Identify the "Winner" (Smaller Error)
+            # Blue in BGR is (255, 0, 0)
+
+            if dist_raw < dist_corr:
+                # Sensor is performing better than the model
+                cv2.circle(canvas, p_raw, 15, (0, 0, 255), 2)
+            else:
+                # Model is successfully improving the sensor data
+                cv2.circle(canvas, p_corr, 15, (0, 255, 0), 2)
+
+        # 4. OVERLAY INFO
+        cv2.putText(
+            canvas,
+            f"Pipeline Delay: {self.get_parameter('internal_pipeline_delay_ms').value}ms",
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (255, 255, 255),
+            1,
+        )
+        cv2.putText(
+            canvas,
+            f"Active Model: {self.model_type}",
+            (10, 60),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (255, 255, 255),
+            1,
+        )
+
+        # Publish to ROS
+        try:
+            img_msg = self.bridge.cv2_to_imgmsg(canvas, encoding="bgr8")
+            img_msg.header.stamp = self.get_clock().now().to_msg()
+            self.live_viz_pub.publish(img_msg)
+        except Exception as e:
+            self.get_logger().error(f"Live Viz Error: {e}")
 
     def finalize_and_send_segment(self, end_ts):
         """Extracts 200Hz gaze slice and interpolates 30Hz button ground truth."""
@@ -394,17 +614,31 @@ class GazeController(Node):
         )
 
         # 3. GENERATE DEBUG PLOT
-        self.plot_debug_viz(data, btn_data, self.rec_start_ts, end_ts, trimmed_idx)
+        # self.plot_debug_viz(data, btn_data, self.rec_start_ts, end_ts, trimmed_idx)
         self.reset_recording_state()
 
-    def plot_debug_viz(self, gaze_data, btn_data, start_ts, end_ts, used_indices):
+    def plot_debug_viz(
+        self, gaze_data, btn_data, start_ts, end_ts, highlight_timestamps
+    ):
         """Creates a 1200x400 image. Handles coordinate conversion strictly for OpenCV."""
         W, H = 1200, 400
         img = np.zeros((H, W, 3), dtype=np.uint8)
 
         if len(gaze_data) < 2:
             return
+        # FIX: used_indices is now a set of timestamps (floats)
+        # We ensure it's a set for O(1) lookup speed
+        if isinstance(highlight_timestamps, np.ndarray):
+            # If it's the [ts, x, y] array, just take the ts column
+            used_set = (
+                set(highlight_timestamps[:, 0])
+                if highlight_timestamps.ndim > 1
+                else set(highlight_timestamps)
+            )
+        else:
+            used_set = set(highlight_timestamps)
 
+        # 1. Setup Scaling
         # Use actual data limits for scaling to prevent "empty" plots due to time gaps
         t_min = float(np.min(gaze_data[:, 0]))
         t_max = float(np.max(gaze_data[:, 0]))
@@ -414,22 +648,19 @@ class GazeController(Node):
             try:
                 # Calculate normalized position (0.0 to 1.0)
                 norm_x = (float(t) - t_min) / t_range
-                # Normalize Y based on 1200 (common gaze height)
-                norm_y = float(val) / 1200.0
+                px_x = int(norm_x * (W - 60) + 30)
+                # px_y = norm_y * (H - 40) + 20
+                # Y-axis is Coordinate Value (normalized to 1600 width)
+                # We use 1600 because this plot shows the X-profile
+                norm_val = float(val) / 1600.0
+                # Flip Y so 0 is at bottom, 1600 is at top of the strip
+                px_y = int((H - 60) - (norm_val * (H - 60)) + 30)
+                return (np.clip(px_x, 0, W - 1), np.clip(px_y, 0, H - 1))
 
-                px_x = norm_x * (W - 40) + 20
-                px_y = norm_y * (H - 40) + 20
-
-                # CRITICAL: Convert to standard Python int and clip to prevent Overflow
-                # OpenCV fails if these are numpy.int64 or outside visible range
-                return (
-                    int(np.clip(px_x, -100, W + 100)),
-                    int(np.clip(px_y, -100, H + 100)),
-                )
             except (ValueError, TypeError):
                 return None
 
-        # 1. Background blocks (Button Activity)
+        # 2. Draw Background (Button Activity State)
         for i in range(len(btn_data) - 1):
             t1, _, _, _, act = btn_data[i]
             t2, _, _, _, _ = btn_data[i + 1]
@@ -441,22 +672,21 @@ class GazeController(Node):
                     img, (p1[0], 0), (p2[0], H), (0, 30, 0) if act else (0, 0, 30), -1
                 )
 
-        # 2. History (Blue) & 3. Segment (Yellow)
+        # 3. Draw Gaze Samples
         for i, (t, gx, gy) in enumerate(gaze_data):
             p = to_pixels(t, gx)
-            if p:
-                is_used = i in used_indices
+            # Color logic:
+            # Yellow/Cyan = The actual data sent to the learner
+            # Dim Blue = Buffer history not included in the segment
+            if i in used_set:
                 use_alignment = self.get_parameter("use_temporal_alignment").value
-                if is_used:
+                color = (0, 255, 255) if use_alignment else (0, 255, 0)
+                radius = 2
+            else:
+                color = (80, 40, 20)
+                radius = 1
 
-                    if use_alignment:
-                        color = (0, 255, 255)
-                    else:
-                        color = (0, 255, 0)
-                else:
-                    color = (200, 100, 50)
-                radius = 2 if is_used else 1
-                cv2.circle(img, p, radius, color, -1)
+            cv2.circle(img, p, radius, color, -1)
 
         # 4. Truth Line (White)
         btn_pts = []
@@ -471,13 +701,42 @@ class GazeController(Node):
                 img, [np.array(btn_pts, dtype=np.int32)], False, (255, 255, 255), 1
             )
 
-        # 5. Timing Markers
+        # 5. Draw Timing Markers (Trimming visualization)
         ps = to_pixels(start_ts, 0)
         pe = to_pixels(end_ts, 0)
-        if ps:
-            cv2.line(img, (ps[0], 0), (ps[0], H), (255, 255, 0), 2)
-        if pe:
-            cv2.line(img, (pe[0], 0), (pe[0], H), (0, 255, 255), 2)
+        # Start marker (Yellow)
+        cv2.line(img, (ps[0], 0), (ps[0], H), (0, 255, 255), 1)
+        # End marker (Cyan)
+        cv2.line(img, (pe[0], 0), (pe[0], H), (255, 255, 0), 1)
+
+        # 6. UI Overlays
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(
+            img,
+            "X-Coordinate Temporal Profile",
+            (10, 25),
+            font,
+            0.6,
+            (255, 255, 255),
+            1,
+        )
+
+        duration = end_ts - start_ts
+        cv2.putText(
+            img,
+            f"Segment: {duration:.2f}s | Samples: {len(used_set)}",
+            (10, H - 15),
+            font,
+            0.5,
+            (200, 200, 200),
+            1,
+        )
+
+        # Legend
+        cv2.putText(
+            img, "TRUTH (BUTTON X)", (W - 180, 25), font, 0.4, (200, 200, 200), 1
+        )
+        cv2.putText(img, "USED GAZE", (W - 180, 45), font, 0.4, (0, 255, 255), 1)
 
         # Publish
         try:
@@ -546,45 +805,46 @@ class GazeController(Node):
             )
 
     def get_correction(self, x, y):
-        if self.model_type == CalibrationModel.TYPE_BIAS:
-            return self.coeffs_x[5], self.coeffs_y[5]
+        # Ensure coefficients exist
+        cx, cy = self.coeffs_x, self.coeffs_y
+        if len(cx) < 6 or len(cy) < 6:
+            return 0.0, 0.0
 
-        cx = self.coeffs_x
-        cy = self.coeffs_y
-
-        # Use relative coordinates (dx, dy) because the learner trains on centered data
-        # cx/cy are defined in GazeCorrectionFramework (800, 600)
+        # 1. Use relative coordinates (centered at 800, 600)
         dx = x - 800.0
         dy = y - 600.0
 
-        # 1. 2nd Order Polynomial Terms
-        dx2, dy2, dxy = dx * dx, dy * dy, dx * dy
-
-        # 2. Sigmoid Terms (Only if coeffs[6] is non-zero)
-        # coeffs[6] = Amplitude, coeffs[7] = Sharpness/Scale
-        sig_x = cx[6] * np.tanh(dx / cx[7]) if len(cx) > 7 and cx[7] != 0 else 0.0
-        sig_y = cy[6] * np.tanh(dy / cy[7]) if len(cy) > 7 and cy[7] != 0 else 0.0
-
-        # 3. Combined Result
-        # [0]=x2, [1]=y2, [2]=xy, [3]=x, [4]=y, [5]=bias
+        # 2. Polynomial Core (Indices 0-5)
         corr_x = (
-            (cx[0] * dx2)
-            + (cx[1] * dy2)
-            + (cx[2] * dxy)
-            + (cx[3] * dx)
-            + (cx[4] * dy)
+            cx[0] * dx**2
+            + cx[1] * dy**2
+            + cx[2] * dx * dy
+            + cx[3] * dx
+            + cx[4] * dy
             + cx[5]
-            + sig_x
         )
         corr_y = (
-            (cy[0] * dx2)
-            + (cy[1] * dy2)
-            + (cy[2] * dxy)
-            + (cy[3] * dx)
-            + (cy[4] * dy)
+            cy[0] * dx**2
+            + cy[1] * dy**2
+            + cy[2] * dx * dy
+            + cy[3] * dx
+            + cy[4] * dy
             + cy[5]
-            + sig_y
         )
+        # 3. Sigmoid Terms [6: Amp, 7: Scale]
+        if len(cx) >= 8 and abs(cx[7]) > 1e-3:
+            corr_x += cx[6] * np.tanh(dx / cx[7])
+        if len(cy) >= 8 and abs(cy[7]) > 1e-3:
+            corr_y += cy[6] * np.tanh(dy / cy[7])
+
+        # 4. Pure Radial Term [8: k_radial]
+        # Corr = k * dist * displacement
+        if len(cx) >= 9 or len(cy) >= 9:
+            r = np.sqrt(dx**2 + dy**2)
+            if len(cx) >= 9:
+                corr_x += cx[8] * (dx * r)
+            if len(cy) >= 9:
+                corr_y += cy[8] * (dy * r)
 
         return corr_x, corr_y
 
@@ -642,12 +902,12 @@ class GazeController(Node):
         else:
             # Post-hoc trimming: Remove the start padding (eye settling)
             trimmed_idx = raw_idx[self.pad_samples :]
-            self._publish_segment(data[trimmed_idx], end_ts)
+            self._publish_segment(data[trimmed_idx], end_ts, full_context_buffer=data)
 
         self.is_recording = False
         self.rec_start_ts = None
 
-    def _publish_segment(self, gaze_slice, end_ts, gaze_data=None):
+    def _publish_segment(self, gaze_slice, end_ts, full_context_buffer=None):
         """Interpolates and sends the ROS message"""
         btn_data = list(self.btn_history)
         if not btn_data:
@@ -681,21 +941,22 @@ class GazeController(Node):
         self.segment_pub.publish(segment)
 
         mean_error = np.mean(
-            np.sqrt((gaze_slice[:, 1] - tx) ** 2 + (gaze_slice[:, 2] - ty) ** 2)
+            np.sqrt((tx - gaze_slice[:, 1]) ** 2 + (ty - gaze_slice[:, 2]) ** 2)
         )
         self.get_logger().info(
             f"Published segment with {len(segment.gaze_samples)} samples. Mean error to GT: {mean_error:.1f}px"
         )
 
+        # If we weren't given the full buffer, just show the slice
+        highlight_ts = gaze_slice[:, 0]
+        plot_data = (
+            full_context_buffer if full_context_buffer is not None else gaze_slice
+        )
+
         # Plot Debug Viz
-        if gaze_data is None:
-            self.plot_debug_viz(
-                gaze_slice, btn_data, self.rec_start_ts, end_ts, gaze_slice
-            )
-        else:
-            self.plot_debug_viz(
-                gaze_slice, btn_data, self.rec_start_ts, end_ts, gaze_data
-            )
+        self.plot_debug_viz(
+            plot_data, btn_data, self.rec_start_ts, end_ts, highlight_ts
+        )
 
 
 def main(args=None):
