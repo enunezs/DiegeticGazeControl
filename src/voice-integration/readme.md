@@ -81,7 +81,13 @@ The robot will now move to point down. You can now send messages to the /waypoin
 ros2 topic pub /waypoint_trigger std_msgs/msg/String "data: 'Go'"  --once
 ```
 
-# Other stuff
+### Other stuff
+
+# Tp control the robot using the joystick, run:
+
+`````bash
+
+ros2 run jacoarm-ros2 joystick_control
 
 ````bash
 
@@ -128,11 +134,15 @@ In the terminal, run the following command to start the ROS2 nodes:
 
 ```bash
 python3 src/voice-integration/scripts/voice_integration1.py
-````
+`````
 
 # Testing robot's response:
 
 ros2 topic pub /j2n6s300_driver/in/cartesian_velocity geometry_msgs/Twist "{linear: {x: 0.1}}"
+
+# To control robot using joystick:#
+
+ros2 run jacoarm-ros2 joystick_control
 
 # Saving to git in vscode:
 
