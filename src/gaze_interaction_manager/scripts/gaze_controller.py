@@ -20,6 +20,9 @@ from sensor_msgs.msg import Image  # New: for RViz output
 
 
 class GazeController(Node):
+
+### === 1. Initialization & Parameters === ###
+
     def __init__(self):
         super().__init__("gaze_controller")
         self._lock = Lock()
@@ -85,10 +88,13 @@ class GazeController(Node):
 
         self.is_recording = False
         self.rec_start_ts = None
-        self.active_button_id = None
+        self.current_button_id = None
         self.last_valid_btn_ts = 0.0
         self.latest_gaze_time = 0.0
         self.in_saccade, self.in_blink = False, False
+
+        self.button_engaged = False # New: tracks if the button is physically held
+
 
         # Latency/RMS Tracking
         self.mean_latency = 0.0
@@ -178,6 +184,8 @@ class GazeController(Node):
         self.update_internal_params()
         return SetParametersResult(successful=True)
 
+### === 2. Core Callbacks: Gaze === ###
+
     def gaze_cb(self, msg: GazeData):
         with self._lock:
             ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
@@ -236,6 +244,30 @@ class GazeController(Node):
         out_msg.header = msg.header
         out_msg.point = Point(x=self.smoothed_x + dx, y=self.smoothed_y + dy, z=0.0)
         self.corrected_gaze_pub.publish(out_msg)
+    
+### === Pupil Event Callbacks === ###
+    def saccade_cb(self, msg: GazeEvent):
+        """Handles precise termination using Pupil Native Events"""
+        # Assuming GazeEvent message has start_time_ns based on your FixationEventData example
+        with self._lock:
+            if self.is_recording:
+                # Use the exact start of the saccade provided by the glasses
+                event_start_ts = msg.start_time_ns / 1e9
+                self.get_logger().info(
+                    f"Saccade detected! Terminating segment at {event_start_ts:.3f}"
+                )
+                self._trigger_segment_end(event_start_ts, reason="SACCADE")
+
+    def blink_cb(self, msg: GazeEvent):
+        with self._lock:
+            if self.is_recording:
+                event_start_ts = msg.start_time_ns / 1e9
+                self.get_logger().info(
+                    f"Blink detected! Terminating segment at {event_start_ts:.3f}"
+                )
+                self._trigger_segment_end(event_start_ts, reason="BLINK")
+
+### === 2. Core Callbacks: Buttons === ###
 
     def button_cb(self, msg: ButtonStatus):
         """
@@ -244,7 +276,9 @@ class GazeController(Node):
         """
 
         with self._lock:
-            # 1. Temporal Registration + Latency relative to the gaze stream
+
+            # 1. Latency adjustment relative to the gaze stream
+            # ! Not in use
             button_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
             if self.latest_gaze_time > 0 and button_ts > 0:
                 latency_sec = self.latest_gaze_time - button_ts
@@ -255,13 +289,11 @@ class GazeController(Node):
                 self.get_parameter("internal_pipeline_delay_ms").value / 1000.0
             )
 
-            # 2. Validity Check: Ensure button coordinates are valid and the button is active
+            # 2. Run validity check and store ground truth history for interpolation
+            is_active = msg.button_status == ButtonStatus.BUTTON_ACTIVE
             is_pos_valid = (
                 abs(msg.button.center_x) > 1e-5 and abs(msg.button.center_y) > 1e-5
             )
-            is_active = msg.button_status == ButtonStatus.BUTTON_ACTIVE
-
-            # 3. Store ground truth history for interpolation
             if is_pos_valid:
                 self.btn_history.append(
                     (
@@ -274,34 +306,191 @@ class GazeController(Node):
                 )
                 self.last_valid_btn_ts = adjusted_ts
 
-            # 4. Handle Transitions
-            if is_active and is_pos_valid and not self.is_recording:
-                # Rising Edge: Start Recording only if we have valid coordinates
+            # 3. Rising Edge: User starts dwelling/pressing
+            if is_active and not self.button_engaged:
+                self.button_engaged = True
                 self.is_recording = True
                 self.rec_start_ts = adjusted_ts
                 self.current_button_id = msg.button.button_id
+                self.get_logger().info(f"Started Recording for Button {self.current_button_id}")
 
-            elif not is_active and self.is_recording:
-                # Falling Edge: Button Release
-
-                # Check the new "Sticky" parameter
-                is_sticky = self.get_parameter("sticky_button_interaction").value
-
-                if not is_sticky:
-                    if self.get_parameter("use_button_termination").value:
-
+            # 4. Falling Edge: User stops dwelling/pressing
+            elif not is_active and self.button_engaged:
+                self.button_engaged = False
+                
+                # If NOT sticky, the button release ends the segment
+                if not self.get_parameter("sticky_button_interaction").value:
+                    if self.is_recording:
                         trim_s = self.get_parameter("terminal_trim_ms").value / 1000.0
                         end_point = self.last_valid_btn_ts - trim_s
                         self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
-                else:
-                    pass
-                    self.get_logger().debug(
-                        "Sticky mode: Ignoring button release, waiting for physiological signal."
-                    )
+                        self.get_logger().info(f"Button released. Ending segment at {end_point:.3f}")
+                    else:
+                        self.get_logger().info(
+                            "Sticky mode: Ignoring button release, waiting for physiological signal."
+                        )
 
             # 5. Trigger Visualization
             if self.get_parameter("viz_enabled").value:
                 self.publish_live_debug_plot(msg)
+
+    def _trigger_segment_end(self, end_ts, reason="UNKNOWN"):
+        """Unified finalization logic"""
+        if not self.is_recording:
+            return
+
+        # self.get_logger().info(f"Finalizing segment: {reason} at {end_ts:.3f}")
+
+        # 1. Slice and Sort Gaze
+        data = (
+            np.roll(self.gaze_history, -self.gaze_ptr, axis=0)
+            if self.gaze_buffer_filled
+            else self.gaze_history[: self.gaze_ptr]
+        )
+        data = data[data[:, 0] > 0]
+        data = data[np.argsort(data[:, 0])]
+
+        # 2. Windowing
+        raw_idx = np.where((data[:, 0] >= self.rec_start_ts) & (data[:, 0] <= end_ts))[
+            0
+        ]
+
+        # Check minimum duration
+        if len(raw_idx) < (self.pad_samples + self.min_samples):
+            # self.get_logger().info(
+            #     f"Segment too short ({len(raw_idx)} samples). Discarding."
+            # )
+            pass
+        else:
+            # Post-hoc trimming: Remove the start padding (eye settling)
+            trimmed_idx = raw_idx[self.pad_samples :]
+            self._publish_segment(data[trimmed_idx], end_ts, full_context_buffer=data)
+
+        self.is_recording = False
+        self.rec_start_ts = None
+
+    def reset_recording_state(self):
+        self.is_recording = False
+        self.rec_start_ts = None
+        self.last_valid_btn_ts = 0.0
+
+    def float_to_stamp(self, t_float):
+        t = Header().stamp
+        t.sec, t.nanosec = int(t_float), int((t_float - int(t_float)) * 1e9)
+        return t
+
+    def _publish_segment(self, gaze_slice, end_ts, full_context_buffer=None):
+        """Interpolates and sends the ROS message"""
+        btn_data = list(self.btn_history)
+        if not btn_data:
+            return
+
+        # Extract button timestamps and positions for interpolation
+        b_times = np.array([b[0] for b in btn_data])
+        b_xs = np.array([b[1] for b in btn_data])
+        b_ys = np.array([b[2] for b in btn_data])
+
+        segment = InteractionSegment()
+        segment.header.stamp = self.get_clock().now().to_msg()
+        segment.button_id = self.current_button_id
+
+        target_points = np.zeros((len(gaze_slice), 2))
+        for i, (gt, gx, gy) in enumerate(gaze_slice):
+            # 1. Calculate ground truth for this specific gaze timestamp
+            tx = np.interp(gt, b_times, b_xs)
+            ty = np.interp(gt, b_times, b_ys)
+            target_points[i] = [tx, ty]
+
+            # 2. Add the Target point
+            t_pt = Point(x=tx, y=ty, z=0.0)
+            segment.target_samples.append(t_pt)
+
+            # 3. Add the Gaze sample
+            g_msg = GazeData()
+            g_msg.header.stamp = self.float_to_stamp(gt)
+            g_msg.x, g_msg.y = float(gx), float(gy)
+            segment.gaze_samples.append(g_msg)
+
+        # segment.target_pixel = Point(x=float(np.mean(b_xs)), y=float(np.mean(b_ys)))
+        self.segment_pub.publish(segment)
+
+        mean_error = np.mean(
+            np.sqrt((target_points[:, 0] - gaze_slice[:, 1]) ** 2 + (target_points[:, 1] - gaze_slice[:, 2]) ** 2)
+        )
+        self.get_logger().info(
+            f"Published segment with {len(segment.gaze_samples)} samples. Mean error to GT: {mean_error:.1f}px"
+        )
+
+        # If we weren't given the full buffer, just show the slice
+        highlight_ts = gaze_slice[:, 0]
+        plot_data = (
+            full_context_buffer if full_context_buffer is not None else gaze_slice
+        )
+
+        # Plot Debug Viz
+        self.plot_debug_viz(
+            plot_data, btn_data, self.rec_start_ts, end_ts, highlight_ts
+        )
+
+### === Calibration Model Handling === ###
+    def model_cb(self, msg: CalibrationModel):
+        with self._lock:
+            if msg.model_type in [CalibrationModel.TYPE_KNN_GRID]:
+                self.get_logger().warning(
+                    f"Received unsupported model type: {msg.model_type}"
+                )
+                return
+
+            self.model_type = msg.model_type
+            self.coeffs_x, self.coeffs_y = np.array(msg.coeffs_x), np.array(
+                msg.coeffs_y
+            )
+
+    def get_correction(self, x, y):
+        # Ensure coefficients exist
+        cx, cy = self.coeffs_x, self.coeffs_y
+        if len(cx) < 6 or len(cy) < 6:
+            return 0.0, 0.0
+
+        # 1. Use relative coordinates (centered at 800, 600)
+        dx = x - 800.0
+        dy = y - 600.0
+
+        # 2. Polynomial Core (Indices 0-5)
+        corr_x = (
+            cx[0] * dx**2
+            + cx[1] * dy**2
+            + cx[2] * dx * dy
+            + cx[3] * dx
+            + cx[4] * dy
+            + cx[5]
+        )
+        corr_y = (
+            cy[0] * dx**2
+            + cy[1] * dy**2
+            + cy[2] * dx * dy
+            + cy[3] * dx
+            + cy[4] * dy
+            + cy[5]
+        )
+        # 3. Sigmoid Terms [6: Amp, 7: Scale]
+        if len(cx) >= 8 and abs(cx[7]) > 1e-3:
+            corr_x += cx[6] * np.tanh(dx / cx[7])
+        if len(cy) >= 8 and abs(cy[7]) > 1e-3:
+            corr_y += cy[6] * np.tanh(dy / cy[7])
+
+        # 4. Pure Radial Term [8: k_radial]
+        # Corr = k * dist * displacement
+        if len(cx) >= 9 or len(cy) >= 9:
+            r = np.sqrt(dx**2 + dy**2)
+            if len(cx) >= 9:
+                corr_x += cx[8] * (dx * r)
+            if len(cy) >= 9:
+                corr_y += cy[8] * (dy * r)
+
+        return corr_x, corr_y
+
+### === Helper Methods for Segment Handling & Visualization === ###
 
     def publish_live_debug_plot(self, current_btn_msg: ButtonStatus):
         # Create a black canvas (1600x1200 scaled down for performance if needed)
@@ -497,126 +686,6 @@ class GazeController(Node):
         except Exception as e:
             self.get_logger().error(f"Live Viz Error: {e}")
 
-    def finalize_and_send_segment(self, end_ts):
-        """Extracts 200Hz gaze slice and interpolates 30Hz button ground truth."""
-        self.get_logger().debug(
-            f"Finalizing segment for button {self.current_button_id} with end timestamp {end_ts:.3f}"
-        )
-
-        if not self.is_recording or self.rec_start_ts is None:
-            return
-
-        # 1. Extraction: Get all rows with a valid timestamp
-        # This handles wrapping automatically because we sort by timestamp
-
-        # 1. Slice Gaze Buffer
-        ## Roll unscrambles the circular buffer
-        data = (
-            np.roll(self.gaze_history, -self.gaze_ptr, axis=0)
-            if self.gaze_buffer_filled
-            else self.gaze_history[: self.gaze_ptr]
-        )
-        valid_mask = data[:, 0] > 0
-        data = data[valid_mask]
-
-        if len(data) < 2:
-            self.get_logger().warning("Not enough valid gaze data to finalize segment.")
-            self.reset_recording_state()
-            return
-
-        # Sort chronologically
-        data = data[np.argsort(data[:, 0])]
-        g_times = data[:, 0]
-
-        # 2. Windowing
-        raw_idx = np.where((g_times >= self.rec_start_ts) & (g_times <= end_ts))[0]
-        total_samples = self.pad_samples + self.min_samples
-
-        # Check if we have enough data (Padding + Minimum duration)
-        if len(raw_idx) < total_samples:
-            self.get_logger().debug(
-                f"Segment too short ({len(raw_idx)} samples). Discarding."
-            )
-            self.reset_recording_state()
-            return
-
-        # Apply padding: remove the first few samples where eyes were still moving
-        trimmed_idx = raw_idx[self.pad_samples :]
-        # Now remove the end samples to account for saccade
-        trimmed_idx = raw_idx[: len(raw_idx) - self.pad_samples]
-
-        # 2. Match and Interpolate
-        ## Slice buttons coordinates
-        btn_data = list(self.btn_history)
-        if not btn_data:
-            self.get_logger().warning(
-                "Button history is empty, cannot interpolate ground truth for segment."
-            )
-            self.reset_recording_state()
-            return
-
-        b_times = np.array([b[0] for b in btn_data])
-        if len(b_times) < 2:
-            self.get_logger().warning("Not enough valid button history to interpolate.")
-            self.reset_recording_state()
-            return
-        b_xs, b_ys = np.array([b[1] for b in btn_data]), np.array(
-            [b[2] for b in btn_data]
-        )
-
-        # Sort button data
-        order = np.argsort(b_times)
-        b_times = b_times[order]
-        b_xs, b_ys = b_xs[order], b_ys[order]
-
-        # Get the toggle value
-        use_alignment = self.get_parameter("use_temporal_alignment").value
-
-        gaze_slice = data[trimmed_idx]
-        segment = InteractionSegment()
-        segment.header.stamp = self.get_clock().now().to_msg()
-        segment.button_id = self.current_button_id
-
-        # Interpolate button center for every gaze timestamp
-        for gt, gx, gy in gaze_slice:
-            if use_alignment:
-                # Standard Mode: Temporal Interpolation
-                target_x = np.interp(gt, b_times, b_xs)
-                target_y = np.interp(gt, b_times, b_ys)
-            else:
-                # Snapshot Mode: Use latest known point before or at gaze timestamp
-                # Find indices where button time is less than or equal to gaze time
-                valid_mask = b_times <= gt
-                if np.any(valid_mask):
-                    idx = np.where(valid_mask)[0][-1]
-                    target_x = b_xs[idx]
-                    target_y = b_ys[idx]
-                else:
-                    # Fallback if no prior data exists
-                    target_x = b_xs[0]
-                    target_y = b_ys[0]
-
-            # Pack GazeData (Preserving 200Hz)
-            g_msg = GazeData()
-            g_msg.header.stamp = self.float_to_stamp(gt)
-            g_msg.x, g_msg.y = float(gx), float(gy)
-
-            segment.samples.append(g_msg)
-            # self.get_logger().info(
-            #     f"Interpolated GT for gaze at {gt:.3f}s: ({gx:.1f}, {gy:.1f}) -> ({target_x:.1f}, {target_y:.1f})"
-            # )
-
-        # Representative target (mean of the button's position during the slice)
-        segment.target_pixel = Point(x=float(np.mean(b_xs)), y=float(np.mean(b_ys)))
-        self.segment_pub.publish(segment)
-        self.get_logger().info(
-            f"Published segment: {len(segment.samples)} samples @ 200Hz for ID {segment.button_id}"
-        )
-
-        # 3. GENERATE DEBUG PLOT
-        # self.plot_debug_viz(data, btn_data, self.rec_start_ts, end_ts, trimmed_idx)
-        self.reset_recording_state()
-
     def plot_debug_viz(
         self, gaze_data, btn_data, start_ts, end_ts, highlight_timestamps
     ):
@@ -746,11 +815,6 @@ class GazeController(Node):
         except Exception as e:
             self.get_logger().error(f"Viz Error: {e}")
 
-    def reset_recording_state(self):
-        self.is_recording = False
-        self.rec_start_ts = None
-        self.last_valid_btn_ts = 0.0
-
     def update_latency_metrics(self, lat):
         # lat is in milliseconds
         # Exponential Moving Average for Mean
@@ -789,174 +853,6 @@ class GazeController(Node):
         )
         self.debug_pub_fov.publish(Float32(data=4.0 - offset if in_fov else 3.0))
         self.debug_pub_clean.publish(Float32(data=5.0 - offset if is_clean else 4.0))
-
-    ### Calibration Model Handling ###
-    def model_cb(self, msg: CalibrationModel):
-        with self._lock:
-            if msg.model_type in [CalibrationModel.TYPE_KNN_GRID]:
-                self.get_logger().warning(
-                    f"Received unsupported model type: {msg.model_type}"
-                )
-                return
-
-            self.model_type = msg.model_type
-            self.coeffs_x, self.coeffs_y = np.array(msg.coeffs_x), np.array(
-                msg.coeffs_y
-            )
-
-    def get_correction(self, x, y):
-        # Ensure coefficients exist
-        cx, cy = self.coeffs_x, self.coeffs_y
-        if len(cx) < 6 or len(cy) < 6:
-            return 0.0, 0.0
-
-        # 1. Use relative coordinates (centered at 800, 600)
-        dx = x - 800.0
-        dy = y - 600.0
-
-        # 2. Polynomial Core (Indices 0-5)
-        corr_x = (
-            cx[0] * dx**2
-            + cx[1] * dy**2
-            + cx[2] * dx * dy
-            + cx[3] * dx
-            + cx[4] * dy
-            + cx[5]
-        )
-        corr_y = (
-            cy[0] * dx**2
-            + cy[1] * dy**2
-            + cy[2] * dx * dy
-            + cy[3] * dx
-            + cy[4] * dy
-            + cy[5]
-        )
-        # 3. Sigmoid Terms [6: Amp, 7: Scale]
-        if len(cx) >= 8 and abs(cx[7]) > 1e-3:
-            corr_x += cx[6] * np.tanh(dx / cx[7])
-        if len(cy) >= 8 and abs(cy[7]) > 1e-3:
-            corr_y += cy[6] * np.tanh(dy / cy[7])
-
-        # 4. Pure Radial Term [8: k_radial]
-        # Corr = k * dist * displacement
-        if len(cx) >= 9 or len(cy) >= 9:
-            r = np.sqrt(dx**2 + dy**2)
-            if len(cx) >= 9:
-                corr_x += cx[8] * (dx * r)
-            if len(cy) >= 9:
-                corr_y += cy[8] * (dy * r)
-
-        return corr_x, corr_y
-
-    ### Pupil Event Callbacks ###
-    def saccade_cb(self, msg: GazeEvent):
-        """Handles precise termination using Pupil Native Events"""
-        # Assuming GazeEvent message has start_time_ns based on your FixationEventData example
-        with self._lock:
-            if self.is_recording:
-                # Use the exact start of the saccade provided by the glasses
-                event_start_ts = msg.start_time_ns / 1e9
-                # self.get_logger().info(
-                #     f"Saccade detected! Terminating segment at {event_start_ts:.3f}"
-                # )
-                self._trigger_segment_end(event_start_ts, reason="SACCADE")
-
-    def blink_cb(self, msg: GazeEvent):
-        with self._lock:
-            if self.is_recording:
-                event_start_ts = msg.start_time_ns / 1e9
-                self._trigger_segment_end(event_start_ts, reason="BLINK")
-
-    def float_to_stamp(self, t_float):
-        t = Header().stamp
-        t.sec, t.nanosec = int(t_float), int((t_float - int(t_float)) * 1e9)
-        return t
-
-    def _trigger_segment_end(self, end_ts, reason="UNKNOWN"):
-        """Unified finalization logic"""
-        if not self.is_recording:
-            return
-
-        # self.get_logger().info(f"Finalizing segment: {reason} at {end_ts:.3f}")
-
-        # 1. Slice and Sort Gaze
-        data = (
-            np.roll(self.gaze_history, -self.gaze_ptr, axis=0)
-            if self.gaze_buffer_filled
-            else self.gaze_history[: self.gaze_ptr]
-        )
-        data = data[data[:, 0] > 0]
-        data = data[np.argsort(data[:, 0])]
-
-        # 2. Windowing
-        raw_idx = np.where((data[:, 0] >= self.rec_start_ts) & (data[:, 0] <= end_ts))[
-            0
-        ]
-
-        # Check minimum duration
-        if len(raw_idx) < (self.pad_samples + self.min_samples):
-            # self.get_logger().info(
-            #     f"Segment too short ({len(raw_idx)} samples). Discarding."
-            # )
-            pass
-        else:
-            # Post-hoc trimming: Remove the start padding (eye settling)
-            trimmed_idx = raw_idx[self.pad_samples :]
-            self._publish_segment(data[trimmed_idx], end_ts, full_context_buffer=data)
-
-        self.is_recording = False
-        self.rec_start_ts = None
-
-    def _publish_segment(self, gaze_slice, end_ts, full_context_buffer=None):
-        """Interpolates and sends the ROS message"""
-        btn_data = list(self.btn_history)
-        if not btn_data:
-            return
-
-        # Extract button timestamps and positions for interpolation
-        b_times = np.array([b[0] for b in btn_data])
-        b_xs = np.array([b[1] for b in btn_data])
-        b_ys = np.array([b[2] for b in btn_data])
-
-        segment = InteractionSegment()
-        segment.header.stamp = self.get_clock().now().to_msg()
-        segment.button_id = self.current_button_id
-
-        for gt, gx, gy in gaze_slice:
-            # 1. Calculate ground truth for this specific gaze timestamp
-            tx = np.interp(gt, b_times, b_xs)
-            ty = np.interp(gt, b_times, b_ys)
-
-            # 2. Add the Target point
-            t_pt = Point(x=tx, y=ty, z=0.0)
-            segment.target_samples.append(t_pt)
-
-            # 3. Add the Gaze sample
-            g_msg = GazeData()
-            g_msg.header.stamp = self.float_to_stamp(gt)
-            g_msg.x, g_msg.y = float(gx), float(gy)
-            segment.gaze_samples.append(g_msg)
-
-        # segment.target_pixel = Point(x=float(np.mean(b_xs)), y=float(np.mean(b_ys)))
-        self.segment_pub.publish(segment)
-
-        mean_error = np.mean(
-            np.sqrt((tx - gaze_slice[:, 1]) ** 2 + (ty - gaze_slice[:, 2]) ** 2)
-        )
-        self.get_logger().info(
-            f"Published segment with {len(segment.gaze_samples)} samples. Mean error to GT: {mean_error:.1f}px"
-        )
-
-        # If we weren't given the full buffer, just show the slice
-        highlight_ts = gaze_slice[:, 0]
-        plot_data = (
-            full_context_buffer if full_context_buffer is not None else gaze_slice
-        )
-
-        # Plot Debug Viz
-        self.plot_debug_viz(
-            plot_data, btn_data, self.rec_start_ts, end_ts, highlight_ts
-        )
 
 
 def main(args=None):

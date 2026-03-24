@@ -30,27 +30,10 @@
     video_resolution:
       - 1600
       - 1200
-    ip: "10.0.0.2"/gaze_controller_node:
-  ros__parameters:
-    compensation_active : True
-    use_temporal_alignment : True
-    history_length_s : 15.0
-    internal_pipeline_delay_ms : 0.0
-    median_window : 20
-    ema_alpha : 0.2
-    edge_margin : 50
-    pad_duration_ms : 50.0
-    terminal_trim_ms : 50.0
-    min_event_duration_ms : 100.0
-    max_compensation_px : 200.0
-    sticky_button_interaction : True
-    use_button_termination : False
-    use_fallback_saccade : True
-    fallback_saccade_threshold_px : 150.0
-
+    ip: "10.0.0.2"
     port: "8080"
     print_performance: False
-
+  
 /aruco_detector:
   ros__parameters:
         aruco_dict : "DICT_4X4_250"
@@ -90,9 +73,9 @@
 
 /gaze_controller_node:
   ros__parameters:
-    compensation_active : True
+    compensation_active : False
     use_temporal_alignment : True
-    history_length_s : 15.0
+    history_length_s : 5.0
     internal_pipeline_delay_ms : 0.0
     median_window : 20
     ema_alpha : 0.2
@@ -101,10 +84,10 @@
     terminal_trim_ms : 50.0
     min_event_duration_ms : 100.0
     max_compensation_px : 200.0
-    sticky_button_interaction : True
-    use_button_termination : False
     use_fallback_saccade : True
     fallback_saccade_threshold_px : 150.0
+    sticky_button_interaction : True
+    # use_button_termination : False
 
 
 /calibration_learner_node:
