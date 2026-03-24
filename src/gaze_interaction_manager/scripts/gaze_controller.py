@@ -11,12 +11,12 @@ from collections import deque
 from std_msgs.msg import Float32, Header
 from geometry_msgs.msg import Point, PointStamped
 from pupil_neon_ros.msg import GazeData, GazeEvent
-from gaze_interaction_manager.msg import ButtonStatus
+from gaze_interaction_manager.msg import ButtonStatus, ButtonStatusArray
 from gaze_interaction_manager.msg import InteractionSegment, CalibrationModel
 
-import cv2  # New: for plotting
-from cv_bridge import CvBridge  # New: for ROS image conversion
-from sensor_msgs.msg import Image  # New: for RViz output
+import cv2  # For plotting
+from cv_bridge import CvBridge  # for ROS image conversion
+from sensor_msgs.msg import Image  # for RViz output
 
 
 class GazeController(Node):
@@ -61,6 +61,7 @@ class GazeController(Node):
         self.declare_parameter("viz_show_corrected", True)
         self.declare_parameter("viz_show_history", True)
         self.declare_parameter("viz_show_buttons", True)
+        self.declare_parameter("viz_show_all_buttons", True)
         self.declare_parameter("viz_show_vectors", True)
         self.declare_parameter("viz_show_field", True)
 
@@ -79,6 +80,8 @@ class GazeController(Node):
         self.btn_history = deque(
             maxlen=int(self.get_parameter("history_length_s").value * 40)
         )
+
+        self.latest_all_buttons = []  # <--- Stores the snapshot for background drawing
 
         # --- 3. State & Metrics ---
         self.smoothed_x, self.smoothed_y = 0.0, 0.0
@@ -157,6 +160,10 @@ class GazeController(Node):
         self.create_subscription(
             CalibrationModel, "calibration/model_update", self.model_cb, 10
         )
+        if self.get_parameter("viz_show_all_buttons").value:
+            self.create_subscription(
+                ButtonStatusArray, "/dwell_time/input_status", self.all_buttons_cb, 10
+            )
 
         self.add_on_set_parameters_callback(self.param_callback)
 
@@ -562,7 +569,44 @@ class GazeController(Node):
         for gy in range(0, 1200, bin_size):
             cv2.line(canvas, to_kv(0, gy), to_kv(1600, gy), grid_color, 1)
 
-        # 2. DRAW BUTTONS (Target)
+        # 2. DRAW ALL BUTTONS (BACKGROUND)
+        if self.get_parameter("viz_show_all_buttons").value:
+            for status in self.latest_all_buttons:
+                # Skip the active one to draw it with highlight later
+                if status.button.button_id == current_btn_msg.button.button_id:
+                    continue
+
+                # Colors from your reference: Hover=Yellowish, Inactive=Grey
+                if status.button_status == ButtonStatus.BUTTON_HOVER:
+                    color = (0, 180, 180)  # Dim Yellow
+                else:
+                    color = (100, 100, 100)  # Dark Grey
+
+                if len(status.button.x_points) == 4:
+                    pts = np.array(
+                        [
+                            [
+                                to_kv(
+                                    status.button.x_points[i], status.button.y_points[i]
+                                )
+                            ]
+                            for i in range(4)
+                        ],
+                        np.int32,
+                    )
+                    cv2.polylines(canvas, [pts], True, color, 1)
+                    center = to_kv(status.button.center_x, status.button.center_y)
+                    cv2.putText(
+                        canvas,
+                        str(status.button.button_id),
+                        (center[0] - 5, center[1] + 5),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.3,
+                        color,
+                        1,
+                    )
+
+        # 3. DRAW ACTIVE BUTTON (FOREGROUND)
         if self.get_parameter("viz_show_buttons").value:
             b = current_btn_msg.button
 
