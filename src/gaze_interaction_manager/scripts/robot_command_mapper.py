@@ -188,13 +188,13 @@ class CommandMapper(Node):
 
     def _init_subscribers(self):
         """Initialize all ROS subscribers:
-        - /dwell_time/active_button -> ButtonStatus
+        - /gaze_controller/active_button -> ButtonStatus
         - /teleop/current_mode -> String
         """
 
         self.button_sub = self.create_subscription(
             ButtonStatusMsg, 
-            '/dwell_time/active_button', 
+            '/gaze_controller/teleop_filtered', 
             self.button_callback, 
             10
         )

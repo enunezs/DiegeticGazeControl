@@ -109,6 +109,14 @@ class GazeController(Node):
             PointStamped, "gaze_controller/corrected_gaze", 10
         )
 
+        self.latest_raw_button_msg = None  # To store the last geometric data
+        self.robot_output_timer = self.create_timer(1.0/30.0, self.publish_to_robot_loop)
+
+        # New Publisher for the filtered teleop command
+        self.teleop_pub = self.create_publisher(
+            ButtonStatus, "gaze_controller/teleop_filtered", 10
+        )
+
         # Debug Publishers
         self.debug_pub_saccade = self.create_publisher(
             Float32, "debug/signal_saccade", 10
@@ -277,6 +285,7 @@ class GazeController(Node):
 
         with self._lock:
 
+            
             # 1. Latency adjustment relative to the gaze stream
             # ! Not in use
             button_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
@@ -290,7 +299,10 @@ class GazeController(Node):
             )
 
             # 2. Run validity check and store ground truth history for interpolation
+            # Cache the geometry so we can re-broadcast it even if the Dwell node stops
+            self.latest_raw_button_msg = msg 
             is_active = msg.button_status == ButtonStatus.BUTTON_ACTIVE
+
             is_pos_valid = (
                 abs(msg.button.center_x) > 1e-5 and abs(msg.button.center_y) > 1e-5
             )
@@ -313,6 +325,7 @@ class GazeController(Node):
                 self.rec_start_ts = adjusted_ts
                 self.current_button_id = msg.button.button_id
                 self.get_logger().info(f"Started Recording for Button {self.current_button_id}")
+                
 
             # 4. Falling Edge: User stops dwelling/pressing
             elif not is_active and self.button_engaged:
@@ -333,6 +346,29 @@ class GazeController(Node):
             # 5. Trigger Visualization
             if self.get_parameter("viz_enabled").value:
                 self.publish_live_debug_plot(msg)
+
+    def publish_to_robot_loop(self):
+        """Safety-critical heartbeat loop for teleoperation."""
+        with self._lock:
+            # If we've never received a button message, we can't publish anything valid yet
+            if self.latest_raw_button_msg is None:
+                return
+
+            # Create a new message based on the last known geometry
+            out_msg = self.latest_raw_button_msg
+            out_msg.header.stamp = self.get_clock().now().to_msg()
+            
+            # THE FILTER:
+            # Even if the Dwell Node says "INACTIVE", if we are still 'recording' 
+            # (because of Sticky Mode or a Blink), we force the status to ACTIVE.
+            if self.is_recording:
+                out_msg.button_status = ButtonStatus.BUTTON_ACTIVE
+                out_msg.button.button_id = self.current_button_id # Ensure ID is consistent
+            else:
+                out_msg.button_status = ButtonStatus.BUTTON_INACTIVE
+                out_msg.button_id = "" # Clear ID so robot stops
+
+            self.teleop_pub.publish(out_msg)
 
     def _trigger_segment_end(self, end_ts, reason="UNKNOWN"):
         """Unified finalization logic"""
