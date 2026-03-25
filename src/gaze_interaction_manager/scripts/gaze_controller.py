@@ -354,6 +354,13 @@ class GazeController(Node):
             if self.get_parameter("viz_enabled").value:
                 self.publish_live_debug_plot(msg)
 
+    def all_buttons_cb(self, msg: ButtonStatusArray):
+        """Simple storage of latest button states for background drawing."""
+        if not self.get_parameter("viz_show_all_buttons").value:
+            return
+        with self._lock:
+            self.latest_all_buttons = msg.inputs
+            
     def publish_to_robot_loop(self):
         """Safety-critical heartbeat loop for teleoperation."""
         with self._lock:

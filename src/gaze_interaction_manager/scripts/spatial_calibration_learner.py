@@ -494,7 +494,7 @@ class CalibrationLearner(Node):
             "bin_size": 150,
             "samples_per_bin": 50,
             "val_size": 10,
-            "thinning_stride": 5,
+            "thinning_stride": 2,
             # "trigger_bins": self.get_parameter("trigger_bins").value, # TODO: Formalize or remove later
             "solver": self.get_parameter("solver").value,
             "solver_alpha": self.get_parameter("solver_alpha").value,
