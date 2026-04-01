@@ -539,7 +539,7 @@ class GazeInteractionNode(Node):
     def _publish_status_array(self, status_updates: List[ButtonStatus_msg]):
         """Publish array of button statuses"""
 
-        self.get_logger().debug(f"Publishing status for {status_updates}")
+        # self.get_logger().debug(f"Publishing status for {status_updates}")
         msg = ButtonStatusArray_msg()
         # msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "gaze_interaction"
@@ -699,7 +699,8 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":

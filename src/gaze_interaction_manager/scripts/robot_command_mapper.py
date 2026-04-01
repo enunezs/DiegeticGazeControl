@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Int32, Float64MultiArray
 from geometry_msgs.msg import TwistStamped, PoseStamped
+from sensor_msgs.msg import Joy
 from nav_msgs.msg import Path   
 from builtin_interfaces.msg import Time
 from rclpy.time import Time, Duration
@@ -165,6 +166,20 @@ class CommandMapper(Node):
         # Timer to publish velocity continuously at 100 Hz
         self.robot_vel_publish_timer = self.create_timer(1.0 / PUBLISH_RATE_HZ, self._publish_velocity_tick)
 
+        ### --- Joy interruption --- ###
+        self.controls_enabled = True
+        self.prev_joy_buttons = [] 
+        
+        # New Joy Subscriber
+        self.joy_sub = self.create_subscription(
+            Joy, 
+            'joy', 
+            self.joy_callback, 
+            10
+        )
+     
+        self.get_logger().info("Controls are currently ENABLED")
+
     def _init_publishers(self):
         """Initialize all ROS publishers:
         - /teleop/cartesian_velocity -> TwistStamped (Velocity and frame of reference for movement)
@@ -194,7 +209,7 @@ class CommandMapper(Node):
 
         self.button_sub = self.create_subscription(
             ButtonStatusMsg, 
-            '/gaze_controller/teleop_filtered', 
+            'gaze_controller/teleop_filtered', 
             self.button_callback, 
             10
         )
@@ -245,9 +260,8 @@ class CommandMapper(Node):
         # self.get_logger().info(f"Mode mappings: {self.mode_mappings}")
         
         # print by mode_mappings for debug
-        for button_id, modes in self.mode_mappings.items():
-            self.get_logger().debug(f"Button {button_id}: modes = {list(modes.keys())}")
-
+        # for button_id, modes in self.mode_mappings.items():
+        # self.get_logger().debug(f"Button {button_id}: modes = {list(modes.keys())}")
 
     def calculate_calibration_route(self) -> Dict[str, Dict]:
         """Define a waypoint demo route for calibration purposes.
@@ -377,6 +391,15 @@ class CommandMapper(Node):
         and debounce all existing buttons each cycle.
         """
 
+        # SAFETY GUARD: Ignore gaze buttons if joystick has locked the system
+        if not self.controls_enabled:
+            # Publish empty velocity to ensure robot stops
+            self.current_velocity_params = {}
+            self.current_finger_params = {}
+
+            return
+
+
         button_id = msg.button_id if msg.button_id else None
         status = msg.button_status if msg.button_status is not None else self.BUTTON_INACTIVE
         now = self.get_clock().now().nanoseconds / 1e9
@@ -407,7 +430,7 @@ class CommandMapper(Node):
         
         # Handle rising edge events (button press)
         if edge == 'rising':
-            self.get_logger().debug(f"[RISING_EDGE] Button {button_id}: action_type={action_type}")
+            # self.get_logger().debug(f"[RISING_EDGE] Button {button_id}: action_type={action_type}")
             
             # Publish button press sound
             self.button_sound_pub.publish(Int32(data=1))
@@ -426,7 +449,7 @@ class CommandMapper(Node):
          
         # Handle falling edge events (button release)
         elif edge == 'falling':
-            self.get_logger().debug(f"[FALLING_EDGE] Button {button_id} released")
+            # self.get_logger().debug(f"[FALLING_EDGE] Button {button_id} released")
             self.button_sound_pub.publish(Int32(data=2))
 
     def _update_velocity_commands(self):
@@ -510,8 +533,14 @@ class CommandMapper(Node):
         
         self.robot_vel_pub.publish(twist)
 
-        # NEW: Finger Publishing
+        # IF DISABLED: Publish zeros and exit immediately
         f_msg = Float64MultiArray()
+        f_msg.data = [0.0, 0.0, 0.0]
+        if not self.controls_enabled:
+            self.robot_vel_pub.publish(twist)
+            self.finger_vel_pub.publish(f_msg)
+            return
+
         if self.current_finger_params:
             params = self.current_finger_params
             speed = float(params.get("speed", 0.0))
@@ -699,6 +728,40 @@ class CommandMapper(Node):
             f"Published waypoint path with {len(waypoints)} waypoints to /teleop/waypoint_path"
         )
 
+    def joy_callback(self, msg: Joy):
+        # Initialize prev_joy if it's the first message
+        if not self.prev_joy_buttons:
+            self.prev_joy_buttons = [0] * len(msg.buttons)
+            return
+
+        enable_btn_index = 0  # Button A
+        disable_btn_index = 10 # Button B
+
+        # 1. Check for ENABLE (Button A / Index 0)
+        # Detect Rising Edge: current is 1, previous was 0
+        if msg.buttons[enable_btn_index] == 1 and self.prev_joy_buttons[enable_btn_index] == 0:
+            if not self.controls_enabled:
+                self.controls_enabled = True
+                self.get_logger().info("!!! CONTROLS ENABLED via JOYSTICK !!!")
+                self.sys_pub.publish(String(data="robot_enabled"))
+                # Optional: Play a sound
+                self.button_sound_pub.publish(Int32(data=1))
+
+        # 2. Check for DISABLE (Button B / Index 1)
+        if msg.buttons[disable_btn_index] == 1 and self.prev_joy_buttons[disable_btn_index] == 0:
+            if self.controls_enabled:
+                self.controls_enabled = False
+                self.get_logger().warn("!!! CONTROLS LOCKED via JOYSTICK !!!")
+                # Clear any active movement immediately
+                self.current_velocity_params = {}
+                self.current_finger_params = {}
+                self.sys_pub.publish(String(data="robot_disabled"))
+                # Optional: Play a different sound
+                self.button_sound_pub.publish(Int32(data=2))
+
+        # Store state for next comparison
+        self.prev_joy_buttons = list(msg.buttons)
+
 def main(args=None):
     rclpy.init(args=args)
     node = CommandMapper()
@@ -708,7 +771,8 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':

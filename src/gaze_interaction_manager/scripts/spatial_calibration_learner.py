@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
 # ROS2 Imports
+from datetime import datetime
+
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, Joy
+
 from gaze_interaction_manager.msg import InteractionSegment, CalibrationModel
 
 # Other Imports
@@ -32,7 +35,6 @@ from sklearn.linear_model import (
 
 import os
 import csv
-from sensor_msgs.msg import Joy
 
 # from rcl_py.time import Time
 
@@ -85,12 +87,19 @@ class SpatialReservoir:
         """Standard FIFO split: newest samples in bin are validation."""
         train_list, val_list = [], []
 
+        min_samples = self.cfg.get("min_samples_per_bin_threshold", 4) 
+
+
         # Every Nth sample goes to validation (e.g., if ratio is 0.2, every 5th)
         # Using a fixed step ensures consistent distribution
         # val_step = int(1.0 / self.val_ratio) if self.val_ratio > 0 else 100
         val_step = max(2, int(self.max_samples / self.val_size))
 
         for samples in self.bins.values():
+
+            if len(samples) < min_samples:
+                continue # Ignore this bin for training/validation for now
+
             s_list = list(samples)
             for i, sample in enumerate(s_list):
                 # Interleave: every val_step-th sample goes to validation
@@ -206,7 +215,6 @@ class SpatialReservoir:
 
     #     return np.array(train_list), np.array(val_list)
 
-
 # ==========================================
 # 2. THE MATHEMATICAL MODELS
 # ==========================================
@@ -226,6 +234,9 @@ class GazeCorrectionFramework:
 
         self.prequential_errors = []
         self.unlock_moments = {}
+        self.aulc_history = [] # Cumulative Mean of Prequential Error
+        self.macro_rmse_history = []
+
         # self.raw_prequential_errors = []  # Hardware error (px)
 
         # Recipe Definition
@@ -237,7 +248,6 @@ class GazeCorrectionFramework:
         self.bic_history = []
         self.aic_history = []
 
-        self.macro_rmse_history = []
 
         # Screen Constants
         self.feature_library = {
@@ -363,7 +373,7 @@ class GazeCorrectionFramework:
 
         # Step 1: Handle model graduation as per number of samples
         if self.current_features == ["bias"] and n_bins >= self.cfg.get(
-            "trigger_bins", 15
+            "trigger_bins", 10
         ):
             self.current_features = self.master_recipe
             self.unlock_moments["activation"] = event_idx
@@ -450,7 +460,6 @@ class GazeCorrectionFramework:
                 self.models["y"].coef_,
             )
 
-
 class CalibrationLearner(Node):
     def __init__(self):
         super().__init__("calibration_learner_reservoir")
@@ -473,7 +482,7 @@ class CalibrationLearner(Node):
                 ("n_folds", 5),
                 ("spatial_val_ratio", 0.2),
                 ("cv_include_diagonals", True),
-                ("retrain_on_full_data", False),
+                ("retrain_on_full_data", True),
                 # Regressor settings
                 ("solver", "ridge"),  # "huber", "ridge", "linear"
                 ("solver_alpha", 1.0),  # TODO: Regularization strength for Ridge
@@ -481,6 +490,8 @@ class CalibrationLearner(Node):
                 ("bic_hysteresis", 3.0),  # Threshold to switch models
                 ("rmse_hysteresis", 2.0),
                 ("joy_button_index", 10),  # For recording, default to 'A' or 'X' button
+                ("joy_resume_button_index", 0),  # Xbox 'A' button is typically index 0
+
                 ("error_log_filename", "gaze_error_log.csv"),
             ],
         )
@@ -492,9 +503,9 @@ class CalibrationLearner(Node):
             "screen_w": 1600,
             "screen_h": 1200,
             "bin_size": 150,
-            "samples_per_bin": 50,
+            "samples_per_bin": 100,
             "val_size": 10,
-            "thinning_stride": 2,
+            "thinning_stride": 1,
             # "trigger_bins": self.get_parameter("trigger_bins").value, # TODO: Formalize or remove later
             "solver": self.get_parameter("solver").value,
             "solver_alpha": self.get_parameter("solver_alpha").value,
@@ -511,29 +522,29 @@ class CalibrationLearner(Node):
             GazeCorrectionFramework(
                 "Raw", ["identity"], self.cfg | {"trigger_bins": 0}
             ),
-            GazeCorrectionFramework("Bias", ["bias"], self.cfg | {"trigger_bins": 0}),
+            GazeCorrectionFramework("Bias", ["bias"], self.cfg | {"trigger_bins": 1}),
             GazeCorrectionFramework(
-                "Linear", ["bias", "lin_x", "lin_y"], self.cfg | {"trigger_bins": 0}
+                "Linear", ["bias", "lin_x", "lin_y"], self.cfg | {"trigger_bins": 6}
             ),
             GazeCorrectionFramework(
                 "Radial Concentric",
                 ["bias", "radial_concentric"],
                 self.cfg | {"trigger_bins": 5},
             ),
-            # GazeCorrectionFramework(
-            #     "Simple Radial", ["bias", "radial"], self.cfg | {"trigger_bins": 5}
-            # ),
+            GazeCorrectionFramework(
+                "Simple Radial", ["bias", "radial"], self.cfg | {"trigger_bins": 8}
+            ),
+            GazeCorrectionFramework(
+                "Sigmoid X+Y", ["bias", "sigmoid"], self.cfg | {"trigger_bins": 10}
+            ),
             GazeCorrectionFramework(
                 "Radial Complete",
                 ["bias", "radial_universal"],
-                self.cfg | {"trigger_bins": 20},
+                self.cfg | {"trigger_bins": 15},
             ),
             GazeCorrectionFramework(
-                "Conic", ["bias", "full_conic"], self.cfg | {"trigger_bins": 40}
+                "Conic", ["bias", "full_conic"], self.cfg | {"trigger_bins": 20}
             ),
-            # GazeCorrectionFramework(
-            #     "Sigmoid X+Y", ["bias", "sigmoid"], self.cfg | {"trigger_bins": 15}
-            # ),
         ]
 
         self.active_idx = 1
@@ -563,14 +574,32 @@ class CalibrationLearner(Node):
 
         self.get_logger().info("Tournament Calibration Learner Initialized.")
 
+        # Extra. Filesystem Setup (New for Experiment)
+
+        # 1. Session Folder Setup
+        self.session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.log_dir = os.path.join(os.getcwd(), 'user_recordings', f"session_{self.session_name}")
+        os.makedirs(self.log_dir, exist_ok=True)
+
+        # 2. File Paths
+        self.file_aulc = os.path.join(self.log_dir, "history_aulc.csv")
+        self.file_preq = os.path.join(self.log_dir, "history_prequential.csv")
+        self.file_rmse = os.path.join(self.log_dir, "history_rmse.csv")
+        self.file_user = os.path.join(self.log_dir, "user_report_errors.csv")
+        
+        self._init_csv_headers()
+        self.last_hardware_ts = "0.0"  # This will store the Pupil Clock time
+
+
         # 5. Prepare error log
+        self.create_subscription(Joy, "joy", self.joy_cb, 10)
         self.joy_btn_idx = self.get_parameter("joy_button_index").value
+        self.resume_btn_idx = self.get_parameter("joy_resume_button_index").value
+        self.last_stop_button_state = 0  # For debouncing (rising edge detection)
+        self.last_resume_button_state = 0
         self.log_path = self.get_parameter("error_log_filename").value
-        self.last_button_state = 0  # For debouncing (rising edge detection)
-        self.create_subscription(Joy, "joy", self.joy_callback, 10)
 
         # Prepare CSV File
-        self._init_error_log()
         self.get_logger().info(
             f"Tournament Initialized. CV Strategy: {self.cfg['cv_strategy']}"
         )
@@ -608,35 +637,43 @@ class CalibrationLearner(Node):
         if len(msg.gaze_samples) != len(msg.target_samples):
             self.get_logger().error("Mismatched sample counts in segment!")
             return
-
-        # TODO: not append if sample error greater than 200
+        
+        # Save to CSVs
+        now = self.get_clock().now().to_msg()
+        system_ts = f"{now.sec}.{now.nanosec:09d}" # Ensure leading zeros for nanoseconds
+        last_sample = msg.gaze_samples[-1]
+        self.last_hardware_ts = f"{last_sample.header.stamp.sec}.{last_sample.header.stamp.nanosec:09d}"
 
         gx = np.array([p.x for p in msg.gaze_samples])
         gy = np.array([p.y for p in msg.gaze_samples])
         tx = np.array([p.x for p in msg.target_samples])
         ty = np.array([p.y for p in msg.target_samples])
+        ts = np.array([p.timestamp_unix_seconds for p in msg.gaze_samples])
+    
+
         # Error relative to target (Ground Truth)
         # ex, ey = gx - tx, gy - ty
         ex, ey = tx - gx, ty - gy  # Target - Gaze
 
         ### Phase 1: Prequential Evaluation ###
         # Evaluate all models BEFORE they learn from this segment
-        best_aulc = float("inf")
-        for i, model in enumerate(self.competitors):
-            if model.params["x"] is not None:
-                px, py = model.predict(gx, gy)
-                rmse = np.sqrt(np.mean((ex - px) ** 2 + (ey - py) ** 2))
-            else:
-                rmse = np.sqrt(np.mean(ex**2 + ey**2))
-            model.prequential_errors.append(rmse)
+        preq_row = []
+        aulc_row = []
 
-            # # TODO: not here. Should be based on cv scores within the training phase, not the prequential error of the single segment. This is too noisy and reactive.
-            # # Winner Selection (AULC)
-            # if i > 0:
-            #     aulc = np.mean(model.prequential_errors)
-            #     if aulc < best_aulc:
-            #         best_aulc = aulc
-            #         self.active_idx = i
+        for i, model in enumerate(self.competitors):
+            # if model.params["x"] is not None:
+            px, py = model.predict(gx, gy)
+            preq_rmse = np.sqrt(np.mean((ex - px) ** 2 + (ey - py) ** 2))
+            # else:
+            # rmse = np.sqrt(np.mean(ex**2 + ey**2))
+            model.prequential_errors.append(preq_rmse)
+
+            # AULC is the mean of errors seen SO FAR
+            aulc = np.mean(model.prequential_errors)
+            
+            preq_row.append(preq_rmse)
+            aulc_row.append(aulc)
+
 
         ### Phase 2: Update Shared Reservoir ###
         self.reservoir.add_segment(gx, gy, ex, ey)
@@ -645,13 +682,37 @@ class CalibrationLearner(Node):
         # train_pool, val_pool
 
         # Phase 3: Shared Training ###
+        rmse_row = []
         for model in self.competitors:
             model.train(split_data, len(self.reservoir), self.event_count)
 
-        self.event_count += 1
+            # Update Macro-RMSE (error across all bins)
+            bin_mses = []
+            for samples in self.reservoir.bins.values():
+                s = np.array(samples)
+                px, py = model.predict(s[:, 0], s[:, 1])
+                bin_mses.append(np.mean((s[:, 2] - px) ** 2 + (s[:, 3] - py) ** 2))
+            model.macro_rmse_history.append(np.sqrt(np.mean(bin_mses)))
+
+            rmse_row.append(model.macro_rmse_history[-1] if model.macro_rmse_history else 0.0)
 
         # Phase 4: Model selection
         self.run_selection_tournament()
+
+
+        meta = [
+            system_ts, 
+            self.last_hardware_ts, 
+            self.event_count, 
+            self.reservoir.__len__(),
+            msg.button_id,
+            self.competitors[self.active_idx].name
+        ]
+        self._append_to_csv(self.file_preq, meta + preq_row)
+        self._append_to_csv(self.file_aulc, meta + aulc_row)
+        self._append_to_csv(self.file_rmse, meta + rmse_row)
+        
+        self.event_count += 1
 
         # Publish model update and visuals
         self.publish_model_update()
@@ -705,20 +766,73 @@ class CalibrationLearner(Node):
                 )
                 self.active_idx = challenger_idx
 
+    def reset_calibration(self):
+        """Dumps current data, clears memory, and resets models for a fresh start."""
+        self.get_logger().warn("RESUME BUTTON PRESSED: Resetting calibration session...")
+
+        # 1. Dump current data with a unique label so it's not overwritten
+        reset_label = f"reset_event_{self.event_count}"
+        self.dump_reservoir(label=reset_label)
+        
+        # 2. Clear the Reservoir
+        self.reservoir = SpatialReservoir(self.cfg)
+
+        # 3. Reset all competitors to their initial state
+        for model in self.competitors:
+            model.params = {"x": None, "y": None}
+            model.models = {"x": None, "y": None}
+            
+            # model.prequential_errors = []
+            # model.aulc_history = []
+            # model.macro_rmse_history = []
+            # model.bic_history = []
+            # model.aic_history = []
+            # model.unlock_moments = {}
+
+            # This triggers the "Learning" phase again
+            if not model.is_identity:
+                model.current_features = ["bias"]
+                model.unlock_moments = {}
+
+        # 4. Reset tournament state
+        self.active_idx = 1  # Default back to 'Bias' model
+        # Note: We keep self.event_count increasing to maintain a continuous timeline in logs
+        self.log_reset_event()
+
+        self.get_logger().info("Memory cleared. Models reset. Ready for new data.")
+        self.publish_model_update()
+
+    def log_reset_event(self):
+        """Adds a special marker to the user report log to indicate a reset occurred."""
+        now = self.get_clock().now().to_msg()
+        system_ts = f"{now.sec}.{now.nanosec:09d}"
+        
+        row = [
+            system_ts, 
+            self.last_hardware_ts,  
+            self.event_count, 
+            "ACTION_RESET_RESUME", # Marker
+            0, # Bins are now 0
+            0, # Samples are now 0
+            0.0
+        ]
+        self._append_to_csv(self.file_user, row)
+
     def publish_model_update(self):
         winner = self.competitors[self.active_idx]
-        if winner.params["x"] is None:
-            return
 
         msg = CalibrationModel()
         # Initialize 9-slot coefficients with zeros [x2, y2, xy, x, y, bias, sigmoid_amp, sigmoid_scale, radial_coeff]
         cx, cy = [0.0] * 9, [0.0] * 9
 
         px, py = winner.params["x"], winner.params["y"]
-
         W, H = 800.0, 600.0  # Normalization constants used in training
 
-        if winner.name == "Bias":
+        if winner.params["x"] is None or winner.params["y"] is None:
+            msg.model_type = CalibrationModel.TYPE_BIAS
+            cx[5], cy[5] = 0.0, 0.0
+            
+        elif winner.name == "Bias":
             msg.model_type = CalibrationModel.TYPE_BIAS
             cx[5], cy[5] = float(px[0]), float(py[0])
 
@@ -798,7 +912,7 @@ class CalibrationLearner(Node):
         if self.get_parameter("publish_prediction_map").value:
             self._plot_prediction_field()
 
-    def _plot_reservoir(self, train_pool, val_pool):
+    def _plot_reservoir(self, train_pool, val_pool, save_name=None):
         fig, ax = plt.subplots(figsize=(6, 5))
 
         # --- ADD BIN MARKS (GRID) ---
@@ -839,9 +953,9 @@ class CalibrationLearner(Node):
         )
         ax.set_xlim(0, 1600)
         ax.set_ylim(1200, 0)
-        self._pub_plt(fig, "quiver")
+        self._pub_plt(fig, "quiver", save_name=save_name)
 
-    def _plot_tournament(self):
+    def _plot_tournament(self, save_name=None):
         fig, ax = plt.subplots(figsize=(6, 4))
         strategy = self.get_parameter("selection_strategy").value
         for m in self.competitors:
@@ -851,9 +965,9 @@ class CalibrationLearner(Node):
         ax.set_title(f"Tournament Status ({strategy})")
         ax.legend(fontsize="x-small")
         ax.grid(alpha=0.2)
-        self._pub_plt(fig, "tourney")
+        self._pub_plt(fig, "tourney", save_name=save_name)
 
-    def _plot_profile(self):
+    def _plot_profile(self, save_name=None):
         fig, ax = plt.subplots(figsize=(6, 4))
         winner, raw = self.competitors[self.active_idx], self.competitors[0]
         if winner.macro_rmse_history:
@@ -868,9 +982,9 @@ class CalibrationLearner(Node):
         ax.set_ylim(0, 150)
         ax.legend()
         ax.grid(alpha=0.2)
-        self._pub_plt(fig, "profile")
+        self._pub_plt(fig, "profile", save_name=save_name)
 
-    def _plot_prediction_field(self):
+    def _plot_prediction_field(self, save_name=None):
         winner = self.competitors[self.active_idx]
         fig, ax = plt.subplots(figsize=(6, 5))
         gw, gh = self.cfg["screen_w"], self.cfg["screen_h"]
@@ -890,88 +1004,119 @@ class CalibrationLearner(Node):
         ax.set_xlim(0, gw)
         ax.set_ylim(gh, 0)
         ax.set_title(f"Correction Field: {winner.name}")
-        self._pub_plt(fig, "map")
+        self._pub_plt(fig, "map", save_name=save_name)
 
-    def _pub_plt(self, fig, key):
+    def _pub_plt(self, fig, key, save_name=None):
+        # If a save_name is provided, write it to the log directory
+        if save_name is not None:
+            path = os.path.join(self.log_dir, save_name)
+            fig.savefig(path, bbox_inches='tight')
+
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
         img = cv2.cvtColor(np.asarray(canvas.buffer_rgba()), cv2.COLOR_RGBA2BGR)
         self.pubs[key].publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
         plt.close(fig)
 
-    def _init_error_log(self):
-        """Creates the CSV file and writes headers if it doesn't exist."""
-        if not os.path.exists(self.log_path):
-            with open(self.log_path, "w", newline="") as f:
-                writer = csv.writer(f)
-                header = [
-                    "timestamp_ros",
-                    "event_count",
-                    "active_model",
-                    "num_bins",
-                    "total_samples",
-                ]
-                # Add columns for every competitor's current score
-                for m in self.competitors:
-                    header.append(f"{m.name}_score")
-                writer.writerow(header)
+    def joy_cb(self, msg: Joy):
+        # 1. Report Error / User Stop (Xbox Button B or Menu)
+        current_stop = msg.buttons[self.joy_btn_idx]
+        if current_stop == 1 and self.last_button_state == 0:
+            self.get_logger().warn("USER REPORTED ERROR")
+            self.log_user_error()
+        self.last_button_state = current_stop
 
-    def joy_callback(self, msg: Joy):
-        """Listens for the 'calibration is wrong' button press."""
-        current_state = msg.buttons[self.joy_btn_idx]
+        # 2. Reset and Resume (Xbox Button A)
+        # Assuming index 0 for 'A' button. Add self.resume_btn_idx to __init__
+        current_resume = msg.buttons[self.resume_btn_idx]
+        if current_resume == 1 and self.last_resume_button_state == 0:
+            self.reset_calibration()
+            self.dump_all_plots(label="user_request")
 
-        # Detect Rising Edge (0 -> 1)
-        if current_state == 1 and self.last_button_state == 0:
-            self.get_logger().warn("USER REPORTED CALIBRATION FAILURE!")
-            self.log_error_event()
+        self.last_resume_button_state = current_resume
 
-        self.last_button_state = current_state
+    def _init_csv_headers(self):
+        # For errors
+        header = ["timestamp", "pupil_hardware_timestamp", "event_count", "bin_count","button_id", "active_model"] + [m.name for m in self.competitors]
+        for f in [self.file_aulc, self.file_preq, self.file_rmse]:
+            with open(f, 'w', newline='') as csvfile:
+                csv.writer(csvfile).writerow(header)
 
-    def log_error_event(self):
-        """Saves the current internal state of the calibration to a CSV."""
+        # For user-reported errors, we log the state at the moment of the report
+        with open(self.file_user, 'w', newline='') as csvfile:
+            csv.writer(csvfile).writerow(["timestamp", "pupil_hardware_timestamp", "event_count", "bin_count", "active_model", "num_bins", "total_samples", "current_rmse"])
+            
+    def _append_to_csv(self, path, row):
+        with open(path, 'a', newline='') as f:
+            csv.writer(f).writerow(row)
+
+    def log_user_error(self):
         now = self.get_clock().now().to_msg()
-        timestamp = f"{now.sec}.{now.nanosec}"
+        system_ts = f"{now.sec}.{now.nanosec:09d}"
 
-        active_model = self.competitors[self.active_idx]
-        strategy = self.get_parameter("selection_strategy").value
+        active = self.competitors[self.active_idx]
 
-        # Gather data
+        # We add self.last_hardware_ts here
         row = [
-            timestamp,
-            self.event_count,
-            active_model.name,
+            system_ts, 
+            self.last_hardware_ts,  
+            self.event_count, 
             len(self.reservoir.bins),
+            active.name, 
             sum(len(b) for b in self.reservoir.bins.values()),
+            active.macro_rmse_history[-1] if active.macro_rmse_history else 0.0
         ]
+        self._append_to_csv(self.file_user, row)
 
-        # Append scores for all models to see if the 'correct' model was close
-        for m in self.competitors:
-            score = 0.0
-            if strategy == "BIC":
-                score = m.bic_history[-1] if m.bic_history else 0.0
-            elif strategy == "AIC":
-                score = m.aic_history[-1] if m.aic_history else 0.0
-            else:
-                score = m.macro_rmse_history[-1] if m.macro_rmse_history else 0.0
-            row.append(score)
-
-        # Write to file
-        with open(self.log_path, "a", newline="") as f:
+    # --- Reservoir Dump at Shutdown ---
+    def dump_reservoir(self, label="training"):
+        # Add a sub-timestamp to the file name to prevent accidental overwrites
+        sub_ts = datetime.now().strftime("%H%M%S")
+        filename = f"reservoir_dump_{label}_{sub_ts}.csv"
+        path = os.path.join(self.log_dir, filename)
+        
+        with open(path, 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(row)
+            writer.writerow(["bin_x", "bin_y", "gaze_x", "gaze_y", "err_x", "err_y"])
+            for (bx, by), samples in self.reservoir.bins.items():
+                for s in samples:
+                    writer.writerow([bx, by, s[0], s[1], s[2], s[3]])
+        self.get_logger().info(f"Reservoir saved to: {filename}")
 
-        self.get_logger().info(f"Event logged to {self.log_path}")
+    def on_shutdown(self):
+        self.dump_all_plots(label="user_request")
+        self.dump_reservoir(label="final_session")
 
+    def dump_all_plots(self, label="manual"):
+        """Generates and saves all current visualization plots to the session folder."""
+        timestamp = datetime.now().strftime("%H%M%S")
+        prefix = f"plot_{label}_ev{self.event_count}_{timestamp}"
+        
+        self.get_logger().info(f"Dumping plots with prefix: {prefix}")
+        
+        # Get current data split for the reservoir plot
+        train_flat, val_flat = self.reservoir._get_stratified_split()
+        
+        # We call our existing plot functions but tell them to save to disk
+        self._plot_reservoir(train_flat, val_flat, save_name=f"{prefix}_reservoir.png")
+        self._plot_tournament(save_name=f"{prefix}_tournament.png")
+        self._plot_profile(save_name=f"{prefix}_profile.png")
+        self._plot_prediction_field(save_name=f"{prefix}_map.png")
 
 def main():
     rclpy.init()
     node = CalibrationLearner()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt):
         pass
-    node.destroy_node()
-    rclpy.shutdown()
+    finally:
+        node.get_logger().info("Shutting down: Saving final reservoir and flushing logs...")
+        node.on_shutdown()
+
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":

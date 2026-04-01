@@ -55,7 +55,7 @@ The project is detailed in the preprint:
 - [Running](#running)
 - [Running Experiment](#running-experiment)
 - [How does it work?](#how-does-it-work)
-  - [Launch files](#launch-files)
+    - [Launch files](#launch-files)
 - [Performance](#performance)
 - [Citing this work](#citing-this-work)
 
@@ -151,6 +151,10 @@ Fill the forms (Demographics + nausea/fatigue)
 Do the calibration routine
 Do the experiment + remember
 Finsih questionanire
+
+
+---
+
 
 # How does it work?
 

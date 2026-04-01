@@ -5,6 +5,9 @@ ENV HOME=/root
 WORKDIR $HOME
 SHELL ["/bin/bash", "-c"]
 
+
+
+
 # Set environment variables for OpenCV
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -178,6 +181,7 @@ RUN python3 -c "import numpy; print('NumPy version:', numpy.__version__)" && \
     python3 -c "import cv2; print('OpenCV version:', cv2.__version__); print('OpenCV build info:'); print(cv2.getBuildInformation())"
 
 
+
 RUN python3 - <<EOF
 import matplotlib
 import pyparsing
@@ -187,3 +191,8 @@ print("matplotlib:", matplotlib.__version__)
 print("pyparsing:", pyparsing.__version__)
 print("All scientific imports OK")
 EOF
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["bash"]

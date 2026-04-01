@@ -252,14 +252,14 @@ class DiegeticButtonPublisher(Node):
         self.camera_info_received = True
 
         if not hasattr(self, "_camera_info_logged"):
-            self.get_logger().info("Camera calibration received")
+            self.get_logger().info("Camera calibration received", once=True)
             self._camera_info_logged = True
 
     def _screen_button_callback(self, msg: DiegeticButton2DArray):
         # TODO: Once received, the screen buttons position relative to the screen center will be inmmediately calculated (2D px to 3D m)
-        self.get_logger().info(
-            f"Received {len(self.screen_active_buttons)} screen buttons"
-        )
+        # self.get_logger().info(
+        #     f"Received {len(self.screen_active_buttons)} screen buttons"
+        # )
 
         # Save
         self.screen_active_buttons = msg.buttons
@@ -318,7 +318,7 @@ class DiegeticButtonPublisher(Node):
         """Process detected ArUco markers and compute button positions"""
 
         if not self.camera_info_received:
-            self.get_logger().debug("Camera calibration not yet received, skipping")
+            self.get_logger().warn("Camera calibration not yet received, skipping")
             return  # <--- ADD THIS RETURN STATEMENT
 
         # 1. Capture the EXACT timestamp of the markers (derived from the camera frame)
@@ -757,7 +757,8 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":

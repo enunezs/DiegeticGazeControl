@@ -211,7 +211,8 @@ class Visualizer2D(Node):
 def main(args=None):
     rclpy.init(args=args)
     rclpy.spin(Visualizer2D())
-    rclpy.shutdown()
+    if rclpy.ok():
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

@@ -139,7 +139,7 @@ class ArucoDetectorNode(Node):
         self.declare_parameter("filter_beta", 0.05)
 
         # --- ANCHOR CONFIGURATION ---
-        self.declare_parameter("anchor_id", 91)  # For calibration target
+        self.declare_parameter("anchor_id", 88)  # For calibration target
         # self.declare_parameter("anchor_id", 78) # For controls
 
         # The robot frame that the marker is attached to (e.g. base_link or end_effector)
@@ -193,9 +193,9 @@ class ArucoDetectorNode(Node):
         t.transform.rotation.w = quat[3]
 
         self.static_broadcaster.sendTransform(t)
-        self.get_logger().info(
-            f"Published Static TF: {t.header.frame_id} -> {t.child_frame_id}"
-        )
+        # self.get_logger().info(
+        #     f"Published Static TF: {t.header.frame_id} -> {t.child_frame_id}"
+        # )
 
     def setup_aruco_detector(self):
         aruco_dict_name = self.config.get("aruco_dict", "DICT_4X4_100")
@@ -435,9 +435,9 @@ class ArucoDetectorNode(Node):
         t.transform.rotation.w = quaternion[3]
 
         self.tf_broadcaster.sendTransform(t)
-        self.get_logger().info(
-            f"Broadcasted TF: {t.header.frame_id} -> {t.child_frame_id}", once=True
-        )
+        # self.get_logger().info(
+        #     f"Broadcasted TF: {t.header.frame_id} -> {t.child_frame_id}", once=True
+        # )
 
 
 def main(args=None):
@@ -449,7 +449,8 @@ def main(args=None):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":
