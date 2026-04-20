@@ -32,7 +32,7 @@ class GazeController(Node):
 
         # --- 1. Parameters ---
         # Filtering
-        self.declare_parameter("history_length_s", 5.0)
+        self.declare_parameter("history_length_s", 30.0)
         self.declare_parameter("internal_pipeline_delay_ms", 0.0)
         self.declare_parameter("median_window", 20)
         self.declare_parameter("ema_alpha", 0.2)

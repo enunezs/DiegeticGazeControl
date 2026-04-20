@@ -163,6 +163,8 @@ RUN pip3 install \
     pyttsx3 \
     simpleaudio
 
+RUN pip3 install \
+    python3-pytest
 
 # Network configuration for RTP streams
 RUN echo 'net.core.rmem_max = 134217728' >> /etc/sysctl.conf && \
