@@ -102,7 +102,7 @@ class ArucoDetectorNode(Node):
         sensor_qos = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
             durability=DurabilityPolicy.VOLATILE,
-            depth=1,
+            depth=5,
         )
 
         self.image_sub = self.create_subscription(

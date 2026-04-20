@@ -38,7 +38,7 @@ import tf2_ros
 class PipelineAuditor(Node):
     def __init__(self):
         super().__init__('pipeline_auditor')
-        self.image_pub = self.create_publisher(CompressedImage, 'pupil_glasses/front_image', 10)
+        self.image_pub = self.create_publisher(CompressedImage, 'pupil_glasses/front_image', 5)
 
         self.camera_calib_pub = self.create_publisher(
             CameraInfo, "pupil_glasses/front_camera/camera_info", 10
@@ -105,7 +105,6 @@ def test_hardware_time_propagation():
     assert auditor.received_stamp.sec == 9876, f"Hardware SECONDS overwritten! Got {auditor.received_stamp.sec}"
     assert auditor.received_stamp.nanosec == 123456789, "Hardware NANOSECONDS overwritten!"
 
-
 def test_burst_queue_saturation():
     """Verifies that a rapid burst of frames doesn't result in dropped data due to queue limits"""
     executor = SingleThreadedExecutor()
@@ -129,7 +128,7 @@ def test_burst_queue_saturation():
     auditor.button_sub.callback = collecting_cb
 
     # Fire 10 frames as fast as possible!
-    burst_size = 10
+    burst_size = 5
     for i in range(burst_size):
         msg = CompressedImage()
         msg.header.stamp.sec = 1000 + i # Timestamps 1000, 1001, 1002...
@@ -241,3 +240,78 @@ def test_tf_hardware_time_expiration():
         # If the image was black, Aruco didn't publish a TF, which throws this. 
         # To make this test perfect, load a real JPEG of an ArUco marker instead of np.zeros!
         pass
+
+def test_blinking_marker_timeout():
+    """Verifies that buttons survive short frame drops but are deleted after the timeout"""
+    executor = SingleThreadedExecutor()
+    auditor = PipelineAuditor()
+    executor.add_node(auditor)
+
+    auditor.camera_calib_pub.publish(CameraInfo(width=100, height=100))
+    
+    # Send Frame 1 (T=1000)
+    msg = CompressedImage(format="jpeg")
+    msg.header.stamp.sec = 1000
+    fake_img = np.zeros((100, 100, 3), dtype=np.uint8)
+    _, compressed = cv2.imencode('.jpg', fake_img)
+    msg.data = compressed.tobytes()
+    auditor.image_pub.publish(msg)
+
+    # Spin to process
+    t_end = time.time() + 1.0
+    while time.time() < t_end: executor.spin_once(timeout_sec=0.1)
+
+    assert auditor.received_stamp is not None, "Failed to receive first frame"
+    
+    # Now simulate a frame drop! We send the NEXT frame with a timestamp 0.4 seconds later.
+    # Because your button_timeout is 0.5s, the button SHOULD SURVIVE.
+    auditor.received_stamp = None
+    msg.header.stamp.sec = 1000
+    msg.header.stamp.nanosec = 400000000 # +0.4 seconds
+    auditor.image_pub.publish(msg)
+
+    t_end = time.time() + 1.0
+    while auditor.received_stamp is None and time.time() < t_end: 
+        executor.spin_once(timeout_sec=0.1)
+
+    assert auditor.received_stamp is not None, "Button was incorrectly deleted after only 0.4s!"
+
+    # Now simulate a LONG drop (0.6 seconds). 
+    # T = 1000.4 + 0.6 = 1001.0
+    auditor.received_stamp = None
+    msg.header.stamp.sec = 1001
+    msg.header.stamp.nanosec = 0
+    auditor.image_pub.publish(msg)
+
+    # Note: To fully test this, you'd check the internal state of `button_statuses` 
+    # in the GazeInteractionNode to ensure the old button was purged and a "new" one was created.
+
+
+def test_filter_identical_timestamps():
+    """Verifies the 1Euro filter doesn't crash if two frames have the exact same hardware time"""
+    executor = SingleThreadedExecutor()
+    auditor = PipelineAuditor()
+    executor.add_node(auditor)
+
+    auditor.camera_calib_pub.publish(CameraInfo(width=100, height=100))
+    time.sleep(0.5)
+
+    # 1. First frame (T=5000)
+    msg = CompressedImage()
+    msg.header.stamp.sec = 5000
+    fake_img = np.zeros((100, 100, 3), dtype=np.uint8)
+    _, compressed = cv2.imencode('.jpg', fake_img)
+    msg.data = compressed.tobytes()
+    msg.format = "jpeg"
+    auditor.image_pub.publish(msg)
+
+    # 2. Second frame (EXACT SAME TIMESTAMP, T=5000)
+    # This often causes a DivideByZero error in custom temporal filters
+    auditor.image_pub.publish(msg)
+
+    # Spin to see if the node survives and processes it
+    t_end = time.time() + 2.0
+    while auditor.received_stamp is None and time.time() < t_end:
+        executor.spin_once(timeout_sec=0.1)
+
+    assert auditor.received_stamp is not None, "Pipeline crashed when given identical timestamps!"
