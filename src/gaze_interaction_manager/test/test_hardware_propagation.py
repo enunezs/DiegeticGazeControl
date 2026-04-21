@@ -59,40 +59,41 @@ def ros_setup():
     yield
     rclpy.shutdown()
 
+# TEST: Is the hardware tiemstamp propagated properly from glasses image to the end of the button identification?
 def test_hardware_time_propagation():
     """Verifies that the CV pipeline does not overwrite the hardware timestamp"""
     executor = SingleThreadedExecutor()
     auditor = PipelineAuditor()
     executor.add_node(auditor)
 
-    # 1. Wait a moment for ROS 2 to connect the publisher to the live nodes
+    # Wait a moment for ROS 2 to connect the publisher to the live nodes
     start_time = time.time()
     while time.time() - start_time < 1.0:
         executor.spin_once(timeout_sec=0.1)
 
-    # Publish a dummy camera calibration (some nodes won't process images without it)
+    # 0. Prepatation: Publish a dummy camera calibration (some nodes won't process images without it)
     calib_msg = CameraInfo()
     calib_msg.width = 100
     calib_msg.height = 100
     auditor.camera_calib_pub.publish(calib_msg)
 
-    #wait a moment for the calibration to propagate
+    # wait a moment for the calibration to propagate
     start_time = time.time()
     while time.time() - start_time < 1.0:
         executor.spin_once(timeout_sec=0.1)
 
-    # 2. Create a dummy image with a highly specific "Hardware" timestamp
+    # 1. Create a dummy image with a highly specific "Hardware" timestamp
     msg = CompressedImage()
     msg.header.stamp.sec = 9876    # Obvious fake hardware time
     msg.header.stamp.nanosec = 123456789
     
-    # Create a tiny blank image so cv_bridge doesn't crash your Aruco node!
+    # Create a tiny blank image so cv_bridge doesn't crash the Aruco node
     fake_img = np.zeros((100, 100, 3), dtype=np.uint8)
     _, compressed = cv2.imencode('.jpg', fake_img)
     msg.data = compressed.tobytes()
     msg.format = "jpeg"
 
-    # 3. Publish and process
+    # 2. Publish and process
     auditor.image_pub.publish(msg)
 
     # Spin to allow the live nodes to process the image and send it back
@@ -100,7 +101,7 @@ def test_hardware_time_propagation():
     while auditor.received_stamp is None and time.time() < timeout:
         executor.spin_once(timeout_sec=0.1)
 
-    # 4. Assert the header made it through
+    # 3. Assert the header made it through
     assert auditor.received_stamp is not None, "Pipeline dropped the message! (Are your nodes running?)"
     assert auditor.received_stamp.sec == 9876, f"Hardware SECONDS overwritten! Got {auditor.received_stamp.sec}"
     assert auditor.received_stamp.nanosec == 123456789, "Hardware NANOSECONDS overwritten!"
@@ -127,7 +128,7 @@ def test_burst_queue_saturation():
     # Temporarily override the callback for this test
     auditor.button_sub.callback = collecting_cb
 
-    # Fire 10 frames as fast as possible!
+    # Fire 5 frames as fast as possible!
     burst_size = 5
     for i in range(burst_size):
         msg = CompressedImage()
@@ -238,7 +239,7 @@ def test_tf_hardware_time_expiration():
         pytest.fail(f"TF Failed! The hardware time was too old and TF deleted it: {e}")
     except tf2_ros.LookupException as e:
         # If the image was black, Aruco didn't publish a TF, which throws this. 
-        # To make this test perfect, load a real JPEG of an ArUco marker instead of np.zeros!
+        # TODO: To complete this test, load a real JPEG of an ArUco marker instead of np.zeros
         pass
 
 def test_blinking_marker_timeout():
@@ -284,8 +285,12 @@ def test_blinking_marker_timeout():
     auditor.image_pub.publish(msg)
 
     # Note: To fully test this, you'd check the internal state of `button_statuses` 
-    # in the GazeInteractionNode to ensure the old button was purged and a "new" one was created.
+    # TODO in the GazeInteractionNode to ensure the old button was purged and a "new" one was created.
+    # TODO: Add the top of interpolationt test to explore
+    
 
+
+   
 
 def test_filter_identical_timestamps():
     """Verifies the 1Euro filter doesn't crash if two frames have the exact same hardware time"""
