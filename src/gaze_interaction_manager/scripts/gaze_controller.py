@@ -51,10 +51,7 @@ class GazeController(Node):
         self.declare_parameter("max_compensation_px", 200.0)
         self.declare_parameter("use_temporal_alignment", True)
         self.declare_parameter("sticky_button_interaction", False)
-        self.declare_parameter(
-            "use_button_termination", False  # TODO: Repeated!
-        )  # If False, only gaze events end segments
-
+        
         # --- New Visualization Parameters ---
         self.declare_parameter("viz_enabled", False)
         self.declare_parameter("viz_show_raw", True)
@@ -290,100 +287,183 @@ class GazeController(Node):
                 # )
                 self._trigger_segment_end(event_start_ts, reason="BLINK")
 
-### === 2. Core Callbacks: Buttons === ###
-
+    ### === 2. Core Callbacks: Buttons === ###
     def button_cb(self, msg: ButtonStatus):
         """
-        Triggered at ~30Hz. 
-        erforms the heavy time-matching and error calculation.
+        Triggered at ~30Hz by the active button topic.
+
+        Responsibilities (in order):
+          1. Latency logging              — always, unconditional
+          2. Timestamp adjustment         — always, unconditional
+          3. Ground truth append          — always for ACTIVE+valid, unconditional
+          4. State machine                — delegated to _handle_button_standard()
+                                           or _handle_button_sticky()
+          5. Visualization trigger        — always, at the end
+
+        The ground truth append (step 3) is intentionally separated from the
+        state machine (step 4).  Previously they were interleaved, which caused
+        btn_history to be empty on the first button_cb call (before is_recording
+        was set), breaking interpolation.
         """
-
         with self._lock:
-            button_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
 
-            # Latency logging
+            # ----------------------------------------------------------------
+            # 1. Latency logging (diagnostic only, does not affect data flow)
+            # ----------------------------------------------------------------
+            button_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
             if self.latest_gaze_time > 0 and button_ts > 0:
-                latency_sec = self.latest_gaze_time - button_ts
-                latency_ms = latency_sec * 1000.0
+                latency_ms = (self.latest_gaze_time - button_ts) * 1000.0
                 self.update_latency_metrics(latency_ms)
 
-            # 1. Adjustment relative to the gaze stream
+            # ----------------------------------------------------------------
+            # 2. Pipeline delay adjustment
+            #    adjusted_ts is what we use for EVERYTHING downstream.
+            #    button_ts is only kept for latency logging above.
+            # ----------------------------------------------------------------
             adjusted_ts = button_ts - (
                 self.get_parameter("internal_pipeline_delay_ms").value / 1000.0
             )
 
-            # 2. Run validity check and store ground truth history for interpolation
-            # Cache the geometry so we can re-broadcast it even if the Dwell node stops
             incoming_id = msg.button.button_id
             is_active = msg.button_status == ButtonStatus.BUTTON_ACTIVE
+            is_pos_valid = (
+                abs(msg.button.center_x) > 1e-5
+                and abs(msg.button.center_y) > 1e-5
+            )
 
-            # --- TARGET LOCKING LOGIC ---
-            if self.is_recording:
-                # If we are already "Sticky" on a button, ignore everything else
-                if incoming_id != self.current_button_id:
-                    if self.get_parameter("sticky_button_interaction").value:
-                        # Optional: Log once that we are ignoring a distraction
-                        # self.get_logger().debug(f"Ignoring Button {incoming_id}, locked on {self.current_button_id}")
-                        return
-                    else:
-                        # If not sticky, we can switch to a new button immediately
-                        # self.get_logger().debug(f"Switching lock from Button {self.current_button_id} to {incoming_id}")
-                        self.current_button_id = incoming_id
+            # ----------------------------------------------------------------
+            # 3. Ground truth history append — UNCONDITIONAL
+            #    Every valid ACTIVE position gets logged regardless of recording
+            #    state.  _publish_segment() reads btn_history for interpolation,
+            #    so this must be populated before is_recording is ever set.
+            # ----------------------------------------------------------------
+            if is_active and is_pos_valid:
+                self.btn_history.append((
+                    adjusted_ts,
+                    msg.button.center_x,
+                    msg.button.center_y,
+                    incoming_id,
+                    is_active,
+                ))
+                self.last_valid_btn_ts = adjusted_ts
+                self.latest_raw_button_msg = msg  # Keep geometry fresh for teleop
 
-                # If it's our locked button, update the geometry if valid
-                is_pos_valid = (
-                    abs(msg.button.center_x) > 1e-5 and abs(msg.button.center_y) > 1e-5
-                )
-                if is_pos_valid:
+            # ----------------------------------------------------------------
+            # 4. State machine — delegated based on mode
+            # ----------------------------------------------------------------
+            if self.get_parameter("sticky_button_interaction").value:
+                self._handle_button_sticky(msg, adjusted_ts, incoming_id, is_active)
+            else:
+                self._handle_button_standard(msg, adjusted_ts, incoming_id, is_active)
 
-                    self.btn_history.append(
-                        (
-                            adjusted_ts,
-                            msg.button.center_x,
-                            msg.button.center_y,
-                            incoming_id,
-                            is_active,
-                        )
-                    )
-                    self.last_valid_btn_ts = adjusted_ts
-
-            # --- STATE TRANSITIONS ---
-
-                # if self.is_recording and msg.button.button_id == self.current_button_id:
-                #     self.latest_raw_button_msg = msg
-                # elif not self.is_recording and is_active:
-                #     self.latest_raw_button_msg = msg
-
-            # 3. Rising Edge: User starts dwelling/pressing
-            if is_active and not self.is_recording:
-                self.is_recording = True
-                self.button_engaged = True # Tracks physical touch
-                self.current_button_id = incoming_id
-                self.latest_raw_button_msg = msg 
-
-                self.rec_start_ts = adjusted_ts
-                # self.get_logger().info(f"LOCKED onto Button: {self.current_button_id}")
-
-            # 4. Falling Edge: User stops dwelling/pressing
-            elif not is_active and self.button_engaged and incoming_id == self.current_button_id:
-                self.button_engaged = False
-                
-                # If NOT sticky, the button release ends the segment
-                if not self.get_parameter("sticky_button_interaction").value:
-                    # if self.is_recording:
-                        # self.latest_raw_button_msg = None
-
-                    terminal_trim_s = self.get_parameter("terminal_trim_ms").value / 1000.0
-                    end_point = self.last_valid_btn_ts - terminal_trim_s
-                    self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
-                    # self.get_logger().info(f"Button released. Ending segment at {end_point:.3f}. Not sticky")
-                else:
-                    self.get_logger().info(f"Sticky Mode: Physical contact lost with {incoming_id}, maintaining lock.")
-                    pass
-
-            # 5. Trigger Visualization
+            # ----------------------------------------------------------------
+            # 5. Visualization
+            # ----------------------------------------------------------------
             if self.get_parameter("viz_enabled").value:
                 self.publish_live_debug_plot(msg)
+
+    # -------------------------------------------------------------------------
+
+    def _handle_button_standard(self, msg, adjusted_ts, incoming_id, is_active):
+        """
+        Simple non-sticky state machine.
+
+        Rising edge  → start recording, lock onto this button ID.
+        Falling edge → if we were recording, end the segment immediately.
+        Different ID while recording → switch lock (non-sticky allows this).
+
+        This is the baseline.  All tests should pass against this path.
+        """
+        # Rising edge: a new ACTIVE signal while we are not yet recording
+        if is_active and not self.is_recording:
+            self.is_recording = True
+            self.button_engaged = True
+            self.current_button_id = incoming_id
+            self.rec_start_ts = adjusted_ts
+            self.get_logger().info(f"[Standard] Recording started: {incoming_id}")
+            return
+
+        # While recording: allow lock switch to a different button
+        if self.is_recording and is_active and incoming_id != self.current_button_id:
+            self.get_logger().debug(
+                f"[Standard] Switching lock: {self.current_button_id} → {incoming_id}"
+            )
+            self.current_button_id = incoming_id
+
+        # Falling edge: button released while we were recording
+        if not is_active and self.button_engaged and incoming_id == self.current_button_id:
+            self.button_engaged = False
+            if self.is_recording:
+                terminal_trim_s = self.get_parameter("terminal_trim_ms").value / 1000.0
+                end_point = self.last_valid_btn_ts - terminal_trim_s
+                self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
+                self.get_logger().info(
+                    f"[Standard] Button released. Segment ended at {end_point:.3f}"
+                )
+
+    # -------------------------------------------------------------------------
+
+    def _handle_button_sticky(self, msg, adjusted_ts, incoming_id, is_active):
+        """
+        Sticky state machine.
+
+        The key assumption: if the user started an interaction with button A,
+        we assume they are STILL interacting with A even if:
+          - the sensor drifts and reports a different active button
+          - the sensor briefly loses the button entirely
+          - the button goes INACTIVE (release is ignored)
+
+        Only a physiological signal (saccade, blink) ends the segment.
+        Those are handled in saccade_cb / blink_cb → _trigger_segment_end.
+
+        Ground truth collection:
+          - While no interaction is active: log ALL arriving button positions
+            normally (already done in step 3 of button_cb above).
+          - Once locked: only log positions for current_button_id.
+            Positions for other buttons are ignored for interpolation.
+            If current_button_id disappears from the active topic, we leave
+            a gap in btn_history (honest — no extrapolation).
+            A future enhancement could query latest_all_buttons here to fill
+            gaps, but that is left as a TODO to keep this path simple.
+
+        Rising edge  → start recording, lock onto this button ID.
+        Falling edge → ignored (button_engaged flag updated for bookkeeping
+                       only; no segment is triggered).
+        Different ID → if not recording, start fresh on the new ID.
+                       If already recording, ignore (stay locked on original).
+        """
+        if is_active and not self.is_recording:
+            # Fresh start: lock onto whatever just became active
+            self.is_recording = True
+            self.button_engaged = True
+            self.current_button_id = incoming_id
+            self.rec_start_ts = adjusted_ts
+            self.get_logger().info(f"[Sticky] Recording started: {incoming_id}")
+            return
+
+        if self.is_recording:
+            if incoming_id != self.current_button_id:
+                # Sensor drift / glitch — do NOT switch lock, do NOT log this
+                # button's position into btn_history for interpolation.
+                # (The append in step 3 already happened for the raw history,
+                # but the interpolation in _publish_segment only uses samples
+                # where the ID matches current_button_id — see note below.)
+                #
+                # TODO: query self.latest_all_buttons to find current_button_id
+                # and log its position here if available, to reduce gaps.
+                self.get_logger().debug(
+                    f"[Sticky] Ignoring {incoming_id}, locked on {self.current_button_id}"
+                )
+                return
+
+            # Falling edge for the *locked* button: update bookkeeping only
+            if not is_active and self.button_engaged:
+                self.button_engaged = False
+                self.get_logger().info(
+                    f"[Sticky] Physical contact lost with {self.current_button_id}. "
+                    "Maintaining lock — waiting for physiological signal."
+                )
+                # No _trigger_segment_end here — intentional.
 
     def all_buttons_cb(self, msg: ButtonStatusArray):
         """Simple storage of latest button states for background drawing."""
@@ -467,13 +547,29 @@ class GazeController(Node):
 
     def _publish_segment(self, gaze_slice, end_ts, full_context_buffer=None):
         """Interpolates and sends the ROS message"""
-        btn_data = list(self.btn_history)
 
         use_alignment = self.get_parameter("use_temporal_alignment").value
+        sticky = self.get_parameter("sticky_button_interaction").value
 
+        btn_data = list(self.btn_history)
         if not btn_data:
             return
 
+        # In sticky mode, only use ground truth samples that belong to the
+        # locked button.  Rogue frames from other IDs were still appended to
+        # btn_history in button_cb (unconditional step 3), so we filter them
+        # out here.  In standard mode we use everything.
+        if sticky and self.current_button_id is not None:
+            btn_data = [b for b in btn_data if b[3] == self.current_button_id]
+ 
+        if not btn_data:
+            # All history was from other buttons — nothing to interpolate against
+            self.get_logger().warning(
+                "[Sticky] btn_history contained no samples for "
+                f"{self.current_button_id}. Discarding segment."
+            )
+            return
+ 
         # Extract button timestamps and positions for interpolation
         b_times = np.array([b[0] for b in btn_data])
         b_xs = np.array([b[1] for b in btn_data])
@@ -484,10 +580,10 @@ class GazeController(Node):
         segment.button_id = self.current_button_id
 
         target_points = np.zeros((len(gaze_slice), 2))
+
         for i, (gt, gx, gy) in enumerate(gaze_slice):
             if use_alignment:
                 # Align gaze timestamp to button timeline
-                
                 # 1. Calculate ground truth for this specific gaze timestamp
                 tx = np.interp(gt, b_times, b_xs)
                 ty = np.interp(gt, b_times, b_ys)
@@ -498,9 +594,8 @@ class GazeController(Node):
                 idx = max(0, idx)
                 tx, ty = b_xs[idx], b_ys[idx]
 
-            target_points[i] = [tx, ty]
-
             # 2. Add the Target point
+            target_points[i] = [tx, ty]
             t_pt = Point(x=tx, y=ty, z=0.0)
             segment.target_samples.append(t_pt)
 
@@ -514,8 +609,11 @@ class GazeController(Node):
         self.segment_pub.publish(segment)
 
         mean_error = np.mean(
-            np.sqrt((target_points[:, 0] - gaze_slice[:, 1]) ** 2 + (target_points[:, 1] - gaze_slice[:, 2]) ** 2)
-        )
+            np.sqrt(
+                (target_points[:, 0] - gaze_slice[:, 1]) ** 2 + 
+                (target_points[:, 1] - gaze_slice[:, 2]) ** 2
+                ))
+
         # self.get_logger().info(
         #     f"Published segment with {len(segment.gaze_samples)} samples. Mean error to GT: {mean_error:.1f}px"
         # )

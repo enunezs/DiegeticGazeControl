@@ -5,23 +5,25 @@ Run with:
 python3 -m pytest src/gaze_interaction_manager/test/test_gaze_controller.py -v -s -k test_pipeline_delay_shifts_interpolation
 
 Covers:
-  - PASS - Ghost button assertion fix          
-  ! FAIL - test_pipeline_delay_shifts_interpolation
-  - PASS - min_event_duration_ms filter
-  - PASS - test_min_event_duration_accepts_long_enough_fixation
-    PASS - test_second_saccade_is_no_op 
-  ! FAIL - test_nanosecond_rollover_interpolation [INFO] [1776765263.724452919]  
-    PASS - test_nanosecond_stamp_reconstruction [INFO] [1776765263.748522155]  
-    PASS - test_out_of_order_gaze_timestamps [INFO] [1776765263.759809108]  
-  ! FAIL - test_concurrent_button_ids_same_timestamp [INFO] [1776765263.778543704]  
-  ! WARN - test_trigger_segment_end_length_check_uses_wrong_floor [INFO] [1776765263.800300389]  
-    PASS - test_publish_to_robot_loop_button_id_typo [INFO] [1776765263.828513905]  
-  ## sticky vs non-sticky release logic
-  - PASS - test_non_sticky_release_triggers_segment
-  ! FAIL - test_sticky_release_does_not_trigger_segment
-  ! FAIL - test_button_id_swap_glitch_sticky
+    PASS - test_ghost_button_extrapolation_no_extrapolation [INFO] [1776774780.118979693] 
+    PASS - test_pipeline_unadjusted_interpolation [INFO] [1776774780.146057189] 
+    PASS - test_pipeline_delay_shifts_interpolation [INFO] [1776774780.162905300] 
+    PASS - test_min_event_duration_discards_short_fixation [INFO] [1776774780.179351964] 
+    PASS - test_min_event_duration_accepts_long_enough_fixation [INFO] [1776774780.193628278] 
+    PASS - test_non_sticky_release_triggers_segment [INFO] [1776774780.219551520] 
+    ! FAIL - test_sticky_release_does_not_trigger_segment [INFO] [1776774780.234753508] 
+    ! FAIL - test_button_id_swap_glitch_sticky [INFO] [1776774780.269219045] 
+    PASS - test_button_id_swap_glitch_non_sticky [INFO] [1776774780.287939802] 
+    PASS - test_second_saccade_is_no_op [INFO] [1776774780.302518831] 
+    PASS - test_nanosecond_rollover_interpolation [INFO] [1776774780.320432084] 
+    PASS - test_nanosecond_stamp_reconstruction [INFO] [1776774780.336768237] 
+    PASS - test_out_of_order_gaze_timestamps [INFO] [1776774780.347622632] 
+    ! FAIL - test_concurrent_button_ids_same_timestamp [INFO] [1776774780.364378270] 
+    PASS - test_trigger_segment_end_length_check_uses_wrong_floor [INFO] [1776774780.383703632] 
+    PASS - test_publish_to_robot_loop_button_id_typo [INFO] [1776774780.416494757] 
 """
 
+from platform import node
 import sys
 import os
 import math
@@ -733,6 +735,7 @@ def test_trigger_segment_end_length_check_uses_wrong_floor():
     published_short = capture_segments(node)
     node.saccade_cb(make_saccade(1_095_000_000))
     assert len(published_short) == 0, "19-sample window should be below threshold."
+    node.destroy_node()
 
     # Reset and try with 21 samples — should publish
     node2 = GazeController()
