@@ -50,7 +50,7 @@ class GazeController(Node):
         self.declare_parameter("compensation_active", True)
         self.declare_parameter("max_compensation_px", 200.0)
         self.declare_parameter("use_temporal_alignment", True)
-        self.declare_parameter("sticky_button_interaction", True)
+        self.declare_parameter("sticky_button_interaction", False)
         self.declare_parameter(
             "use_button_termination", False  # TODO: Repeated!
         )  # If False, only gaze events end segments
@@ -232,12 +232,15 @@ class GazeController(Node):
             # self.publish_debug_signals(in_fov, is_clean)
 
     def _process_and_publish_corrected_gaze(self, msg):
-        # --- B. SMOOTHING (Median + EMA) ---
+
+        # --- A. SMOOTHING (Median + EMA) ---
         if self.gaze_buffer_filled or self.gaze_ptr >= self.median_window:
+            # We need a min number of samples for smoothing
             idx = (
                 np.arange(self.gaze_ptr - self.median_window, self.gaze_ptr)
                 % self.gaze_buffer_size
             )
+            # TODO: Would prefer as a function
             window = self.gaze_history[idx]
             mx = np.median(window[:, 1])
             my = np.median(window[:, 2])
@@ -248,9 +251,10 @@ class GazeController(Node):
                 1 - self.ema_alpha
             ) * self.smoothed_y
         else:
+            # Just pass without smoothing
             self.smoothed_x, self.smoothed_y = msg.x, msg.y
 
-        # --- C. CORRECTION & PUBLISH ---
+        # --- B. CORRECTION ---
         if self.get_parameter("compensation_active").value:
             dx, dy = self.get_correction(self.smoothed_x, self.smoothed_y)
             dx = np.clip(dx, -self.max_compensation, self.max_compensation)
@@ -258,6 +262,7 @@ class GazeController(Node):
         else:
             dx, dy = 0.0, 0.0
 
+        # --- C. PUBLISH ---
         out_msg = PointStamped()
         out_msg.header = msg.header
         out_msg.point = Point(x=self.smoothed_x + dx, y=self.smoothed_y + dy, z=0.0)
@@ -294,14 +299,15 @@ class GazeController(Node):
         """
 
         with self._lock:
-            # 1. Latency adjustment relative to the gaze stream
             button_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
 
+            # Latency logging
             if self.latest_gaze_time > 0 and button_ts > 0:
                 latency_sec = self.latest_gaze_time - button_ts
                 latency_ms = latency_sec * 1000.0
                 self.update_latency_metrics(latency_ms)
 
+            # 1. Adjustment relative to the gaze stream
             adjusted_ts = button_ts - (
                 self.get_parameter("internal_pipeline_delay_ms").value / 1000.0
             )
@@ -355,8 +361,6 @@ class GazeController(Node):
                 self.current_button_id = incoming_id
                 self.latest_raw_button_msg = msg 
 
-
-                button_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
                 self.rec_start_ts = adjusted_ts
                 # self.get_logger().info(f"LOCKED onto Button: {self.current_button_id}")
 

@@ -2,7 +2,7 @@
 """
 Extended GazeController Test Suite
 Run with:
-    python3 -m pytest src/gaze_interaction_manager/test/test_gaze_controller.py -v -s -k test_pipeline_delay_shifts_interpolation
+python3 -m pytest src/gaze_interaction_manager/test/test_gaze_controller.py -v -s -k test_pipeline_delay_shifts_interpolation
 
 Covers:
   - PASS - Ghost button assertion fix          
@@ -139,6 +139,80 @@ def test_ghost_button_extrapolation_no_extrapolation():
     )
 
 
+
+def test_pipeline_unadjusted_interpolation():
+    """
+    internal_pipeline_delay_ms subtracts N ms from the button timestamp so that
+    button and gaze timestamps are aligned on the same hardware clock.
+
+    Setup:
+      - Delay = 500ms  (camera is 500ms behind gaze clock)
+      - Button at hardware T=1.5 → stored as adjusted T=1.0
+      - Button at hardware T=2.5 → stored as adjusted T=2.0
+      - Gaze sample at T=1.5  (no delay adjustment needed for gaze)
+      - Interpolated target should be X=15.0 (midpoint of 10→20 range)
+
+    Without delay compensation the button timestamps would be 1.5 and 2.5,
+    so interp at T=1.5 would return X=10.0 (the first sample exactly).
+
+    BUG(2): In button_cb, `button_ts` is re-declared inside the "Rising Edge"
+    block (line ~160 of the source), silently shadowing the adjusted_ts already
+    calculated above. The re-computed value is the raw timestamp, so
+    `self.rec_start_ts` stores the *unadjusted* time.  Segments are then
+    windowed using `rec_start_ts` vs adjusted gaze times — causing a
+    systematic offset equal to the pipeline delay.
+    Fix: replace `button_ts = msg.header.stamp…` with `self.rec_start_ts = adjusted_ts`
+    (which is the line immediately after, making the re-assignment redundant anyway).
+    """
+
+    node = GazeController()
+    node.set_parameters([
+        rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
+        rclpy.parameter.Parameter('start_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('edge_margin', value=50),
+
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+
+    ])
+    # Gaze at T=1.5 (adjusted btn midpoint)
+    node.gaze_cb(make_gaze(100.0, 100.0, 1, 0))
+    node.gaze_cb(make_gaze(200.0, 200.0, 2, 0))
+    node.gaze_cb(make_gaze(300.0, 300.0, 3, 0))
+
+    published = capture_segments(node)
+
+    btn_1 = make_button("btn1", 10.0, 100.0, 1, 0)  
+    btn_2 = make_button("btn1", 30.0, 300.0, 3, 0) 
+    node.button_cb(btn_1)
+    node.button_cb(btn_2)
+
+    node.saccade_cb(make_saccade(3_200_000_000))
+
+    # Should publish one segment
+    assert len(published) == 1, "No segment published"
+
+    # Unpack into 3 vectors
+    targets = [[s.x, s.y] for s in published[0].target_samples]
+
+    assert targets[0] == [10.0, 100.0], (
+        f"Interpolation ! FAIL: expected [10.0, 100.0], got {targets[0]}. "
+        "rec_start_ts is likely using the raw timestamp — see BUG(2)."
+    )
+    assert targets[1] == [20.0, 200.0], (
+        f"Interpolation ! FAIL: expected [20.0, 200.0], got {targets[1]}. "
+        "rec_start_ts is likely using the raw timestamp — see BUG(2)."
+    )
+    assert targets[2] == [30.0, 300.0], (
+        f"Interpolation ! FAIL: expected [30.0, 300.0], got {targets[2]}. "
+        "rec_start_ts is likely using the raw timestamp — see BUG(2)."
+    )
+
+
+
+
 # ===========================================================================
 # 2. PIPELINE DELAY COMPENSATION
 # ===========================================================================
@@ -167,11 +241,18 @@ def test_pipeline_delay_shifts_interpolation():
     Fix: replace `button_ts = msg.header.stamp…` with `self.rec_start_ts = adjusted_ts`
     (which is the line immediately after, making the re-assignment redundant anyway).
     """
+
     node = GazeController()
     node.set_parameters([
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=500.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('edge_margin', value=50),
+
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+
     ])
 
     # Hardware timestamps 1.5s and 2.5s → adjusted to 1.0 and 2.0
