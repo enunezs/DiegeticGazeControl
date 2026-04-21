@@ -176,24 +176,41 @@ class GazeController(Node):
         self.min_samples = int(
             (self.get_parameter("min_event_duration_ms").value / 1000.0) * self.hz_gaze
         )
-        self.gaze_buffer_size = int(
-            self.get_parameter("history_length_s").value * self.hz_gaze
-        )
-        self.gaze_history = np.zeros((self.gaze_buffer_size, 3))  # [ts, x, y]
 
-        # Buffer Resizing
-        new_size = int(self.get_parameter("history_length_s").value * self.hz_gaze)
 
-        # Only re-init if size actually changed to avoid losing data on minor param tweaks
-        if self.gaze_history is None or new_size != len(self.gaze_history):
+        self._resize_gaze_buffer(self.get_parameter("history_length_s").value)
+
+    def _resize_gaze_buffer(self, length_s):
+        new_size = int(length_s * self.hz_gaze)
+        if getattr(self, 'gaze_history', None) is None or new_size != len(self.gaze_history):
             self.get_logger().info(f"Initializing Gaze Buffer: {new_size} samples")
             self.gaze_buffer_size = new_size
             self.gaze_history = np.zeros((self.gaze_buffer_size, 3))
             self.gaze_ptr = 0
-            self.gaze_buffer_filled = False  # CRITICAL FIX
+            self.gaze_buffer_filled = False
 
     def param_callback(self, params):
-        self.update_internal_params()
+        """
+        Dynamically handles parameter updates. 
+        MUST extract from `params` directly because self.get_parameter() 
+        still holds old values during this callback.
+        """
+        for p in params:
+            if p.name == "median_window":
+                self.median_window = p.value
+            elif p.name == "ema_alpha":
+                self.ema_alpha = p.value
+            elif p.name == "edge_margin":
+                self.edge_margin = p.value
+            elif p.name == "max_compensation_px":
+                self.max_compensation = p.value
+            elif p.name == "start_trim_ms":
+                self.start_trim_ms = int((p.value / 1000.0) * self.hz_gaze)
+            elif p.name == "min_event_duration_ms":
+                self.min_samples = int((p.value / 1000.0) * self.hz_gaze)
+            elif p.name == "history_length_s":
+                self._resize_gaze_buffer(p.value)
+                
         return SetParametersResult(successful=True)
 
 ### === 2. Core Callbacks: Gaze === ###
@@ -510,16 +527,16 @@ class GazeController(Node):
             if self.gaze_buffer_filled
             else self.gaze_history[: self.gaze_ptr]
         )
+        # Prevent out of order timestamps
         data = data[data[:, 0] > 0]
         data = data[np.argsort(data[:, 0])]
 
         # 2. Windowing
-        raw_idx = np.where((data[:, 0] >= self.rec_start_ts) & (data[:, 0] <= end_ts))[
-            0
-        ]
+        raw_idx = np.where((data[:, 0] >= self.rec_start_ts) & (data[:, 0] <= end_ts))[0]
 
         # Check minimum duration
-        if len(raw_idx) < (self.start_trim_ms + self.min_samples):
+        if len(raw_idx) == 0 or len(raw_idx) < (self.start_trim_ms + self.min_samples):
+            # Segment discarded
             # self.get_logger().info(
             #     f"Segment too short ({len(raw_idx)} samples). Discarding."
             # )
@@ -527,7 +544,9 @@ class GazeController(Node):
         else:
             # Post-hoc trimming: Remove the start padding (eye settling)
             trimmed_idx = raw_idx[self.start_trim_ms :]
-            self._publish_segment(data[trimmed_idx], end_ts, full_context_buffer=data)
+
+            if len(trimmed_idx) > 0:
+                self._publish_segment(data[trimmed_idx], end_ts, full_context_buffer=data)
 
         self.is_recording = False
         self.rec_start_ts = None
