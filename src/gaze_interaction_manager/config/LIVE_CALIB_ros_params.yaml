@@ -74,17 +74,17 @@
 /gaze_controller_node:
   ros__parameters:
     compensation_active : False 
-    use_temporal_alignment : False
-    history_length_s : 30.0
+    use_temporal_alignment : True
+    sticky_button_interaction : False
+    history_length_s : 10.0
     internal_pipeline_delay_ms : 0.0
     median_window : 20
     ema_alpha : 0.2
     edge_margin : 50
-    start_trim_ms : 10.0   # Start Padding 
-    terminal_trim_ms : 10.0  # End padding 
-    min_event_duration_ms : 30.0 #  
+    start_trim_ms : 100.0   # Start Padding 
+    terminal_trim_ms : 100.0  # End padding 
+    min_event_duration_ms : 200.0 #  
     max_compensation_px : 200.0
-    sticky_button_interaction : False
     viz_enabled : False
 
 

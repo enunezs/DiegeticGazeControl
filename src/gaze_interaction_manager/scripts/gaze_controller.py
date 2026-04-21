@@ -644,7 +644,7 @@ class GazeController(Node):
         )
 
         # Plot Debug Viz
-        self.plot_debug_viz(
+        self.plot_ts_alignment_viz(
             plot_data, btn_data, self.rec_start_ts, end_ts, highlight_ts
         )
 
@@ -939,7 +939,7 @@ class GazeController(Node):
         except Exception as e:
             self.get_logger().error(f"Live Viz Error: {e}")
 
-    def plot_debug_viz(
+    def plot_ts_alignment_viz(
         self, gaze_data, btn_data, start_ts, end_ts, highlight_timestamps
     ):
         """Creates a 1200x400 image. Handles coordinate conversion strictly for OpenCV."""

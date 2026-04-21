@@ -52,7 +52,7 @@ class SpatialReservoir:
         self.bin_size = cfg.get("bin_size", 150)
         self.max_samples = cfg.get("samples_per_bin", 50)
         self.val_size = cfg.get("val_size", 10)
-        self.stride = cfg.get("thinning_stride", 15)
+        self.stride = cfg.get("thinning_stride", 1)
         self.val_ratio = cfg.get("val_size", 10) / self.max_samples
 
     def add_segment(self, gx, gy, ex, ey):

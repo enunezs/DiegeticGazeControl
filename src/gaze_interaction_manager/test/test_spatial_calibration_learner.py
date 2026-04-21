@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""
+Run with:
+python3 -m pytest src/gaze_interaction_manager/test/test_spatial_calibration_learner.py -v -s -k test_pipeline_delay_shifts_interpolation
+"""
+
 
 import os
 import sys
@@ -13,13 +18,16 @@ from std_msgs.msg import Header
 from pupil_neon_ros.msg import GazeData
 from gaze_interaction_manager.msg import InteractionSegment, CalibrationModel
 
+from collections import deque
+
+
 # Import your node and classes
 # Adjust the sys.path insertion as needed for your specific directory structure
 current_dir = os.path.dirname(os.path.abspath(__file__))
 scripts_dir = os.path.join(current_dir, '..', 'scripts')
 sys.path.insert(0, scripts_dir)
 
-from calibration_learner import CalibrationLearner, SpatialReservoir, GazeCorrectionFramework
+from spatial_calibration_learner import CalibrationLearner, SpatialReservoir, GazeCorrectionFramework
 
 # ===========================================================================
 # Fixtures & Helpers
