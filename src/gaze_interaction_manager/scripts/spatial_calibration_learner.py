@@ -50,9 +50,9 @@ class SpatialReservoir:
         self.cfg = cfg
         self.bins = {}  # (bx, by) -> deque
         self.bin_size = cfg.get("bin_size", 150)
-        self.max_samples = cfg.get("samples_per_bin", 50)
+        self.max_samples = cfg.get("samples_per_bin", 100)
         self.val_size = cfg.get("val_size", 10)
-        self.stride = cfg.get("thinning_stride", 1)
+        self.stride = cfg.get("thinning_stride", 2)
         self.val_ratio = cfg.get("val_size", 10) / self.max_samples
 
     def add_segment(self, gx, gy, ex, ey):

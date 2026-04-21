@@ -312,10 +312,10 @@ class ArucoDetectorNode(Node):
                 quat_raw = tf_transformations.quaternion_from_matrix(T_raw)
 
                 # Filter
-                tvec_filtered, quat_filtered = self.get_filtered_pose(
-                    int(marker_id), t_curr, tvec_raw, quat_raw
-                )
-
+                # tvec_filtered, quat_filtered = self.get_filtered_pose(
+                #     int(marker_id), t_curr, tvec_raw, quat_raw
+                # )
+                tvec_filtered , quat_filtered = tvec_raw , quat_raw
                 # Reconstruct T_cam_marker from filtered data
                 T_cam_marker = tf_transformations.quaternion_matrix(quat_filtered)
                 T_cam_marker[0:3, 3] = tvec_filtered

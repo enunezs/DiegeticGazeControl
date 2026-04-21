@@ -18,6 +18,12 @@ import cv2  # For plotting
 from cv_bridge import CvBridge  # for ROS image conversion
 from sensor_msgs.msg import Image  # for RViz output
 
+# For plotting
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import io
+
 
 class GazeController(Node):
 
@@ -51,8 +57,12 @@ class GazeController(Node):
         self.declare_parameter("max_compensation_px", 200.0)
         self.declare_parameter("use_temporal_alignment", True)
         self.declare_parameter("sticky_button_interaction", False)
-        
-        # --- New Visualization Parameters ---
+
+        # --- Synchronization Parameters ---
+        self.declare_parameter("max_gap_ms", 300.0)
+        self.declare_parameter("max_error_px", 200.0)
+
+        # --- Visualization Parameters ---
         self.declare_parameter("viz_enabled", False)
         self.declare_parameter("viz_show_raw", True)
         self.declare_parameter("viz_show_corrected", True)
@@ -178,6 +188,9 @@ class GazeController(Node):
         )
 
 
+        self.max_gap_s = self.get_parameter("max_gap_ms").value / 1000.0
+        self.max_error_px = self.get_parameter("max_error_px").value
+
         self._resize_gaze_buffer(self.get_parameter("history_length_s").value)
 
     def _resize_gaze_buffer(self, length_s):
@@ -210,7 +223,11 @@ class GazeController(Node):
                 self.min_samples = int((p.value / 1000.0) * self.hz_gaze)
             elif p.name == "history_length_s":
                 self._resize_gaze_buffer(p.value)
-                
+            elif p.name == "max_gap_ms":
+                self.max_gap_s = p.value / 1000.0
+            elif p.name == "max_error_px":
+                self.max_error_px = p.value
+
         return SetParametersResult(successful=True)
 
 ### === 2. Core Callbacks: Gaze === ###
@@ -546,7 +563,14 @@ class GazeController(Node):
             trimmed_idx = raw_idx[self.start_trim_ms :]
 
             if len(trimmed_idx) > 0:
-                self._publish_segment(data[trimmed_idx], end_ts, full_context_buffer=data)
+                trimmed_start_ts = data[trimmed_idx[0], 0]
+
+                self._publish_segment(
+                    data[trimmed_idx], 
+                    end_ts,
+                    start_ts=self.rec_start_ts,
+                    trimmed_start_ts=trimmed_start_ts
+                    )
 
         self.is_recording = False
         self.rec_start_ts = None
@@ -564,7 +588,7 @@ class GazeController(Node):
         t.sec, t.nanosec = int(t_float), int((t_float - int(t_float)) * 1e9)
         return t
 
-    def _publish_segment(self, gaze_slice, end_ts, full_context_buffer=None):
+    def _publish_segment(self, gaze_slice, end_ts, start_ts, trimmed_start_ts):
         """Interpolates and sends the ROS message"""
 
         use_alignment = self.get_parameter("use_temporal_alignment").value
@@ -574,79 +598,91 @@ class GazeController(Node):
         if not btn_data:
             return
 
-        # In sticky mode, only use ground truth samples that belong to the
-        # locked button.  Rogue frames from other IDs were still appended to
-        # btn_history in button_cb (unconditional step 3), so we filter them
-        # out here.  In standard mode we use everything.
         if sticky and self.current_button_id is not None:
             btn_data = [b for b in btn_data if b[3] == self.current_button_id]
  
-        if not btn_data:
-            # All history was from other buttons — nothing to interpolate against
-            self.get_logger().warning(
-                "[Sticky] btn_history contained no samples for "
-                f"{self.current_button_id}. Discarding segment."
-            )
+        # We need at least 2 points to interpolate a timeline
+        if len(btn_data) < 2:
+            self.get_logger().warning("Not enough button history to interpolate. Discarding segment.")
             return
- 
-        # Extract button timestamps and positions for interpolation
-        b_times = np.array([b[0] for b in btn_data])
-        b_xs = np.array([b[1] for b in btn_data])
-        b_ys = np.array([b[2] for b in btn_data])
+        
+        # 1. Extract Button (Target) Arrays
+        B_times = np.array([b[0] for b in btn_data])
+        B_xs = np.array([b[1] for b in btn_data])
+        B_ys = np.array([b[2] for b in btn_data])
 
-        segment = InteractionSegment()
-        segment.header.stamp = self.get_clock().now().to_msg()
-        segment.button_id = self.current_button_id
+        # 2. Extract Gaze Arrays
+        G_times = gaze_slice[:, 0]
+        G_xs = gaze_slice[:, 1]
+        G_ys = gaze_slice[:, 2]
 
-        target_points = np.zeros((len(gaze_slice), 2))
+        # 3. Vectorized Interpolation
+        if use_alignment:
+            tx = np.interp(G_times, B_times, B_xs)
+            ty = np.interp(G_times, B_times, B_ys)
+        else:
+            # Without alignment: find closest raw target preceding the gaze sample
+            idxs = np.searchsorted(B_times, G_times) - 1
+            idxs = np.clip(idxs, 0, len(B_times) - 1)
+            tx = B_xs[idxs]
+            ty = B_ys[idxs]
 
-        for i, (gt, gx, gy) in enumerate(gaze_slice):
-            if use_alignment:
-                # Align gaze timestamp to button timeline
-                # 1. Calculate ground truth for this specific gaze timestamp
-                tx = np.interp(gt, b_times, b_xs)
-                ty = np.interp(gt, b_times, b_ys)
-            else: 
-                # OPTION B: No alignment. Just find the closest "raw" button sample 
-                # (Simulates what happens if you don't account for pipeline lag)
-                idx = np.searchsorted(b_times, gt) - 1
-                idx = max(0, idx)
-                tx, ty = b_xs[idx], b_ys[idx]
 
-            # 2. Add the Target point
-            target_points[i] = [tx, ty]
-            t_pt = Point(x=tx, y=ty, z=0.0)
-            segment.target_samples.append(t_pt)
+        # 4. Create Mask: Drop Gaps 
+        # (Drop samples that fall in a gap > max_gap_s, or out of bounds)
+        gap_mask = np.ones(len(G_times), dtype=bool)
 
-            # 3. Add the Gaze sample
-            g_msg = GazeData()
-            g_msg.header.stamp = self.float_to_stamp(gt)
-            g_msg.x, g_msg.y = float(gx), float(gy)
-            segment.gaze_samples.append(g_msg)
+        # A. Out of bounds (Extrapolation is dropped)
+        gap_mask[G_times < B_times[0]] = False
+        gap_mask[G_times > B_times[-1]] = False
 
-        # segment.target_pixel = Point(x=float(np.mean(b_xs)), y=float(np.mean(b_ys)))
-        self.segment_pub.publish(segment)
+        # B. Internal Gaps
+        diffs = np.diff(B_times)
+        bad_gap_indices = np.where(diffs > self.max_gap_s)[0]
 
-        mean_error = np.mean(
-            np.sqrt(
-                (target_points[:, 0] - gaze_slice[:, 1]) ** 2 + 
-                (target_points[:, 1] - gaze_slice[:, 2]) ** 2
-                ))
+        # np.searchsorted maps G_times to the interval they fall into
+        interval_idx = np.searchsorted(B_times, G_times)
+        for i in bad_gap_indices:
+            # Drop gaze samples falling into the interval (B_times[i], B_times[i+1])
+            gap_mask[interval_idx == i + 1] = False
 
-        # self.get_logger().info(
-        #     f"Published segment with {len(segment.gaze_samples)} samples. Mean error to GT: {mean_error:.1f}px"
-        # )
+        # 5. Create Mask: Drop Huge Errors
+        errors = np.hypot(tx - G_xs, ty - G_ys)
+        error_mask = errors <= self.max_error_px
 
-        # If we weren't given the full buffer, just show the slice
-        highlight_ts = gaze_slice[:, 0]
-        plot_data = (
-            full_context_buffer if full_context_buffer is not None else gaze_slice
-        )
+        # 6. Final Valid Mask
+        valid_mask = gap_mask & error_mask
 
-        # Plot Debug Viz
-        self.plot_ts_alignment_viz(
-            plot_data, btn_data, self.rec_start_ts, end_ts, highlight_ts
-        )
+        # 7. Build ROS Message (Iterate only over valid data)
+        valid_indices = np.where(valid_mask)[0]
+
+        if len(valid_indices) == 0:
+            self.get_logger().warning("All gaze samples dropped (gaps or errors). Discarding segment.")
+        else:
+            segment = InteractionSegment()
+            segment.header.stamp = self.get_clock().now().to_msg()
+            segment.button_id = self.current_button_id
+
+            for i in valid_indices:
+                t_pt = Point(x=float(tx[i]), y=float(ty[i]), z=0.0)
+                segment.target_samples.append(t_pt)
+
+                g_msg = GazeData()
+                g_msg.header.stamp = self.float_to_stamp(G_times[i])
+                g_msg.x, g_msg.y = float(G_xs[i]), float(G_ys[i])
+                segment.gaze_samples.append(g_msg)
+
+            self.segment_pub.publish(segment)
+
+        # 8. Trigger Matplotlib Visualization
+        if self.get_parameter("viz_enabled").value:
+            self.plot_ts_alignment_viz(
+                G_times, G_xs, G_ys, 
+                B_times, B_xs, B_ys, 
+                tx, ty, 
+                gap_mask, error_mask, valid_mask, 
+                start_ts, trimmed_start_ts, end_ts
+            )
 
 ### === Calibration Model Handling === ###
     def model_cb(self, msg: CalibrationModel):
@@ -939,144 +975,94 @@ class GazeController(Node):
         except Exception as e:
             self.get_logger().error(f"Live Viz Error: {e}")
 
-    def plot_ts_alignment_viz(
-        self, gaze_data, btn_data, start_ts, end_ts, highlight_timestamps
-    ):
-        """Creates a 1200x400 image. Handles coordinate conversion strictly for OpenCV."""
-        W, H = 1200, 400
-        img = np.zeros((H, W, 3), dtype=np.uint8)
+    def plot_ts_alignment_viz(self, 
+                              g_times, g_xs, g_ys, 
+                              b_times, b_xs, b_ys, 
+                              tx, ty, 
+                              gap_mask, error_mask, valid_mask, 
+                              start_ts, trimmed_start_ts, end_ts):
+        """Generates a detailed Matplotlib figure of the synchronization and publishes it."""
+        
+        # Create figure with 2 vertically stacked subplots sharing the X (time) axis
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
+        
+        fig.suptitle(f"Segment Synchronization Analysis (ID: {self.current_button_id})", fontsize=14)
 
-        if len(gaze_data) < 2:
-            return
-        # FIX: used_indices is now a set of timestamps (floats)
-        # We ensure it's a set for O(1) lookup speed
-        if isinstance(highlight_timestamps, np.ndarray):
-            # If it's the [ts, x, y] array, just take the ts column
-            used_set = (
-                set(highlight_timestamps[:, 0])
-                if highlight_timestamps.ndim > 1
-                else set(highlight_timestamps)
-            )
-        else:
-            used_set = set(highlight_timestamps)
+        # -------------------------------------------------------------
+        # Helper to plot a single axis (X or Y)
+        # -------------------------------------------------------------
+        def plot_lane(ax, b_vals, g_vals, t_vals, title, y_limit):
+            ax.set_title(title, loc='left', fontsize=10, weight='bold')
+            ax.set_ylim(0, y_limit)
+            ax.set_xlim(end_ts - 5.0, end_ts + 0.2)
+            ax.invert_yaxis() # Image coordinates: 0 at top
+            ax.grid(True, linestyle='--', alpha=0.5)
 
-        # 1. Setup Scaling
-        # Use actual data limits for scaling to prevent "empty" plots due to time gaps
-        t_min = float(np.min(gaze_data[:, 0]))
-        t_max = float(np.max(gaze_data[:, 0]))
-        t_range = t_max - t_min if t_max > t_min else 1.0
-
-        def to_pixels(t, val, is_y=False):
-            try:
-                # Calculate normalized position (0.0 to 1.0)
-                norm_x = (float(t) - t_min) / t_range
-                px_x = int(norm_x * (W - 60) + 30)
-                # px_y = norm_y * (H - 40) + 20
-                # Y-axis is Coordinate Value (normalized to 1600 width)
-                # We use 1600 because this plot shows the X-profile
-                norm_val = float(val) / 1600.0
-                # Flip Y so 0 is at bottom, 1600 is at top of the strip
-                px_y = int((H - 60) - (norm_val * (H - 60)) + 30)
-                return (np.clip(px_x, 0, W - 1), np.clip(px_y, 0, H - 1))
-
-            except (ValueError, TypeError):
-                return None
-
-        # 2. Draw Background (Button Activity State)
-        for i in range(len(btn_data) - 1):
-            t1, _, _, _, act = btn_data[i]
-            t2, _, _, _, _ = btn_data[i + 1]
-            p1 = to_pixels(t1, 0)
-            p2 = to_pixels(t2, 0)
-            if p1 and p2:
-                # Force standard int tuples for OpenCV
-                cv2.rectangle(
-                    img, (p1[0], 0), (p2[0], H), (0, 30, 0) if act else (0, 0, 30), -1
-                )
-
-        # 3. Draw Gaze Samples
-        for i, (t, gx, gy) in enumerate(gaze_data):
-            p = to_pixels(t, gx)
-            # Color logic:
-            # Yellow/Cyan = The actual data sent to the learner
-            # Dim Blue = Buffer history not included in the segment
-            if i in used_set:
-                use_alignment = self.get_parameter("use_temporal_alignment").value
-                color = (0, 255, 255) if use_alignment else (0, 255, 0)
-                radius = 2
-            else:
-                color = (80, 40, 20)
-                radius = 1
-
-            cv2.circle(img, p, radius, color, -1)
-
-       # 4. Truth Lines
-        btn_pts_synced = []
-        btn_pts_raw = []
-
-        # Get the delay parameter for comparison
-        delay_s = self.get_parameter("internal_pipeline_delay_ms").value / 1000.0
-
-        for b in btn_data:
-            # B[0] is already adjusted in button_cb. 
-            # Let's find the raw timestamp by adding the delay back.
-            t_synced = b[0]
-            t_raw = b[0] + delay_s 
+            # 1. Background Shading
+            # A. Start Trim Zone
+            ax.axvspan(start_ts, trimmed_start_ts, color='yellow', alpha=0.2, label='Start Trim Padding')
             
-            p_synced = to_pixels(t_synced, b[1])
-            p_raw = to_pixels(t_raw, b[1])
+            # B. Gap Zones (Highlight gaps > max_gap_s)
+            diffs = np.diff(b_times)
+            for i, d in enumerate(diffs):
+                if d > self.max_gap_s:
+                    label = f'Gap > {self.max_gap_s*1000:.0f}ms' if i == 0 else ""
+                    ax.axvspan(b_times[i], b_times[i+1], color='red', alpha=0.15, hatch='//', label=label)
+
+            # 2. Plot Button Target (Ground Truth)
+            ax.plot(b_times, b_vals, color='gray', linestyle='--', alpha=0.6)
+            ax.scatter(b_times, b_vals, marker='s', color='black', s=10, zorder=3, label='Target Samples')
+
+            # 3. Plot Gaze Points
+            # A. Continuous Gaze Trajectory (Always visible)
+            ax.scatter(g_times, g_vals, 
+                       color='blue', s=2, zorder=4, label='Gaze Trajectory')
+            # ax.plot(g_times, g_vals, color='blue', alpha=0.2, linewidth=1, zorder=1)
+
+            # B. Valid Gaze (Green)
+            ax.scatter(g_times[valid_mask], g_vals[valid_mask], 
+                       color='green', s=2, zorder=4, label='Valid Gaze')
             
-            if p_synced: btn_pts_synced.append(p_synced)
-            if p_raw: btn_pts_raw.append(p_raw)
+            # C. Dropped due to Gap/Out-of-bounds (Red)
+            ax.scatter(g_times[~gap_mask], g_vals[~gap_mask], 
+                       color='red', s=2, zorder=4, label='Dropped (Gap/Extrap)')
 
-        # Draw RAW truth in a dim/dashed style (RED)
-        if len(btn_pts_raw) > 1:
-            cv2.polylines(img, [np.array(btn_pts_raw, dtype=np.int32)], False, (0, 0, 150), 1)
+            # D. Dropped due to Error Threshold (Orange Crosses)
+            error_dropped = gap_mask & (~error_mask)
+            ax.scatter(g_times[error_dropped], g_vals[error_dropped], 
+                       facecolors='none', edgecolors='orange', marker='X', s=15, zorder=4, label='Dropped (Error > Thr)')
 
-        # Draw SYNCED truth (WHITE)
-        if len(btn_pts_synced) > 1:
-            cv2.polylines(img, [np.array(btn_pts_synced, dtype=np.int32)], False, (255, 255, 255), 2)
+            # 4. Faint lines connecting dropped Gaze to Interpolated Target (shows *why* it exceeded error)
+            for i in np.where(error_dropped)[0]:
+                ax.plot([g_times[i], g_times[i]], [g_vals[i], t_vals[i]], color='orange', linestyle=':', alpha=0.7)
 
-        # 5. Draw Timing Markers (Trimming visualization)
-        ps = to_pixels(start_ts, 0)
-        pe = to_pixels(end_ts, 0)
-        # Start marker (Yellow)
-        cv2.line(img, (ps[0], 0), (ps[0], H), (0, 255, 255), 1)
-        # End marker (Cyan)
-        cv2.line(img, (pe[0], 0), (pe[0], H), (255, 255, 0), 1)
+            # End line marker
+            ax.axvline(end_ts, color='cyan', linestyle='-', label='Segment End')
 
-        # 6. UI Overlays
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(
-            img,
-            "X-Coordinate Temporal Profile",
-            (10, 25),
-            font,
-            0.6,
-            (255, 255, 255),
-            1,
-        )
+        # -------------------------------------------------------------
+        
+        # Draw X Lane
+        plot_lane(ax1, b_xs, g_xs, tx, "X-Coordinate Profile (Width: 1600)", 1600)
+        # Draw Y Lane
+        plot_lane(ax2, b_ys, g_ys, ty, "Y-Coordinate Profile (Height: 1200)", 1200)
 
-        duration = end_ts - start_ts
-        cv2.putText(
-            img,
-            f"Segment: {duration:.2f}s | Samples: {len(used_set)}",
-            (10, H - 15),
-            font,
-            0.5,
-            (200, 200, 200),
-            1,
-        )
+        # Polish layout
+        ax2.set_xlabel("Timestamp (Seconds)", fontsize=10, weight='bold')
+        ax1.legend(loc='upper right', bbox_to_anchor=(1.15, 1.05), fontsize=8)
+        fig.tight_layout()
 
-        # Legend
-        cv2.putText(
-            img, "TRUTH (BUTTON X)", (W - 180, 25), font, 0.4, (200, 200, 200), 1
-        )
-        cv2.putText(img, "USED GAZE", (W - 180, 45), font, 0.4, (0, 255, 255), 1)
+        # Render Figure to Image Buffer
+        fig.canvas.draw()
+        
+        # Extract RGB buffer and convert to BGR for CV Bridge
+        img_np = np.asarray(fig.canvas.buffer_rgba())
+        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGBA2BGR)
+        
+        plt.close(fig) # Prevent memory leaks!
 
-        # Publish
+        # Publish to ROS
         try:
-            msg = self.bridge.cv2_to_imgmsg(img, encoding="bgr8")
+            msg = self.bridge.cv2_to_imgmsg(img_bgr, encoding="bgr8")
             msg.header.stamp = self.get_clock().now().to_msg()
             self.debug_pub_viz.publish(msg)
         except Exception as e:

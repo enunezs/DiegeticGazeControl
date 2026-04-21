@@ -43,7 +43,7 @@
         publish_poses : False
         marker_persistence : 0.9
         filter_min_cutoff : 0.5 
-        filter_beta : 0.05  
+        filter_beta : 0.00005  
 
 /button_finder:
   ros__parameters:
@@ -76,16 +76,16 @@
     compensation_active : False 
     use_temporal_alignment : True
     sticky_button_interaction : False
-    history_length_s : 10.0
+    history_length_s : 5.0
     internal_pipeline_delay_ms : 0.0
     median_window : 20
     ema_alpha : 0.2
     edge_margin : 50
-    start_trim_ms : 100.0   # Start Padding 
+    start_trim_ms : 50.0   # Start Padding 
     terminal_trim_ms : 100.0  # End padding 
     min_event_duration_ms : 200.0 #  
     max_compensation_px : 200.0
-    viz_enabled : False
+    viz_enabled : True
 
 
 /calibration_learner_node:
