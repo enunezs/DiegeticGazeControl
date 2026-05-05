@@ -53,24 +53,45 @@ class SpatialReservoir:
         self.max_samples = cfg.get("samples_per_bin", 100)
         self.val_size = cfg.get("val_size", 10)
         self.stride = cfg.get("thinning_stride", 2)
-        self.val_ratio = cfg.get("val_size", 10) / self.max_samples
+        # ? self.val_ratio = cfg.get("val_size", 10) / self.max_samples
+        self.val_ratio = (
+            self.val_size / self.max_samples if self.max_samples > 0 else 0.2
+        )
+
+        # Tracking projection coverage for decoupled axis unlocking
+        self.unique_bx = set()
+        self.unique_by = set()
 
     def add_segment(self, gx, gy, ex, ey):
         """Processes a new segment into the shared spatial bins."""
         stride = self.stride
         gx_t, gy_t, ex_t, ey_t = gx[::stride], gy[::stride], ex[::stride], ey[::stride]
+        max_error = self.cfg.get("max_error_cap", 150.0)
 
         for i in range(len(gx_t)):
             # Basic outlier rejection
-            if abs(ex_t[i]) > 150 or abs(ey_t[i]) > 150:
+            if abs(ex_t[i]) > max_error or abs(ey_t[i]) > max_error:
                 continue
 
             # Binning
-            bid = (int(gx_t[i] // self.bin_size), int(gy_t[i] // self.bin_size))
+            bx, by = int(gx_t[i] // self.bin_size), int(gy_t[i] // self.bin_size)
+            bid = (bx, by)
             if bid not in self.bins:
                 self.bins[bid] = deque(maxlen=self.max_samples)
 
             self.bins[bid].append((gx_t[i], gy_t[i], ex_t[i], ey_t[i]))
+            # Update projection tracking
+            self.unique_bx.add(bx)
+            self.unique_by.add(by)
+
+    @property
+    def coverage(self):
+        """Returns independent axis coverage and total 2D bin coverage."""
+        return {
+            "x": len(self.unique_bx),
+            "y": len(self.unique_by),
+            "2d": len(self.bins),
+        }
 
     def get_split(self):
         """Routes to the requested CV strategy."""
@@ -87,18 +108,18 @@ class SpatialReservoir:
         """Standard FIFO split: newest samples in bin are validation."""
         train_list, val_list = [], []
 
-        min_samples = self.cfg.get("min_samples_per_bin_threshold", 4) 
-
+        min_samples = self.cfg.get("min_samples_per_bin_threshold", 4)
 
         # Every Nth sample goes to validation (e.g., if ratio is 0.2, every 5th)
         # Using a fixed step ensures consistent distribution
-        # val_step = int(1.0 / self.val_ratio) if self.val_ratio > 0 else 100
-        val_step = max(2, int(self.max_samples / self.val_size))
+        val_step = (
+            max(2, int(self.max_samples / self.val_size)) if self.val_size > 0 else 100
+        )
 
         for samples in self.bins.values():
 
             if len(samples) < min_samples:
-                continue # Ignore this bin for training/validation for now
+                continue  # Ignore this bin for training/validation for now
 
             s_list = list(samples)
             for i, sample in enumerate(s_list):
@@ -121,14 +142,17 @@ class SpatialReservoir:
         if len(all_bin_ids) < 5:
             return self._get_stratified_split()
 
+        # 1. Get random sample of bins for testing
         val_ratio = self.cfg.get("spatial_val_ratio", 0.2)
         n_val_bins = max(1, int(len(all_bin_ids) * val_ratio))
         test_bin_ids = set(random.sample(all_bin_ids, n_val_bins))
 
+        # 2. Mark buffer bins (not used in testing)
         buffer_bin_ids = set()
         include_diagonals = self.cfg.get("cv_include_diagonals", False)
 
         for bx, by in test_bin_ids:
+            # Mark criteria
             neighbors = [(bx + 1, by), (bx - 1, by), (bx, by + 1), (bx, by - 1)]
             if include_diagonals:
                 neighbors += [
@@ -137,10 +161,13 @@ class SpatialReservoir:
                     (bx + 1, by - 1),
                     (bx - 1, by + 1),
                 ]
+            # Add bins to buffer
             for nb in neighbors:
                 if nb in self.bins and nb not in test_bin_ids:
                     buffer_bin_ids.add(nb)
 
+        # 3. Split samples based on bin membership.
+        # Dont use buffer bins for anything
         train_list, val_list = [], []
         for bid, samples in self.bins.items():
             if bid in test_bin_ids:
@@ -201,19 +228,6 @@ class SpatialReservoir:
     def __len__(self):
         return len(self.bins)
 
-    # def get_train_val_split(self):
-    #     """Returns a flattened numpy array of training and validation samples."""
-    #     train_list, val_list = [], []
-    #     for samples in self.bins.values():
-    #         s_list = list(samples)
-    #         if len(s_list) > self.val_size:
-    #             # FIFO: Use older data for training, keep newest for "Exam" (Validation)
-    #             val_list.extend(s_list[-self.val_size :])  # Newest for BIC/Val
-    #             train_list.extend(s_list[: -self.val_size])  # Older for Training
-    #         else:
-    #             val_list.extend(s_list)
-
-    #     return np.array(train_list), np.array(val_list)
 
 # ==========================================
 # 2. THE MATHEMATICAL MODELS
@@ -234,20 +248,54 @@ class GazeCorrectionFramework:
 
         self.prequential_errors = []
         self.unlock_moments = {}
-        self.aulc_history = [] # Cumulative Mean of Prequential Error
+        self.aulc_history = []  # Cumulative Mean of Prequential Error
         self.macro_rmse_history = []
 
         # self.raw_prequential_errors = []  # Hardware error (px)
 
-        # Recipe Definition
+        ### ====== Recipe Definition ====== ###
+        # Support for heterogeneous axis recipes:
+        if isinstance(recipe, dict):
+            # Can be a dict:     {'x': ['bias', 'radial'], 'y': ['bias', 'lin_y']}
+            self.master_recipe_x = recipe["x"]
+            self.master_recipe_y = recipe["y"]
+        else:
+            # Or a list: ['bias', 'lin_x', 'lin_y']
+            self.master_recipe_x = list(recipe)
+            self.master_recipe_y = list(recipe)
+
         self.master_recipe = recipe
-        self.is_identity = "identity" in self.master_recipe
-        self.current_features = self.master_recipe if self.is_identity else ["bias"]
+        self.is_identity = "identity" in (
+            self.master_recipe
+            if isinstance(self.master_recipe, list)
+            else self.master_recipe_x + self.master_recipe_y
+        )
+
+        # Independent axis feature tracking (replaces single current_features)
+        self.current_features_x = self.master_recipe_x if self.is_identity else ["bias"]
+        self.current_features_y = self.master_recipe_y if self.is_identity else ["bias"]
+        # self.current_features = self.master_recipe if self.is_identity else ["bias"]
+
+        # Feature categories used by decoupled unlocking logic
+        self.feature_categories = {
+            "x_only": ["lin_x", "quad_x", "cub_x", "sig_x"],
+            "y_only": ["lin_y", "quad_y", "cub_y", "sig_y"],
+            "interaction": [
+                "cross_xy",
+                "radial",
+                "radial_quad",
+                "radial_universal",
+                "full_conic",
+                "tangent_1",
+                "tangent_2",
+                "sigmoid",
+                "sigmoid_edge",
+            ],
+        }
 
         # Tracking for BIC/Tournament
         self.bic_history = []
         self.aic_history = []
-
 
         # Screen Constants
         self.feature_library = {
@@ -255,7 +303,9 @@ class GazeCorrectionFramework:
             "bias": lambda dx, dy, r, r2: [np.ones_like(dx)],
             "lin_x": lambda dx, dy, r, r2: [dx / self.cx],
             "lin_y": lambda dx, dy, r, r2: [dy / self.cy],
-            # "quad_x": lambda dx, dy, r, r2: [(dx**2 * np.sign(dx)) / self.cx**2], # TODO: Sign flipping problem!
+            "quad_x": lambda dx, dy, r, r2: [(dx**2 * np.sign(dx)) / self.cx**2],
+            "quad_y": lambda dx, dy, r, r2: [(dy**2 * np.sign(dy)) / self.cy**2],
+            "cross_xy": lambda dx, dy, r, r2: [(dx * dy) / (self.cx * self.cy)],
             # "quad_y": lambda dx, dy, r, r2: [(dy**2 * np.sign(dy)) / self.cy**2],
             # Radial Linear: Correction scales with distance (Expansion/Contraction)
             # This creates a "stretching" or "shrinking" effect towards/away from center
@@ -291,21 +341,51 @@ class GazeCorrectionFramework:
                 np.tanh(dy / 300),
                 np.ones_like(dx),
             ],
+            "sigmoid_edge": lambda dx, dy, r, r2: [
+                np.tanh(dx / (self.cx / 2)),
+                np.tanh(dy / (self.cy / 2)),
+                np.ones_like(dx),
+            ],
+            "tangent_1": lambda dx, dy, r, r2: [
+                (2 * dx * dy) / self.cx**2,
+                (r2 + 2 * dx**2) / self.cx**2,
+            ],
+            "tangent_2": lambda dx, dy, r, r2: [
+                (r2 + 2 * dy**2) / self.cy**2,
+                (2 * dx * dy) / self.cy**2,
+            ],
         }
 
         # Calculate k (Number of features per axis)
+        # NOTE: k is the sum of both axis column counts, NOT doubled,
+        # because master_recipe_x and master_recipe_y can differ.
         self.k = 0 if self.is_identity else self._get_k_count()
 
-        if self.is_identity:
-            self.k_total = 0
-        else:
-            A_temp = self._get_matrix(np.array([0]), np.array([0]), self.master_recipe)
-            self.k_total = A_temp.shape[1] * 2
+        # k_total kept for backward compatibility with tournament scoring
+        self.k_total = self.k
+
+    @property
+    def current_features(self):
+        """Compatibility property for plotting/logging that reads a single feature string."""
+        if self.current_features_x == self.current_features_y:
+            return self.current_features_x
+        return f"X:{self.current_features_x} | Y:{self.current_features_y}"
+
+    @current_features.setter
+    def current_features(self, value):
+        self.current_features_x = value
+        self.current_features_y = value
+
+    @property
+    def aulc(self):
+        """Area Under the Learning Curve: cumulative mean of prequential errors."""
+        return np.mean(self.prequential_errors) if self.prequential_errors else 0.0
 
     def _get_k_count(self):
-        # Temp build matrix to count columns
-        A = self._get_matrix(np.array([0]), np.array([0]), self.master_recipe)
-        return A.shape[1]
+        # Total parameters = columns in X model + columns in Y model
+        ax_temp = self._get_matrix(np.array([0]), np.array([0]), self.master_recipe_x)
+        ay_temp = self._get_matrix(np.array([0]), np.array([0]), self.master_recipe_y)
+        return ax_temp.shape[1] + ay_temp.shape[1]
 
     def _get_matrix(self, dx, dy, features):
         if not features or features == ["identity"]:
@@ -314,20 +394,21 @@ class GazeCorrectionFramework:
         r2, r = dx**2 + dy**2, np.sqrt(dx**2 + dy**2)
         cols = []
         for f in features:
-            cols.extend(self.feature_library[f](dx, dy, r, r2))
+            if f in self.feature_library:
+                cols.extend(self.feature_library[f](dx, dy, r, r2))
         return np.column_stack(cols)
 
-    def _get_solver(self, key):
+    def _get_solver(self, axis, n_cols):
         """Solver factory. Handles shape changes for Huber warm_start."""
         if self.is_identity:
             return None
 
         s_type = self.cfg.get("solver", "ridge")
         alpha = self.cfg.get("solver_alpha", 1.0)
-        A_temp = self._get_matrix(np.array([0]), np.array([0]), self.current_features)
-        n_cols = A_temp.shape[1]
+        m = self.models.get(axis)
 
-        m = self.models.get(key)
+        # A_temp = self._get_matrix(np.array([0]), np.array([0]), self.current_features)
+        # n_cols = A_temp.shape[1]
 
         if s_type == "huber":
             if m is None or (hasattr(m, "coef_") and len(m.coef_) != n_cols):
@@ -351,8 +432,10 @@ class GazeCorrectionFramework:
             return np.zeros_like(gx), np.zeros_like(gy)
 
         dx, dy = gx - self.cx, gy - self.cy
-        if self.name == "Radial Concentric":
 
+        # Radial Concentric uses a special decoupled solve and cannot use the
+        # general axis-split path — it is inherently a coupled radial model.
+        if self.name == "Radial Concentric":
             if len(self.params["x"]) == 1:
                 return np.full_like(gx, self.params["x"][0]), np.full_like(
                     gy, self.params["y"][0]
@@ -364,101 +447,137 @@ class GazeCorrectionFramework:
             py = self.params["y"][0] + self.params["y"][1] * (dy / self.cy)
             return px, py
 
-        A = self._get_matrix(dx, dy, self.current_features)
-        return A @ self.params["x"], A @ self.params["y"]
+        # General path: predict using axis-specific active feature sets
+        Ax = self._get_matrix(dx, dy, self.current_features_x)
+        Ay = self._get_matrix(dx, dy, self.current_features_y)
+        return Ax @ self.params["x"], Ay @ self.params["y"]
 
-    def train(self, split_data, n_bins, event_idx):
+    def train(self, split_data, coverage_dict, event_idx):
         if self.is_identity:
             return
 
-        # Step 1: Handle model graduation as per number of samples
-        if self.current_features == ["bias"] and n_bins >= self.cfg.get(
-            "trigger_bins", 10
-        ):
-            self.current_features = self.master_recipe
-            self.unlock_moments["activation"] = event_idx
-            self.models = {"x": None, "y": None}  # Reset solvers for shape change
+        # --- DECOUPLED UNLOCKING LOGIC ---
+        policy = self.cfg.get("policy", "original_coupled")
+        t_x = self.cfg.get("trigger_x", self.cfg.get("trigger_bins", 5))
+        t_y = self.cfg.get("trigger_y", self.cfg.get("trigger_bins", 5))
+        t2d = self.cfg.get("trigger_bins", 5)
 
-        # Step 2: Solver Fit
-        # Handle K-Folds vs Single Split
+        if policy == "original_coupled":
+            # Traditional check: total 2D bin count unlocks both axes at once.
+            # This preserves the original ROS2 behaviour exactly.
+            if coverage_dict["2d"] >= t2d:
+                if self.current_features_x == ["bias"]:  # Only act on first unlock
+                    self.current_features_x = self.master_recipe_x
+                    self.current_features_y = self.master_recipe_y
+                    self.unlock_moments["activation"] = event_idx
+                    self.models = {
+                        "x": None,
+                        "y": None,
+                    }  # Reset solvers for shape change
 
+        elif policy in ("decoupled_shared", "fully_decoupled"):
+            # Asymmetric: X and Y unlock independently.
+            # Note: Radial Concentric bypasses this path in predict() regardless,
+            # but we still update current_features_x/y so the unlock log is honest.
+
+            # Horizontal unlock
+            if self.current_features_x == ["bias"] and coverage_dict["x"] >= t_x:
+                x_features = [
+                    f
+                    for f in self.master_recipe_x
+                    if f in self.feature_categories["x_only"] or f == "bias"
+                ]
+                # Guard: if recipe has no x_only terms (e.g. pure interaction),
+                # skip the intermediate step and go straight to the full recipe.
+                self.current_features_x = (
+                    x_features if len(x_features) > 1 else self.master_recipe_x
+                )
+                self.unlock_moments["x_unlock"] = event_idx
+
+            # Vertical unlock
+            if self.current_features_y == ["bias"] and coverage_dict["y"] >= t_y:
+                y_features = [
+                    f
+                    for f in self.master_recipe_y
+                    if f in self.feature_categories["y_only"] or f == "bias"
+                ]
+                self.current_features_y = (
+                    y_features if len(y_features) > 1 else self.master_recipe_y
+                )
+                self.unlock_moments["y_unlock"] = event_idx
+
+            # Interaction rejoin (decoupled_shared only)
+            # Once both axes are unlocked, promote both to the full recipe
+            if policy == "decoupled_shared":
+                both_unlocked = coverage_dict["x"] >= t_x and coverage_dict["y"] >= t_y
+                if both_unlocked and self.current_features_x != self.master_recipe_x:
+                    self.current_features_x = self.master_recipe_x
+                    self.current_features_y = self.master_recipe_y
+                    self.unlock_moments["interaction_unlock"] = event_idx
+
+        # --- SOLVER FIT ---
         # Handle K-Folds vs Single Split
         if isinstance(split_data, list):
-            fold_mses, all_params_x, all_params_y = [], [], []
+            all_params_x, all_params_y = [], []
             for train_samples, val_samples in split_data:
-                if len(train_samples) < 3:
+                if len(train_samples) < 5:
                     continue
 
-                t_dx, t_dy = (
-                    train_samples[:, 0] - self.cx,
-                    train_samples[:, 1] - self.cy,
-                )
-                A_train = self._get_matrix(t_dx, t_dy, self.current_features)
-                mx, my = self._get_solver("x"), self._get_solver("y")
-                mx.fit(A_train, train_samples[:, 2])
-                my.fit(A_train, train_samples[:, 3])
+                px, py = self._fit_step(train_samples)
+                if px is not None:
+                    all_params_x.append(px)
+                    all_params_y.append(py)
 
-                v_dx, v_dy = val_samples[:, 0] - self.cx, val_samples[:, 1] - self.cy
-                A_val = self._get_matrix(v_dx, v_dy, self.current_features)
-                pvx, pvy = A_val @ mx.coef_, A_val @ my.coef_
-                fold_mses.append(
-                    np.mean(
-                        (val_samples[:, 2] - pvx) ** 2 + (val_samples[:, 3] - pvy) ** 2
-                    )
-                )
-                all_params_x.append(mx.coef_)
-                all_params_y.append(my.coef_)
-
-            if fold_mses:
+            if all_params_x:
                 self.params["x"] = np.mean(all_params_x, axis=0)
                 self.params["y"] = np.mean(all_params_y, axis=0)
-                self._last_cv_mse = np.mean(fold_mses)
 
-            # Optional: Production retrain on all data
+            # Production retrain: use the full reservoir (union of all folds)
+            # NOTE: Flattening all fold train+val data rather than only fold[0]
+            # to ensure we train on the complete dataset, not just one fold's worth.
             if self.cfg.get("retrain_on_full_data", True):
-                full_data = np.concatenate([ts for ts, _ in split_data], axis=0)
-                self._simple_fit(full_data)
+                all_data = np.vstack([np.vstack([ts, vs]) for ts, vs in split_data])
+                px, py = self._fit_step(all_data)
+                if px is not None:
+                    self.params["x"], self.params["y"] = px, py
         else:
-            train_samples, _ = split_data
-            self._simple_fit(train_samples)
+            train_samples, val_samples = split_data
+            px, py = self._fit_step(train_samples)
+            if px is not None:
+                self.params["x"], self.params["y"] = px, py
 
-    def _simple_fit(self, data):
+            # Production retrain: include validation data in final fit
+            if self.cfg.get("retrain_on_full_data", True):
+                full_data = np.vstack([train_samples, val_samples])
+                px, py = self._fit_step(full_data)
+                if px is not None:
+                    self.params["x"], self.params["y"] = px, py
+
+    # def _simple_fit(self, data):
+    def _fit_step(self, data):
+        """Fits both axis models on the provided data slice. Returns (coef_x, coef_y)."""
         if len(data) < 3:
-            return
+            return None, None
 
-        train_gx, train_gy, train_ex, train_ey = (
-            data[:, 0],
-            data[:, 1],
-            data[:, 2],
-            data[:, 3],
-        )
-        train_dx, train_dy = train_gx - self.cx, train_gy - self.cy
+        dx, dy = data[:, 0] - self.cx, data[:, 1] - self.cy
 
-        if self.name == "Radial Concentric" and self.current_features != ["bias"]:
+        # Radial Concentric uses its own decoupled matrix construction
+        if self.name == "Radial Concentric" and self.current_features_x != ["bias"]:
             # Solve X and Y using ONLY their respective radial components
-            Ax = np.column_stack([np.ones_like(train_dx), train_dx / self.cx])
-            Ay = np.column_stack([np.ones_like(train_dy), train_dy / self.cy])
-
-            mx, my = self._get_solver("x"), self._get_solver("y")
-            self.models["x"] = mx.fit(Ax, train_ex)
-            self.models["y"] = my.fit(Ay, train_ey)
-            self.params["x"], self.params["y"] = (
-                self.models["x"].coef_,
-                self.models["y"].coef_,
-            )
+            Ax = np.column_stack([np.ones_like(dx), dx / self.cx])
+            Ay = np.column_stack([np.ones_like(dy), dy / self.cy])
         else:
+            Ax = self._get_matrix(dx, dy, self.current_features_x)
+            Ay = self._get_matrix(dx, dy, self.current_features_y)
 
-            A = self._get_matrix(train_dx, train_dy, self.current_features)
-            mx, my = self._get_solver("x"), self._get_solver("y")
-            # Fit models
-            self.models["x"], self.models["y"] = mx.fit(A, train_ex), my.fit(
-                A, train_ey
-            )
-            # Save coefficients
-            self.params["x"], self.params["y"] = (
-                self.models["x"].coef_,
-                self.models["y"].coef_,
-            )
+        # Fit models separately for X and Y using their respective active feature sets
+        mx = self._get_solver("x", Ax.shape[1]).fit(Ax, data[:, 2])
+        my = self._get_solver("y", Ay.shape[1]).fit(Ay, data[:, 3])
+
+        # Save coefficients
+        self.models["x"], self.models["y"] = mx, my
+        return mx.coef_, my.coef_
+
 
 class CalibrationLearner(Node):
     def __init__(self):
@@ -486,12 +605,18 @@ class CalibrationLearner(Node):
                 # Regressor settings
                 ("solver", "ridge"),  # "huber", "ridge", "linear"
                 ("solver_alpha", 1.0),  # TODO: Regularization strength for Ridge
-                # ("trigger_bins", 10),
                 ("bic_hysteresis", 3.0),  # Threshold to switch models
-                ("rmse_hysteresis", 2.0),
+                ("rmse_hysteresis", 1.0),
                 ("joy_button_index", 10),  # For recording, default to 'A' or 'X' button
                 ("joy_resume_button_index", 0),  # Xbox 'A' button is typically index 0
-
+                ("error_log_filename", "gaze_error_log.csv"),
+                # Unlocking policy for feature graduation
+                (
+                    "policy",
+                    "original_coupled",
+                ),  # "original_coupled", "decoupled_shared", "fully_decoupled"
+                ("trigger_x", 5),  # Bins along X axis before X-features unlock
+                ("trigger_y", 5),  # Bins along Y axis before Y-features unlock
                 ("error_log_filename", "gaze_error_log.csv"),
             ],
         )
@@ -514,6 +639,9 @@ class CalibrationLearner(Node):
             "spatial_val_ratio": self.get_parameter("spatial_val_ratio").value,
             "cv_include_diagonals": self.get_parameter("cv_include_diagonals").value,
             "retrain_on_full_data": self.get_parameter("retrain_on_full_data").value,
+            "policy": self.get_parameter("policy").value,
+            # "trigger_x": self.get_parameter("trigger_x").value,
+            # "trigger_y": self.get_parameter("trigger_y").value,
         }
 
         # 3. State
@@ -524,26 +652,39 @@ class CalibrationLearner(Node):
             ),
             GazeCorrectionFramework("Bias", ["bias"], self.cfg | {"trigger_bins": 1}),
             GazeCorrectionFramework(
-                "Linear", ["bias", "lin_x", "lin_y"], self.cfg | {"trigger_bins": 6}
+                "Linear",
+                ["bias", "lin_x", "lin_y"],
+                self.cfg
+                | {"trigger_x": 6, "trigger_y": 6, "policy": "decoupled_shared"},
             ),
             GazeCorrectionFramework(
                 "Radial Concentric",
                 ["bias", "radial_concentric"],
-                self.cfg | {"trigger_bins": 5},
+                self.cfg | {"trigger_bins": 3},
             ),
             GazeCorrectionFramework(
-                "Simple Radial", ["bias", "radial"], self.cfg | {"trigger_bins": 8}
+                "Simple Radial",
+                ["bias", "radial"],
+                self.cfg
+                | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
             ),
             GazeCorrectionFramework(
-                "Sigmoid X+Y", ["bias", "sigmoid"], self.cfg | {"trigger_bins": 10}
+                "Sigmoid X+Y",
+                ["bias", "sigmoid"],
+                self.cfg
+                | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
             ),
             GazeCorrectionFramework(
                 "Radial Complete",
                 ["bias", "radial_universal"],
-                self.cfg | {"trigger_bins": 15},
+                self.cfg
+                | {"trigger_x": 8, "trigger_y": 8, "policy": "decoupled_shared"},
             ),
             GazeCorrectionFramework(
-                "Conic", ["bias", "full_conic"], self.cfg | {"trigger_bins": 20}
+                "Conic",
+                ["bias", "full_conic"],
+                self.cfg
+                | {"trigger_x": 8, "trigger_y": 8, "policy": "decoupled_shared"},
             ),
         ]
 
@@ -578,7 +719,9 @@ class CalibrationLearner(Node):
 
         # 1. Session Folder Setup
         self.session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.log_dir = os.path.join(os.getcwd(), 'user_recordings', f"session_{self.session_name}")
+        self.log_dir = os.path.join(
+            os.getcwd(), "user_recordings", f"session_{self.session_name}"
+        )
         os.makedirs(self.log_dir, exist_ok=True)
 
         # 2. File Paths
@@ -586,10 +729,9 @@ class CalibrationLearner(Node):
         self.file_preq = os.path.join(self.log_dir, "history_prequential.csv")
         self.file_rmse = os.path.join(self.log_dir, "history_rmse.csv")
         self.file_user = os.path.join(self.log_dir, "user_report_errors.csv")
-        
+
         self._init_csv_headers()
         self.last_hardware_ts = "0.0"  # This will store the Pupil Clock time
-
 
         # 5. Prepare error log
         self.create_subscription(Joy, "joy", self.joy_cb, 10)
@@ -612,6 +754,7 @@ class CalibrationLearner(Node):
         self.get_logger().info(
             f"Hysteresis Thresholds - BIC: {self.get_parameter('bic_hysteresis').value}, RMSE: {self.get_parameter('rmse_hysteresis').value}"
         )
+
         self.get_logger().info("--- Competitors: ---")
         for m in self.competitors:
             self.get_logger().info(
@@ -637,19 +780,22 @@ class CalibrationLearner(Node):
         if len(msg.gaze_samples) != len(msg.target_samples):
             self.get_logger().error("Mismatched sample counts in segment!")
             return
-        
+
         # Save to CSVs
         now = self.get_clock().now().to_msg()
-        system_ts = f"{now.sec}.{now.nanosec:09d}" # Ensure leading zeros for nanoseconds
+        system_ts = (
+            f"{now.sec}.{now.nanosec:09d}"  # Ensure leading zeros for nanoseconds
+        )
         last_sample = msg.gaze_samples[-1]
-        self.last_hardware_ts = f"{last_sample.header.stamp.sec}.{last_sample.header.stamp.nanosec:09d}"
+        self.last_hardware_ts = (
+            f"{last_sample.header.stamp.sec}.{last_sample.header.stamp.nanosec:09d}"
+        )
 
         gx = np.array([p.x for p in msg.gaze_samples])
         gy = np.array([p.y for p in msg.gaze_samples])
         tx = np.array([p.x for p in msg.target_samples])
         ty = np.array([p.y for p in msg.target_samples])
         ts = np.array([p.timestamp_unix_seconds for p in msg.gaze_samples])
-    
 
         # Error relative to target (Ground Truth)
         # ex, ey = gx - tx, gy - ty
@@ -670,21 +816,22 @@ class CalibrationLearner(Node):
 
             # AULC is the mean of errors seen SO FAR
             aulc = np.mean(model.prequential_errors)
-            
+
             preq_row.append(preq_rmse)
             aulc_row.append(aulc)
-
 
         ### Phase 2: Update Shared Reservoir ###
         self.reservoir.add_segment(gx, gy, ex, ey)
         split_data = self.reservoir.get_split()
-
-        # train_pool, val_pool
+        coverage = self.reservoir.coverage
 
         # Phase 3: Shared Training ###
         rmse_row = []
         for model in self.competitors:
-            model.train(split_data, len(self.reservoir), self.event_count)
+            if len(self.reservoir) == 0:
+                return
+            # model.train(split_data, len(self.reservoir), self.event_count)
+            model.train(split_data, self.reservoir.coverage, self.event_count)
 
             # Update Macro-RMSE (error across all bins)
             bin_mses = []
@@ -692,26 +839,27 @@ class CalibrationLearner(Node):
                 s = np.array(samples)
                 px, py = model.predict(s[:, 0], s[:, 1])
                 bin_mses.append(np.mean((s[:, 2] - px) ** 2 + (s[:, 3] - py) ** 2))
-            model.macro_rmse_history.append(np.sqrt(np.mean(bin_mses)))
 
-            rmse_row.append(model.macro_rmse_history[-1] if model.macro_rmse_history else 0.0)
+            macro_rmse = np.sqrt(np.mean(bin_mses))
+            model.macro_rmse_history.append(macro_rmse)
+
+            rmse_row.append(macro_rmse)
 
         # Phase 4: Model selection
         self.run_selection_tournament()
 
-
         meta = [
-            system_ts, 
-            self.last_hardware_ts, 
-            self.event_count, 
+            system_ts,
+            self.last_hardware_ts,
+            self.event_count,
             self.reservoir.__len__(),
             msg.button_id,
-            self.competitors[self.active_idx].name
+            self.competitors[self.active_idx].name,
         ]
         self._append_to_csv(self.file_preq, meta + preq_row)
         self._append_to_csv(self.file_aulc, meta + aulc_row)
         self._append_to_csv(self.file_rmse, meta + rmse_row)
-        
+
         self.event_count += 1
 
         # Publish model update and visuals
@@ -733,15 +881,16 @@ class CalibrationLearner(Node):
             for samples in self.reservoir.bins.values():
                 s = np.array(samples)
                 px, py = model.predict(s[:, 0], s[:, 1])
+                # if model.params["x"] is None:
+                #     px, py = np.zeros_like(px), np.zeros_like(py)
                 mse = np.mean((s[:, 2] - px) ** 2 + (s[:, 3] - py) ** 2)
                 bin_mses.append(mse)
 
             macro_mse = np.mean(bin_mses)
             macro_rmse = np.sqrt(macro_mse)
-            model.macro_rmse_history.append(macro_rmse)
 
             # BIC = ln(N_bins) * k + N_bins * ln(MSE_macro)
-            k_total = model.k * 2
+            # k_total = model.k * 2
             bic = np.log(n_bins) * model.k_total + n_bins * np.log(macro_mse + 1e-6)
             # AIC = 2 * k - 2 * ln(Likelihood), where Likelihood ~ exp(-N_bins * MSE_macro)
             aic = 2 * model.k_total + n_bins * np.log(macro_mse + 1e-6)
@@ -752,7 +901,6 @@ class CalibrationLearner(Node):
             scores.append(
                 bic if strategy == "BIC" else aic if strategy == "AIC" else macro_rmse
             )
-            # Pending to add AIC
 
         # Hysteresis Logic
         challenger_idx = np.argmin(scores)
@@ -768,12 +916,14 @@ class CalibrationLearner(Node):
 
     def reset_calibration(self):
         """Dumps current data, clears memory, and resets models for a fresh start."""
-        self.get_logger().warn("RESUME BUTTON PRESSED: Resetting calibration session...")
+        self.get_logger().warn(
+            "RESUME BUTTON PRESSED: Resetting calibration session..."
+        )
 
         # 1. Dump current data with a unique label so it's not overwritten
         reset_label = f"reset_event_{self.event_count}"
         self.dump_reservoir(label=reset_label)
-        
+
         # 2. Clear the Reservoir
         self.reservoir = SpatialReservoir(self.cfg)
 
@@ -781,7 +931,7 @@ class CalibrationLearner(Node):
         for model in self.competitors:
             model.params = {"x": None, "y": None}
             model.models = {"x": None, "y": None}
-            
+
             # model.prequential_errors = []
             # model.aulc_history = []
             # model.macro_rmse_history = []
@@ -791,7 +941,8 @@ class CalibrationLearner(Node):
 
             # This triggers the "Learning" phase again
             if not model.is_identity:
-                model.current_features = ["bias"]
+                model.current_features_x = ["bias"]
+                model.current_features_y = ["bias"]
                 model.unlock_moments = {}
 
         # 4. Reset tournament state
@@ -806,15 +957,15 @@ class CalibrationLearner(Node):
         """Adds a special marker to the user report log to indicate a reset occurred."""
         now = self.get_clock().now().to_msg()
         system_ts = f"{now.sec}.{now.nanosec:09d}"
-        
+
         row = [
-            system_ts, 
-            self.last_hardware_ts,  
-            self.event_count, 
-            "ACTION_RESET_RESUME", # Marker
-            0, # Bins are now 0
-            0, # Samples are now 0
-            0.0
+            system_ts,
+            self.last_hardware_ts,
+            self.event_count,
+            "ACTION_RESET_RESUME",  # Marker
+            0,  # Bins are now 0
+            0,  # Samples are now 0
+            0.0,
         ]
         self._append_to_csv(self.file_user, row)
 
@@ -831,7 +982,7 @@ class CalibrationLearner(Node):
         if winner.params["x"] is None or winner.params["y"] is None:
             msg.model_type = CalibrationModel.TYPE_BIAS
             cx[5], cy[5] = 0.0, 0.0
-            
+
         elif winner.name == "Bias":
             msg.model_type = CalibrationModel.TYPE_BIAS
             cx[5], cy[5] = float(px[0]), float(py[0])
@@ -1010,7 +1161,7 @@ class CalibrationLearner(Node):
         # If a save_name is provided, write it to the log directory
         if save_name is not None:
             path = os.path.join(self.log_dir, save_name)
-            fig.savefig(path, bbox_inches='tight')
+            fig.savefig(path, bbox_inches="tight")
 
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
@@ -1037,17 +1188,35 @@ class CalibrationLearner(Node):
 
     def _init_csv_headers(self):
         # For errors
-        header = ["timestamp", "pupil_hardware_timestamp", "event_count", "bin_count","button_id", "active_model"] + [m.name for m in self.competitors]
+        header = [
+            "timestamp",
+            "pupil_hardware_timestamp",
+            "event_count",
+            "bin_count",
+            "button_id",
+            "active_model",
+        ] + [m.name for m in self.competitors]
         for f in [self.file_aulc, self.file_preq, self.file_rmse]:
-            with open(f, 'w', newline='') as csvfile:
+            with open(f, "w", newline="") as csvfile:
                 csv.writer(csvfile).writerow(header)
 
         # For user-reported errors, we log the state at the moment of the report
-        with open(self.file_user, 'w', newline='') as csvfile:
-            csv.writer(csvfile).writerow(["timestamp", "pupil_hardware_timestamp", "event_count", "bin_count", "active_model", "num_bins", "total_samples", "current_rmse"])
-            
+        with open(self.file_user, "w", newline="") as csvfile:
+            csv.writer(csvfile).writerow(
+                [
+                    "timestamp",
+                    "pupil_hardware_timestamp",
+                    "event_count",
+                    "bin_count",
+                    "active_model",
+                    "num_bins",
+                    "total_samples",
+                    "current_rmse",
+                ]
+            )
+
     def _append_to_csv(self, path, row):
-        with open(path, 'a', newline='') as f:
+        with open(path, "a", newline="") as f:
             csv.writer(f).writerow(row)
 
     def log_user_error(self):
@@ -1058,13 +1227,13 @@ class CalibrationLearner(Node):
 
         # We add self.last_hardware_ts here
         row = [
-            system_ts, 
-            self.last_hardware_ts,  
-            self.event_count, 
+            system_ts,
+            self.last_hardware_ts,
+            self.event_count,
             len(self.reservoir.bins),
-            active.name, 
+            active.name,
             sum(len(b) for b in self.reservoir.bins.values()),
-            active.macro_rmse_history[-1] if active.macro_rmse_history else 0.0
+            active.macro_rmse_history[-1] if active.macro_rmse_history else 0.0,
         ]
         self._append_to_csv(self.file_user, row)
 
@@ -1074,8 +1243,8 @@ class CalibrationLearner(Node):
         sub_ts = datetime.now().strftime("%H%M%S")
         filename = f"reservoir_dump_{label}_{sub_ts}.csv"
         path = os.path.join(self.log_dir, filename)
-        
-        with open(path, 'w', newline='') as f:
+
+        with open(path, "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(["bin_x", "bin_y", "gaze_x", "gaze_y", "err_x", "err_y"])
             for (bx, by), samples in self.reservoir.bins.items():
@@ -1091,27 +1260,30 @@ class CalibrationLearner(Node):
         """Generates and saves all current visualization plots to the session folder."""
         timestamp = datetime.now().strftime("%H%M%S")
         prefix = f"plot_{label}_ev{self.event_count}_{timestamp}"
-        
+
         self.get_logger().info(f"Dumping plots with prefix: {prefix}")
-        
+
         # Get current data split for the reservoir plot
         train_flat, val_flat = self.reservoir._get_stratified_split()
-        
+
         # We call our existing plot functions but tell them to save to disk
         self._plot_reservoir(train_flat, val_flat, save_name=f"{prefix}_reservoir.png")
         self._plot_tournament(save_name=f"{prefix}_tournament.png")
         self._plot_profile(save_name=f"{prefix}_profile.png")
         self._plot_prediction_field(save_name=f"{prefix}_map.png")
 
+
 def main():
     rclpy.init()
     node = CalibrationLearner()
     try:
         rclpy.spin(node)
-    except (KeyboardInterrupt):
+    except KeyboardInterrupt:
         pass
     finally:
-        node.get_logger().info("Shutting down: Saving final reservoir and flushing logs...")
+        node.get_logger().info(
+            "Shutting down: Saving final reservoir and flushing logs..."
+        )
         node.on_shutdown()
 
         node.destroy_node()
