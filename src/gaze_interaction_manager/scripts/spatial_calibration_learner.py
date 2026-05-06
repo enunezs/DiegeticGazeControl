@@ -187,14 +187,17 @@ class SpatialReservoir:
         n_folds = self.cfg.get("n_folds", 5)
         include_diagonals = self.cfg.get("cv_include_diagonals", False)
 
+        # 1. If too few bins, fallback to single split to avoid empty folds
         if len(all_bin_ids) < n_folds * 2:
             return [self._get_stratified_split()]
 
+        # 2. Assign bins to folds using checkerboard pattern: (bx + by) % n_folds
         folds_map = {i: [] for i in range(n_folds)}
         for bx, by in all_bin_ids:
             fold_idx = (bx + by) % n_folds
             folds_map[fold_idx].append((bx, by))
 
+        # 3. For each fold, create train/val split with buffer zones around test bins
         kfolds_data = []
         for k in range(n_folds):
             test_bin_ids = set(folds_map[k])
@@ -289,7 +292,6 @@ class GazeCorrectionFramework:
                 "tangent_1",
                 "tangent_2",
                 "sigmoid",
-                "sigmoid_edge",
             ],
         }
 
@@ -336,12 +338,7 @@ class GazeCorrectionFramework:
             ],
             "sig_x": lambda dx, dy, r, r2: [np.tanh(dx / (self.cx / 2))],
             "sig_y": lambda dx, dy, r, r2: [np.tanh(dy / (self.cy / 2))],
-            "sigmoid": lambda dx, dy, r, r2: [
-                np.tanh(dx / 400),
-                np.tanh(dy / 300),
-                np.ones_like(dx),
-            ],
-            "sigmoid_edge": lambda dx, dy, r, r2: [
+            "sigmoid": lambda dx, dy, r, r2: [  # Correction = A x tanh(normalized_input) + bias
                 np.tanh(dx / (self.cx / 2)),
                 np.tanh(dy / (self.cy / 2)),
                 np.ones_like(dx),
@@ -458,8 +455,8 @@ class GazeCorrectionFramework:
 
         # --- DECOUPLED UNLOCKING LOGIC ---
         policy = self.cfg.get("policy", "original_coupled")
-        t_x = self.cfg.get("trigger_x", self.cfg.get("trigger_bins", 5))
-        t_y = self.cfg.get("trigger_y", self.cfg.get("trigger_bins", 5))
+        t_x = self.cfg.get("trigger_x", self.cfg.get("trigger_x", 5))
+        t_y = self.cfg.get("trigger_y", self.cfg.get("trigger_y", 5))
         t2d = self.cfg.get("trigger_bins", 5)
 
         if policy == "original_coupled":
@@ -606,7 +603,7 @@ class CalibrationLearner(Node):
                 ("solver", "ridge"),  # "huber", "ridge", "linear"
                 ("solver_alpha", 1.0),  # TODO: Regularization strength for Ridge
                 ("bic_hysteresis", 3.0),  # Threshold to switch models
-                ("rmse_hysteresis", 1.0),
+                ("rmse_hysteresis", 2.0),
                 ("joy_button_index", 10),  # For recording, default to 'A' or 'X' button
                 ("joy_resume_button_index", 0),  # Xbox 'A' button is typically index 0
                 ("error_log_filename", "gaze_error_log.csv"),
@@ -757,8 +754,16 @@ class CalibrationLearner(Node):
 
         self.get_logger().info("--- Competitors: ---")
         for m in self.competitors:
+            features = (
+                m.cfg.get(
+                    "trigger_bins",
+                    m.cfg.get("trigger_x", m.cfg.get("trigger_y", "Unlocked")),
+                )
+                if m.is_identity
+                else m.current_features
+            )
             self.get_logger().info(
-                f" - {m.name} (Features: {m.master_recipe}, Trigger Bins: {m.cfg['trigger_bins']})"
+                f" - {m.name} (Features: {m.master_recipe}, Policy: {m.cfg.get('policy', 'Not Set')}, Trigger: {features})"
             )
         self.get_logger().info(
             f"Spatial Reservoir Config: Bin Size={self.cfg['bin_size']}, Max Samples/Bin={self.cfg['samples_per_bin']}, Validation Size/Bin={self.cfg['val_size']}, Thinning Stride={self.cfg['thinning_stride']}"
@@ -1037,14 +1042,15 @@ class CalibrationLearner(Node):
 
         elif winner.name == "Sigmoid X+Y":
             msg.model_type = CalibrationModel.TYPE_SIGMOIDAL
-            # Recipe: [tanh(dx/400), tanh(dy/300), bias]
+            # Recipe: [0,1,2,3,4, bias, sigmoid_amp, sigmoid_scale
+            # tanh(dx/400), tanh(dy/300)]
+            cx[5] = float(px[2])  # Bias
             cx[6] = float(px[0])  # Amplitude
             cx[7] = W / 2  # Fixed Scale from the recipe
-            cx[5] = float(px[2])  # Bias
 
+            cy[5] = float(py[2])  # Bias
             cy[6] = float(py[1])  # Amplitude
             cy[7] = H / 2  # Fixed Scale from the recipe
-            cy[5] = float(py[2])  # Bias
 
         msg.coeffs_x = [float(c) for c in cx]
         msg.coeffs_y = [float(c) for c in cy]
