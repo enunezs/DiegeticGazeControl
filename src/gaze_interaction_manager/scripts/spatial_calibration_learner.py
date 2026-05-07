@@ -665,11 +665,14 @@ class CalibrationLearner(Node):
                 self.cfg
                 | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
             ),
+            # GazeCorrectionFramework(
+            #     "Sigmoid X+Y",
+            #     ["bias", "sigmoid"],
+            #     self.cfg
+            #     | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
+            # ),
             GazeCorrectionFramework(
-                "Sigmoid X+Y",
-                ["bias", "sigmoid"],
-                self.cfg
-                | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
+                "Raw 2", ["identity"], self.cfg | {"trigger_bins": 0}
             ),
             GazeCorrectionFramework(
                 "Radial Complete",
@@ -689,6 +692,10 @@ class CalibrationLearner(Node):
         self.event_count = 0
         self.bridge = CvBridge()
         self.start_time = None
+
+        # --- Evolution Tracking for plotting ---
+        self.winner_idx_history = []
+        self.system_prequential_errors = []
 
         # 4. ROS Setup
         self.create_subscription(
@@ -825,6 +832,9 @@ class CalibrationLearner(Node):
             preq_row.append(preq_rmse)
             aulc_row.append(aulc)
 
+        self.system_prequential_errors.append(self.competitors[self.active_idx].prequential_errors[-1])
+
+
         ### Phase 2: Update Shared Reservoir ###
         self.reservoir.add_segment(gx, gy, ex, ey)
         split_data = self.reservoir.get_split()
@@ -918,6 +928,7 @@ class CalibrationLearner(Node):
                     f"SWITCH: {self.competitors[self.active_idx].name} -> {self.competitors[challenger_idx].name}"
                 )
                 self.active_idx = challenger_idx
+        self.winner_idx_history.append(self.active_idx)
 
     def reset_calibration(self):
         """Dumps current data, clears memory, and resets models for a fresh start."""
@@ -928,6 +939,10 @@ class CalibrationLearner(Node):
         # 1. Dump current data with a unique label so it's not overwritten
         reset_label = f"reset_event_{self.event_count}"
         self.dump_reservoir(label=reset_label)
+
+        # Clear tracking history
+        self.winner_idx_history = []
+        self.system_prequential_errors = []
 
         # 2. Clear the Reservoir
         self.reservoir = SpatialReservoir(self.cfg)
@@ -1113,15 +1128,54 @@ class CalibrationLearner(Node):
         self._pub_plt(fig, "quiver", save_name=save_name)
 
     def _plot_tournament(self, save_name=None):
-        fig, ax = plt.subplots(figsize=(6, 4))
-        strategy = self.get_parameter("selection_strategy").value
-        for m in self.competitors:
-            data = m.bic_history if strategy == "BIC" else m.macro_rmse_history
-            if data:
-                ax.plot(data, label=m.name)
-        ax.set_title(f"Tournament Status ({strategy})")
-        ax.legend(fontsize="x-small")
-        ax.grid(alpha=0.2)
+        """Refactored Evolution Dashboard with Model Shading and Unlocks."""
+        if not self.system_prequential_errors:
+            return
+
+        fig, ax1 = plt.subplots(figsize=(10, 6))
+        
+        ev_range = np.arange(len(self.system_prequential_errors))
+        sys_inst = np.array(self.system_prequential_errors)
+        raw_inst = np.array(self.competitors[0].prequential_errors)
+        
+        # 1. Background Model Shading
+        unique_models = [m.name for m in self.competitors]
+        cmap = plt.get_cmap('Pastel1')
+        
+        if len(self.winner_idx_history) > 0:
+            curr_start = 0
+            curr_idx = self.winner_idx_history[0]
+            for i, val in enumerate(self.winner_idx_history):
+                # If model changed or we reached the end
+                if val != curr_idx or i == len(self.winner_idx_history) - 1:
+                    ax1.axvspan(curr_start, i, color=cmap(curr_idx % 9), alpha=0.3, zorder=0)
+                    # Add label at the top of the shaded region
+                    ax1.text((curr_start + i)/2, ax1.get_ylim()[1] * 0.9, 
+                            unique_models[curr_idx], ha='center', fontsize=8, 
+                            fontweight='bold', color='dimgrey', zorder=5)
+                    curr_start, curr_idx = i, val
+
+        # 2. Cumulative RMSE (AULC) Lines
+        sys_cum = np.cumsum(sys_inst) / (ev_range + 1)
+        raw_cum = np.cumsum(raw_inst) / (ev_range + 1)
+        
+        ax1.plot(raw_cum, color='firebrick', ls='--', lw=2, label='Baseline (Raw) AULC')
+        ax1.plot(sys_cum, color='navy', lw=3, label='System (Winner) AULC')
+
+        # 3. Feature Unlock Moments (Vertical Lines)
+        # Check the active model for its graduation milestones
+        winner = self.competitors[self.active_idx]
+        for label, event_idx in winner.unlock_moments.items():
+            ax1.axvline(x=event_idx, color='green', linestyle=':', alpha=0.6)
+            ax1.text(event_idx, ax1.get_ylim()[1] * 0.1, label, 
+                    rotation=90, verticalalignment='bottom', fontsize=7, color='green')
+
+        ax1.set_title(f"Tournament Evolution: {winner.name} Active", loc='left', fontweight='bold')
+        ax1.set_xlabel("Calibration Event Index")
+        ax1.set_ylabel("Mean Error (AULC) [px]")
+        ax1.legend(loc='upper right', fontsize='small')
+        ax1.grid(True, alpha=0.15)
+
         self._pub_plt(fig, "tourney", save_name=save_name)
 
     def _plot_profile(self, save_name=None):
@@ -1187,8 +1241,9 @@ class CalibrationLearner(Node):
         # Assuming index 0 for 'A' button. Add self.resume_btn_idx to __init__
         current_resume = msg.buttons[self.resume_btn_idx]
         if current_resume == 1 and self.last_resume_button_state == 0:
-            self.reset_calibration()
             self.dump_all_plots(label="user_request")
+
+            self.reset_calibration()
 
         self.last_resume_button_state = current_resume
 
@@ -1259,7 +1314,10 @@ class CalibrationLearner(Node):
         self.get_logger().info(f"Reservoir saved to: {filename}")
 
     def on_shutdown(self):
-        self.dump_all_plots(label="user_request")
+        self.get_logger().info("Performing final data dump...")
+        # Get plots of the final state
+        self.dump_all_plots(label="shutdown")
+        # Save the full CSV of all samples collected
         self.dump_reservoir(label="final_session")
 
     def dump_all_plots(self, label="manual"):

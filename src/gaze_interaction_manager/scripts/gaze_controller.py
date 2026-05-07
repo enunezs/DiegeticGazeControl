@@ -88,6 +88,8 @@ class GazeController(Node):
             maxlen=int(self.get_parameter("history_length_s").value * 40)
         )
 
+        self.get_logger().info(f"Compensation Active: {self.get_parameter('compensation_active').value}") 
+
         self.latest_all_buttons = []  # <--- Stores the snapshot for background drawing
 
         # --- 3. State & Metrics ---
@@ -306,7 +308,8 @@ class GazeController(Node):
         with self._lock:
             if self.is_recording:
                 # Use the exact start of the saccade provided by the glasses
-                event_start_ts = msg.start_time_ns / 1e9
+                # event_start_ts = msg.start_time_ns / 1e9
+                event_start_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
                 # self.get_logger().info(
                 #     f"Saccade detected! Terminating segment at {event_start_ts:.3f}"
                 # )
@@ -315,7 +318,9 @@ class GazeController(Node):
     def blink_cb(self, msg: GazeEvent):
         with self._lock:
             if self.is_recording:
-                event_start_ts = msg.start_time_ns / 1e9
+                # event_start_ts = msg.start_time_ns / 1e9
+                event_start_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
+
                 # self.get_logger().info(
                 #     f"Blink detected! Terminating segment at {event_start_ts:.3f}"
                 # )
@@ -411,27 +416,28 @@ class GazeController(Node):
         # Rising edge: a new ACTIVE signal while we are not yet recording
         if is_active and not self.is_recording:
             self.is_recording = True
-            self.button_engaged = True
+            # self.button_engaged = True
             self.current_button_id = incoming_id
             self.rec_start_ts = adjusted_ts
-            self.get_logger().info(f"[Standard] Recording started: {incoming_id}")
+            self.get_logger().debug(f"[Standard] Recording started: {incoming_id}")
             return
 
         # While recording: allow lock switch to a different button
         if self.is_recording and is_active and incoming_id != self.current_button_id:
-            self.get_logger().debug(
+            self.get_logger().warning(
                 f"[Standard] Switching lock: {self.current_button_id} → {incoming_id}"
             )
             self.current_button_id = incoming_id
 
         # Falling edge: button released while we were recording
-        if not is_active and self.button_engaged and incoming_id == self.current_button_id:
-            self.button_engaged = False
+        if not is_active :
+            # and self.button_engaged and incoming_id == self.current_button_id
+            # self.button_engaged = False
             if self.is_recording:
                 terminal_trim_s = self.get_parameter("terminal_trim_ms").value / 1000.0
                 end_point = self.last_valid_btn_ts - terminal_trim_s
                 self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
-                self.get_logger().info(
+                self.get_logger().debug(
                     f"[Standard] Button released. Segment ended at {end_point:.3f}"
                 )
 
@@ -534,43 +540,68 @@ class GazeController(Node):
     def _trigger_segment_end(self, end_ts, reason="UNKNOWN"):
         """Unified finalization logic"""
         if not self.is_recording:
+            self.get_logger().info(
+                f"Attempted to end segment for reason {reason} at {end_ts:.3f}, but no recording was active."
+            )
             return
 
-        # self.get_logger().info(f"Finalizing segment: {reason} at {end_ts:.3f}")
+        # self.get_logger().info(f"Processing segment: {reason} at {end_ts:.3f}")
+
 
         # 1. Slice and Sort Gaze
-        data = (
+        # There is an issue with the raw_idx
+        # Lets see first the data: (ts, x, y)
+        # self.get_logger().info(f"Raw index info: Min ts {np.min(self.gaze_history[:, 0])}, Max ts {np.max(self.gaze_history[:, 0])}")
+        # self.get_logger().info(f"Gaze data at ptr {self.gaze_ptr-1}: {self.gaze_history[self.gaze_ptr-1]}")
+        # self.get_logger().info(f"Gaze is full? {self.gaze_buffer_filled}")
+        
+        gaze_data = (
             np.roll(self.gaze_history, -self.gaze_ptr, axis=0)
             if self.gaze_buffer_filled
             else self.gaze_history[: self.gaze_ptr]
         )
+        # Is it in order?
+        # self.get_logger().info(f"Gaze data is in order: {np.all(gaze_data[:-1, 0] <= gaze_data[1:, 0])}")
+
         # Prevent out of order timestamps
-        data = data[data[:, 0] > 0]
-        data = data[np.argsort(data[:, 0])]
+        # gaze_data = gaze_data[gaze_data[:, 0] > 0]
+        # gaze_data = gaze_data[np.argsort(gaze_data[:, 0])]
+
+
 
         # 2. Windowing
-        raw_idx = np.where((data[:, 0] >= self.rec_start_ts) & (data[:, 0] <= end_ts))[0]
+        # This is always zero...
+        raw_idx = np.where((gaze_data[:, 0] >= self.rec_start_ts) & (gaze_data[:, 0] <= end_ts))[0]
 
         # Check minimum duration
-        if len(raw_idx) == 0 or len(raw_idx) < (self.start_trim_ms + self.min_samples):
+        segment_duration_ms = (raw_idx[-1] - raw_idx[0]) if len(raw_idx) > 0 else 0
+
+
+        if len(raw_idx) == 0 or segment_duration_ms < (self.start_trim_ms + self.min_samples):
             # Segment discarded
-            # self.get_logger().info(
-            #     f"Segment too short ({len(raw_idx)} samples). Discarding."
-            # )
-            pass
+            self.get_logger().info(
+                f"Segment too short ({segment_duration_ms} ms, {len(raw_idx)} samples). Discarding. Reason = {reason}"
+            )
+            
         else:
             # Post-hoc trimming: Remove the start padding (eye settling)
             trimmed_idx = raw_idx[self.start_trim_ms :]
 
-            if len(trimmed_idx) > 0:
-                trimmed_start_ts = data[trimmed_idx[0], 0]
+            trimmed_start_ts = gaze_data[trimmed_idx[0], 0]
 
-                self._publish_segment(
-                    data[trimmed_idx], 
-                    end_ts,
-                    start_ts=self.rec_start_ts,
-                    trimmed_start_ts=trimmed_start_ts
-                    )
+            self._publish_segment(
+                gaze_data[trimmed_idx], 
+                end_ts,
+                start_ts=self.rec_start_ts,
+                trimmed_start_ts=trimmed_start_ts
+                )
+            self.get_logger().info(
+                f"Segment finalized: {reason} with {len(trimmed_idx)} samples, {(end_ts - trimmed_start_ts)*1000:.3f} ms)"
+            )
+            # else:
+            #     self.get_logger().error(
+            #         f"All samples trimmed out after applying start_trim_ms. Discarding segment."
+            #     )
 
         self.is_recording = False
         self.rec_start_ts = None
