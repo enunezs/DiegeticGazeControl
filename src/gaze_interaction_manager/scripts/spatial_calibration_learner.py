@@ -665,15 +665,15 @@ class CalibrationLearner(Node):
                 self.cfg
                 | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
             ),
-            # GazeCorrectionFramework(
-            #     "Sigmoid X+Y",
-            #     ["bias", "sigmoid"],
-            #     self.cfg
-            #     | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
-            # ),
             GazeCorrectionFramework(
-                "Raw 2", ["identity"], self.cfg | {"trigger_bins": 0}
+                "Sigmoid X+Y",
+                ["bias", "sigmoid"],
+                self.cfg
+                | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
             ),
+            # GazeCorrectionFramework(
+            #     "Raw 2", ["identity"], self.cfg | {"trigger_bins": 0}
+            # ),
             GazeCorrectionFramework(
                 "Radial Complete",
                 ["bias", "radial_universal"],
@@ -993,82 +993,131 @@ class CalibrationLearner(Node):
         winner = self.competitors[self.active_idx]
 
         msg = CalibrationModel()
-        # Initialize 9-slot coefficients with zeros [x2, y2, xy, x, y, bias, sigmoid_amp, sigmoid_scale, radial_coeff]
-        cx, cy = [0.0] * 9, [0.0] * 9
+        # Initialize 10-slot coefficients with zeros
+        cx, cy = [0.0] * 10, [0.0] * 10
 
         px, py = winner.params["x"], winner.params["y"]
         W, H = 800.0, 600.0  # Normalization constants used in training
 
-        if winner.params["x"] is None or winner.params["y"] is None:
-            msg.model_type = CalibrationModel.TYPE_BIAS
-            cx[5], cy[5] = 0.0, 0.0
+        # Guard against None (Not trained yet)
+        if px is None or py is None:
+            msg.model_type = getattr(CalibrationModel, 'TYPE_BIAS', 0)
+            msg.coeffs_x =[float(c) for c in cx]
+            msg.coeffs_y =[float(c) for c in cy]
+            self.model_pub.publish(msg)
+            return
 
-        elif winner.name == "Bias":
-            msg.model_type = CalibrationModel.TYPE_BIAS
-            cx[5], cy[5] = float(px[0]), float(py[0])
+        # Safe getter to avoid index out of bounds on partially unlocked models
+        def get_p(arr, idx):
+            return float(arr[idx]) if idx < len(arr) else 0.0
+
+        # Determine if the advanced features have been unlocked
+        is_locked_x = (len(px) == 1)
+        is_locked_y = (len(py) == 1)
+
+        # Default fallback for type in case custom constants aren't in the .msg file
+        msg.model_type = getattr(CalibrationModel, 'TYPE_LINEAR', 1)
+
+        if winner.name == "Bias":
+            msg.model_type = getattr(CalibrationModel, 'TYPE_BIAS', 0)
+            cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
 
         elif winner.name == "Linear":
-            msg.model_type = CalibrationModel.TYPE_LINEAR
-            # Recipe: ["bias", "lin_x", "lin_y"] -> [1, dx/W, dy/H]
-            cx[5], cx[3], cx[4] = px[0], px[1] / W, px[2] / H
-            cy[5], cy[3], cy[4] = py[0], py[1] / W, py[2] / H
+            msg.model_type = getattr(CalibrationModel, 'TYPE_LINEAR', 1)
+            cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
+            
+            # Dynamic mapping: decoupled_shared policy shifts indices!
+            if "lin_x" in winner.current_features_x:
+                idx = winner.current_features_x.index("lin_x")
+                cx[3] = get_p(px, idx) / W
+            if "lin_y" in winner.current_features_x:
+                idx = winner.current_features_x.index("lin_y")
+                cx[4] = get_p(px, idx) / H
+                
+            if "lin_x" in winner.current_features_y:
+                idx = winner.current_features_y.index("lin_x")
+                cy[3] = get_p(py, idx) / W
+            if "lin_y" in winner.current_features_y:
+                idx = winner.current_features_y.index("lin_y")
+                cy[4] = get_p(py, idx) / H
 
         elif winner.name == "Radial Concentric":
-            msg.model_type = CalibrationModel.TYPE_LINEAR
-            # Special case: Decoupled solves
-
-            if len(winner.params["x"]) > 1:
-                # Recipe: Decoupled ["bias", "radial_concentric"]
-                cx[3], cx[5] = float(px[1] / W), float(px[0])
-                cy[4], cy[5] = float(py[1] / H), float(py[0])
-            else:
-                cx[5], cy[5] = float(px[0]), float(py[0])
+            msg.model_type = getattr(CalibrationModel, 'TYPE_LINEAR', 1)
+            cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
+            if not is_locked_x:
+                cx[3] = get_p(px, 1) / W
+            if not is_locked_y:
+                cy[4] = get_p(py, 1) / H
 
         elif winner.name == "Radial Complete":
-            msg.model_type = CalibrationModel.TYPE_RADIAL_UNIVERSAL
-            # Recipe: ["bias", "radial_universal"]
-            # We map the primary radial term (dx*r) to index 8
-            # and the linear/bias terms to 3, 4, 5
+            msg.model_type = getattr(CalibrationModel, 'TYPE_RADIAL_UNIVERSAL', 2)
+            cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
+            
+            if not is_locked_x:
+                # px[1] = dx*r, px[2] = dy*r, px[3] = dx, px[4] = dy, px[5] = bias offset
+                cx[8] = get_p(px, 1) / (W**2)   # Main radial
+                cx[9] = get_p(px, 2) / (H**2)   # Cross radial
+                cx[3] = get_p(px, 3) / W        # Main linear
+                cx[4] = get_p(px, 4) / H        # Cross linear
+                cx[5] += get_p(px, 5)           # Add to bias
+                
+            if not is_locked_y:
+                # py[1] = dx*r, py[2] = dy*r, py[3] = dx, py[4] = dy, py[5] = bias offset
+                cy[9] = get_p(py, 1) / (W**2)   # Cross radial
+                cy[8] = get_p(py, 2) / (H**2)   # Main radial
+                cy[3] = get_p(py, 3) / W        # Cross linear
+                cy[4] = get_p(py, 4) / H        # Main linear
+                cy[5] += get_p(py, 5)
 
-            # [dx*r2/W3, dy*r2/H3, dx/W, dy/H, bias]
-            cx[8], cx[3], cx[5] = px[0] / (W**2), px[2] / W, px[4]
-            cy[8], cy[4], cy[5] = py[1] / (H**2), py[3] / H, py[4]
+        elif winner.name == "Simple Radial":
+            # Fallback to Quadratic if TYPE_RADIAL doesn't exist
+            msg.model_type = getattr(CalibrationModel, 'TYPE_RADIAL', getattr(CalibrationModel, 'TYPE_QUADRATIC', 2))
+            cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
+            if not is_locked_x:
+                cx[8] = get_p(px, 1) / (W**2)
+            if not is_locked_y:
+                cy[8] = get_p(py, 2) / (H**2)
+
+        elif winner.name == "Radial Complete":
+            msg.model_type = getattr(CalibrationModel, 'TYPE_RADIAL_UNIVERSAL', getattr(CalibrationModel, 'TYPE_QUADRATIC', 2))
+            cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
+            if not is_locked_x:
+                # px[1] is dx*r, px[3] is dx, px[5] is the extra ones offset
+                cx[8], cx[3] = get_p(px, 1) / (W**2), get_p(px, 3) / W
+                cx[5] += get_p(px, 5) 
+            if not is_locked_y:
+                # py[2] is dy*r, py[4] is dy
+                cy[8], cy[4] = get_p(py, 2) / (H**2), get_p(py, 4) / H
+                cy[5] += get_p(py, 5)
 
         elif winner.name == "Conic":
-            msg.model_type = CalibrationModel.TYPE_QUADRATIC
-            # Recipe: ["bias", "full_conic"]
-            # Full conic order: [dx2/W2, dy2/H2, dxdy/WH, dx/W, dy/H, bias]
-            cx[0], cx[1], cx[2], cx[3], cx[4], cx[5] = (
-                px[0] / (W**2),
-                px[1] / (H**2),
-                px[2] / (W * H),
-                px[3] / W,
-                px[4] / H,
-                px[5],
-            )
-            cy[0], cy[1], cy[2], cy[3], cy[4], cy[5] = (
-                py[0] / (W**2),
-                py[1] / (H**2),
-                py[2] / (W * H),
-                py[3] / W,
-                py[4] / H,
-                py[5],
-            )
+            msg.model_type = getattr(CalibrationModel, 'TYPE_QUADRATIC', 2)
+            cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
+            if not is_locked_x:
+                cx[0], cx[1], cx[2], cx[3], cx[4] = (
+                    get_p(px, 1)/(W**2), get_p(px, 2)/(H**2), get_p(px, 3)/(W*H), get_p(px, 4)/W, get_p(px, 5)/H
+                )
+                cx[5] += get_p(px, 6)
+            if not is_locked_y:
+                cy[0], cy[1], cy[2], cy[3], cy[4] = (
+                    get_p(py, 1)/(W**2), get_p(py, 2)/(H**2), get_p(py, 3)/(W*H), get_p(py, 4)/W, get_p(py, 5)/H
+                )
+                cy[5] += get_p(py, 6)
 
         elif winner.name == "Sigmoid X+Y":
-            msg.model_type = CalibrationModel.TYPE_SIGMOIDAL
-            # Recipe: [0,1,2,3,4, bias, sigmoid_amp, sigmoid_scale
-            # tanh(dx/400), tanh(dy/300)]
-            cx[5] = float(px[2])  # Bias
-            cx[6] = float(px[0])  # Amplitude
-            cx[7] = W / 2  # Fixed Scale from the recipe
-
-            cy[5] = float(py[2])  # Bias
-            cy[6] = float(py[1])  # Amplitude
-            cy[7] = H / 2  # Fixed Scale from the recipe
+            msg.model_type = getattr(CalibrationModel, 'TYPE_SIGMOIDAL', getattr(CalibrationModel, 'TYPE_QUADRATIC', 2))
+            cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
+            if not is_locked_x:
+                cx[6] = get_p(px, 1)   # px[1] maps exactly to tanh_x
+                cx[7] = W / 2
+                cx[5] += get_p(px, 3)  # Extra bias offset generated by sigmoid array
+            if not is_locked_y:
+                cy[6] = get_p(py, 2)   # py[2] maps exactly to tanh_y
+                cy[7] = H / 2
+                cy[5] += get_p(py, 3)
 
         msg.coeffs_x = [float(c) for c in cx]
-        msg.coeffs_y = [float(c) for c in cy]
+        msg.coeffs_y =[float(c) for c in cy]
         self.model_pub.publish(msg)
 
     # ==========================================

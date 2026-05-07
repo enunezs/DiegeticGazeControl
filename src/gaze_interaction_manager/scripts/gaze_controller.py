@@ -762,14 +762,20 @@ class GazeController(Node):
         if len(cy) >= 8 and abs(cy[7]) > 1e-3:
             corr_y += cy[6] * np.tanh(dy / cy[7])
 
-        # 4. Pure Radial Term [8: k_radial]
-        # Corr = k * dist * displacement
+        # 4. Pure Radial Term [8: k_radial, 9: cross_radial]
         if len(cx) >= 9 or len(cy) >= 9:
             r = np.sqrt(dx**2 + dy**2)
+            
             if len(cx) >= 9:
                 corr_x += cx[8] * (dx * r)
             if len(cy) >= 9:
                 corr_y += cy[8] * (dy * r)
+                
+            # NEW: Support cross-axis radial terms
+            if len(cx) >= 10:
+                corr_x += cx[9] * (dy * r)  
+            if len(cy) >= 10:
+                corr_y += cy[9] * (dx * r)  
 
         return corr_x, corr_y
 
