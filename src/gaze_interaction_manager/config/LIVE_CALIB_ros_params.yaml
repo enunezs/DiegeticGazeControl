@@ -73,6 +73,8 @@
 
 /gaze_controller_node:
   ros__parameters:
+    screen_width: 800.0
+    screen_height: 600.0
     compensation_active : True 
     use_temporal_alignment : True
     sticky_button_interaction : False
@@ -80,7 +82,7 @@
     internal_pipeline_delay_ms : 0.0
     median_window : 10
     ema_alpha : 1.0
-    edge_margin : 50
+    edge_margin : 25 # px
     start_trim_ms : 100.0   # Start Padding 
     terminal_trim_ms : 150.0  # End padding 
     min_event_duration_ms : 40.0 #  

@@ -213,7 +213,7 @@ class ArucoDetectorNode(Node):
         # 1. Allow for "curved" edges (Critical for fisheye). Default is 0.03. 
         self.detector_params.polygonalApproxAccuracyRate = 0.08 
         # 2. Corner Subpixel Refinement
-        # self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
+        self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
         # 3. Handle small markers at distance
         self.detector_params.minMarkerPerimeterRate = 0.01 
 

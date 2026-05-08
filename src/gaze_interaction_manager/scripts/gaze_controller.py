@@ -37,6 +37,10 @@ class GazeController(Node):
         self.get_logger().info("Gaze Controller Node Initialized")
 
         # --- 1. Parameters ---
+        # Screen
+        self.declare_parameter("screen_width", 1600.0)
+        self.declare_parameter("screen_height", 1200.0)
+        
         # Filtering
         self.declare_parameter("history_length_s", 30.0)
         self.declare_parameter("internal_pipeline_delay_ms", 0.0)
@@ -177,6 +181,12 @@ class GazeController(Node):
         self.add_on_set_parameters_callback(self.param_callback)
 
     def update_internal_params(self):
+
+        self.screen_w = self.get_parameter("screen_width").value
+        self.screen_h = self.get_parameter("screen_height").value
+        self.center_x = self.screen_w / 2.0
+        self.center_y = self.screen_h / 2.0
+
         self.median_window = self.get_parameter("median_window").value
         self.ema_alpha = self.get_parameter("ema_alpha").value
         self.edge_margin = self.get_parameter("edge_margin").value
@@ -211,6 +221,12 @@ class GazeController(Node):
         still holds old values during this callback.
         """
         for p in params:
+            if p.name == "screen_width":
+                self.screen_w = p.value
+                self.center_x = self.screen_w / 2.0
+            elif p.name == "screen_height":
+                self.screen_h = p.value
+                self.center_y = self.screen_h / 2.0
             if p.name == "median_window":
                 self.median_window = p.value
             elif p.name == "ema_alpha":
@@ -249,8 +265,8 @@ class GazeController(Node):
 
             # --- D. BOUNDARY MONITORING ---
             in_fov = (
-                self.edge_margin < msg.x < 1600 - self.edge_margin
-                and self.edge_margin < msg.y < 1200 - self.edge_margin
+                self.edge_margin < msg.x < self.screen_w - self.edge_margin
+                and self.edge_margin < msg.y < self.screen_h - self.edge_margin
             )
 
             # If gaze becomes "dirty", terminate segment immediately
@@ -736,8 +752,8 @@ class GazeController(Node):
             return 0.0, 0.0
 
         # 1. Use relative coordinates (centered at 800, 600)
-        dx = x - 800.0
-        dy = y - 600.0
+        dx = x - (self.screen_w / 2.0)
+        dy = y - (self.screen_h / 2.0)
 
         # 2. Polynomial Core (Indices 0-5)
         corr_x = (
@@ -784,8 +800,8 @@ class GazeController(Node):
     def publish_live_debug_plot(self, current_btn_msg: ButtonStatus):
         # Create a black canvas (1600x1200 scaled down for performance if needed)
         # We'll use 800x600 for the actual image to save bandwidth, but map coords
-        scale = 0.5
-        W, H = int(1600 * scale), int(1200 * scale)
+        scale = 1.0
+        W, H = int(self.screen_w * scale), int(self.screen_h * scale)
         canvas = np.zeros((H, W, 3), dtype=np.uint8)
 
         def to_kv(x, y):
@@ -794,8 +810,8 @@ class GazeController(Node):
         # --- LAYER 1: COMPENSATION VECTOR FIELD (Bottom Layer) ---
         if self.get_parameter("viz_show_field").value:
             grid_step = 100  # Pixels in 1600x1200 space
-            for gy in range(0, 1200, grid_step):
-                for gx in range(0, 1600, grid_step):
+            for gy in range(0, int(self.screen_h), grid_step):
+                for gx in range(0, int(self.screen_w), grid_step):
                     # Get the correction this node is CURRENTLY applying
                     dx, dy = self.get_correction(float(gx), float(gy))
 
@@ -810,10 +826,10 @@ class GazeController(Node):
 
         bin_size = 150  # Matches your Learner config
         grid_color = (30, 30, 30)
-        for gx in range(0, 1600, bin_size):
-            cv2.line(canvas, to_kv(gx, 0), to_kv(gx, 1200), grid_color, 1)
-        for gy in range(0, 1200, bin_size):
-            cv2.line(canvas, to_kv(0, gy), to_kv(1600, gy), grid_color, 1)
+        for gx in range(0, int(self.screen_w), bin_size):
+            cv2.line(canvas, to_kv(gx, 0), to_kv(gx, self.screen_h), grid_color, 1)
+        for gy in range(0, int(self.screen_h), bin_size):
+            cv2.line(canvas, to_kv(0, gy), to_kv(self.screen_w, gy), grid_color, 1)
 
         # 2. DRAW ALL BUTTONS (BACKGROUND)
         if self.get_parameter("viz_show_all_buttons").value:
@@ -1079,9 +1095,9 @@ class GazeController(Node):
         # -------------------------------------------------------------
         
         # Draw X Lane
-        plot_lane(ax1, b_xs, g_xs, tx, "X-Coordinate Profile (Width: 1600)", 1600)
+        plot_lane(ax1, b_xs, g_xs, tx, f"X-Coordinate Profile (Width: {int(self.screen_w)})", self.screen_w)
         # Draw Y Lane
-        plot_lane(ax2, b_ys, g_ys, ty, "Y-Coordinate Profile (Height: 1200)", 1200)
+        plot_lane(ax2, b_ys, g_ys, ty, f"Y-Coordinate Profile (Height: {int(self.screen_h)})", self.screen_h)
 
         # Polish layout
         ax2.set_xlabel("Timestamp (Seconds)", fontsize=10, weight='bold')
