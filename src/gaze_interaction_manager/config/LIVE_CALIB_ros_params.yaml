@@ -24,6 +24,7 @@
 
 /pupil_glasses_node:
   ros__parameters:
+    image_scale: 0.5
     publish_freq: 50
     draw_circle: true
     camera_depth: 1.0
@@ -33,7 +34,6 @@
     ip: "10.0.0.2"
     port: "8080"
     print_performance: False
-  
 /aruco_detector:
   ros__parameters:
         aruco_dict : "DICT_4X4_250"
@@ -85,7 +85,7 @@
     terminal_trim_ms : 150.0  # End padding 
     min_event_duration_ms : 40.0 #  
     max_compensation_px : 200.0
-    viz_enabled : False
+    viz_enabled : True
 
 
 /calibration_learner_node:
