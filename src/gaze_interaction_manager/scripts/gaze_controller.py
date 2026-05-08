@@ -509,8 +509,8 @@ class GazeController(Node):
         """Simple storage of latest button states for background drawing."""
         if not self.get_parameter("viz_enabled").value:
             return
-        if not self.get_parameter("viz_show_all_buttons").value:
-            return
+        # if not self.get_parameter("viz_show_all_buttons").value:
+        #     return
         with self._lock:
             self.latest_all_buttons = msg.inputs
             
@@ -706,14 +706,14 @@ class GazeController(Node):
             self.segment_pub.publish(segment)
 
         # 8. Trigger Matplotlib Visualization
-        if self.get_parameter("viz_enabled").value:
-            self.plot_ts_alignment_viz(
-                G_times, G_xs, G_ys, 
-                B_times, B_xs, B_ys, 
-                tx, ty, 
-                gap_mask, error_mask, valid_mask, 
-                start_ts, trimmed_start_ts, end_ts
-            )
+        # if self.get_parameter("viz_enabled").value:
+        #     self.plot_ts_alignment_viz(
+        #         G_times, G_xs, G_ys, 
+        #         B_times, B_xs, B_ys, 
+        #         tx, ty, 
+        #         gap_mask, error_mask, valid_mask, 
+        #         start_ts, trimmed_start_ts, end_ts
+        #     )
 
 ### === Calibration Model Handling === ###
     def model_cb(self, msg: CalibrationModel):

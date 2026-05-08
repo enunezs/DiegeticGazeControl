@@ -586,7 +586,7 @@ class CalibrationLearner(Node):
             parameters=[
                 # Plotting Toggles
                 ("publish_data_quiver", True),
-                ("publish_status_profile", True),
+                ("publish_status_profile", False),
                 ("publish_prediction_map", True),
                 ("publish_tournament", True),
                 # Selection and switching logic
@@ -601,7 +601,7 @@ class CalibrationLearner(Node):
                 ("retrain_on_full_data", True),
                 # Regressor settings
                 ("solver", "ridge"),  # "huber", "ridge", "linear"
-                ("solver_alpha", 1.0),  # TODO: Regularization strength for Ridge
+                ("solver_alpha", 10.0),  # TODO: Regularization strength for Ridge
                 ("bic_hysteresis", 3.0),  # Threshold to switch models
                 ("rmse_hysteresis", 2.0),
                 ("joy_button_index", 10),  # For recording, default to 'A' or 'X' button
@@ -657,7 +657,9 @@ class CalibrationLearner(Node):
             GazeCorrectionFramework(
                 "Radial Concentric",
                 ["bias", "radial_concentric"],
-                self.cfg | {"trigger_bins": 3},
+
+                self.cfg
+                 | {"trigger_x": 3, "trigger_y": 3, "policy": "original_coupled"},
             ),
             GazeCorrectionFramework(
                 "Simple Radial",
@@ -680,12 +682,12 @@ class CalibrationLearner(Node):
                 self.cfg
                 | {"trigger_x": 8, "trigger_y": 8, "policy": "decoupled_shared"},
             ),
-            GazeCorrectionFramework(
-                "Conic",
-                ["bias", "full_conic"],
-                self.cfg
-                | {"trigger_x": 8, "trigger_y": 8, "policy": "decoupled_shared"},
-            ),
+            # GazeCorrectionFramework(
+            #     "Conic",
+            #     ["bias", "full_conic"],
+            #     self.cfg
+            #     | {"trigger_x": 8, "trigger_y": 8, "policy": "decoupled_shared"},
+            # ),
         ]
 
         self.active_idx = 1
@@ -952,19 +954,19 @@ class CalibrationLearner(Node):
             model.params = {"x": None, "y": None}
             model.models = {"x": None, "y": None}
 
-            # model.prequential_errors = []
-            # model.aulc_history = []
-            # model.macro_rmse_history = []
-            # model.bic_history = []
-            # model.aic_history = []
-            # model.unlock_moments = {}
+            # UNCOMMENT THESE LINES TO FIX THE BUG:
+            model.prequential_errors = []
+            model.aulc_history =[]
+            model.macro_rmse_history = []
+            model.bic_history = []
+            model.aic_history =[]
+            model.unlock_moments = {}
 
             # This triggers the "Learning" phase again
             if not model.is_identity:
                 model.current_features_x = ["bias"]
                 model.current_features_y = ["bias"]
-                model.unlock_moments = {}
-
+                
         # 4. Reset tournament state
         self.active_idx = 1  # Default back to 'Bias' model
         # Note: We keep self.event_count increasing to maintain a continuous timeline in logs
@@ -1152,7 +1154,7 @@ class CalibrationLearner(Node):
                 train_pool[:, 0],
                 train_pool[:, 1],
                 train_pool[:, 2],
-                train_pool[:, 3],
+                -train_pool[:, 3],
                 color=plt.cm.hsv((angles + np.pi) / (2 * np.pi)),
                 alpha=0.5,
                 scale=1,
@@ -1163,7 +1165,7 @@ class CalibrationLearner(Node):
                 val_pool[:, 0],
                 val_pool[:, 1],
                 val_pool[:, 2],
-                val_pool[:, 3],
+                -val_pool[:, 3],
                 color="black",
                 scale=1,
                 scale_units="xy",
@@ -1255,14 +1257,14 @@ class CalibrationLearner(Node):
             grid_x,
             grid_y,
             px.reshape(grid_x.shape),
-            py.reshape(grid_y.shape),
+            -py.reshape(grid_y.shape),
             mag.reshape(grid_x.shape),
             cmap="jet",
             scale=1,
             scale_units="xy",
         )
         ax.set_xlim(0, gw)
-        ax.set_ylim(gh, 0)
+        ax.set_ylim(gh,0)
         ax.set_title(f"Correction Field: {winner.name}")
         self._pub_plt(fig, "map", save_name=save_name)
 

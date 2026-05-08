@@ -76,22 +76,50 @@
     compensation_active : True 
     use_temporal_alignment : True
     sticky_button_interaction : False
-    history_length_s : 15.0
+    history_length_s : 10.0
     internal_pipeline_delay_ms : 0.0
     median_window : 10
     ema_alpha : 1.0
     edge_margin : 50
-    start_trim_ms : 50.0   # Start Padding 
-    terminal_trim_ms : 100.0  # End padding 
-    min_event_duration_ms : 200.0 #  
+    start_trim_ms : 100.0   # Start Padding 
+    terminal_trim_ms : 150.0  # End padding 
+    min_event_duration_ms : 40.0 #  
     max_compensation_px : 200.0
-    viz_enabled : True
+    viz_enabled : False
 
 
 /calibration_learner_node:
   ros__parameters:
-    show_binned_truth: True
-    show_prediction : True
-    show_raw_samples : True
-    publish_debug_image : True
+
+
+    # Selection and switching logic
+    selection_strategy: "RMSE"  # "BIC" or "RMSE"
+    cv_strategy:      "kfolds_spatial_block"       # "stratified", "spatial_block", "kfolds_spatial_block"
+    n_folds: 5
+    spatial_val_ratio: 0.2
+    cv_include_diagonals: True
+    retrain_on_full_data: True
+
+    # Regressor settings
+    solver: "ridge"  # "huber", "ridge", "linear"
+    solver_alpha: 10.0 
+    bic_hysteresis: 3.0  # Threshold to switch models
+    rmse_hysteresis: 2.0
+
+    policy: "original_coupled"     # "original_coupled", "decoupled_shared", "fully_decoupled"
+    trigger_x: 5  # Bins along X axis before X-features unlock
+    trigger_y: 5  # Bins along Y axis before Y-features unlock
+    error_log_filename: "gaze_error_log.csv"
+
+    joy_button_index: 10  # For recording, default to 'A' or 'X' button
+    joy_resume_button_index: 0  # Xbox 'A' button is typically index 0
+
+    publish_data_quiver : True
+    publish_status_profile: False
     publish_prediction_map: True
+    publish_tournament: True
+
+    # show_binned_truth: True
+    # show_prediction : True
+    # show_raw_samples : True
+    publish_debug_image : True

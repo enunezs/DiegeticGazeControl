@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import time
+
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
@@ -211,7 +213,7 @@ class ArucoDetectorNode(Node):
         # 1. Allow for "curved" edges (Critical for fisheye). Default is 0.03. 
         self.detector_params.polygonalApproxAccuracyRate = 0.08 
         # 2. Corner Subpixel Refinement
-        self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
+        # self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
         # 3. Handle small markers at distance
         self.detector_params.minMarkerPerimeterRate = 0.01 
 
@@ -236,8 +238,13 @@ class ArucoDetectorNode(Node):
         if self.camera_matrix is None:
             return
         try:
-            cv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
-            self.detect_markers(cv_image, msg.header)
+            t0 = time.time()
+            np_arr = np.frombuffer(msg.data, np.uint8)
+            gray_image = cv2.imdecode(np_arr, cv2.IMREAD_GRAYSCALE)
+            # cv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
+            t1 = time.time() 
+            self.get_logger().info(f"Image conversion took {(t1-t0)*1000:.2f} ms", throttle_duration_sec=1.0)
+            self.detect_markers(gray_image, msg.header)
         except Exception as e:
             self.get_logger().error(f"Error processing image: {e}")
             self.get_logger().error(traceback.format_exc())
@@ -271,14 +278,17 @@ class ArucoDetectorNode(Node):
         return f_pos, f_quat
 
     def detect_markers(self, image, header):
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        t0 = time.time()
+        gray = image
+        # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        t1 = time.time()
         # Apply CLAHE to improve local contrast
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        gray = clahe.apply(gray)
-
+        # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+        # gray = clahe.apply(gray)
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray, self.aruco_dict, parameters=self.detector_params
         )
+        t2 = time.time()
 
         current_header = header
         # Calculate current message time in seconds
@@ -364,6 +374,7 @@ class ArucoDetectorNode(Node):
                         "pose": marker.pose,
                         "stamp": t_curr
                     }
+        t3 = time.time()
 
         # Persistence for lost markers
         ids_to_delete = []
@@ -389,7 +400,10 @@ class ArucoDetectorNode(Node):
         for marker_id in ids_to_delete:
             del self.last_marker_poses[marker_id]
 
+        t4 = time.time()
         self.aruco_marker_array_pub.publish(marker_array)
+        t5 = time.time()
+        self.get_logger().info(f"Detection times (ms): Grayscale: {(t1-t0)*1000:.2f}, Detection: {(t2-t1)*1000:.2f}, Processing: {(t3-t2)*1000:.2f}, Persistence: {(t4-t3)*1000:.2f}, Publishing: {(t5-t4)*1000:.2f}", throttle_duration_sec=1.0)
 
     def broadcast_anchor_transform(self, T_cam_marker, header, marker_id):
         """
@@ -405,6 +419,8 @@ class ArucoDetectorNode(Node):
 
         t = TransformStamped()
         t.header.stamp = self.get_clock().now().to_msg()
+        # t.header.stamp = headerz.stamp 
+
         t.header.frame_id = f"aruco_{marker_id}"  # Parent: The Marker (on the robot)
         # t.child_frame_id = header.frame_id
         t.child_frame_id = self.config["camera_frame"]  # Child: The Camera
@@ -423,6 +439,8 @@ class ArucoDetectorNode(Node):
         """Standard Marker: Camera -> Marker"""
         t = TransformStamped()
         t.header.stamp = self.get_clock().now().to_msg()
+        # t.header.stamp = header.stamp
+
         t.header.frame_id = self.config["camera_frame"]  # Parent: The Camera
         t.child_frame_id = f"aruco_{marker_id}"
 
