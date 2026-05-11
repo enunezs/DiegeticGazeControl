@@ -22,12 +22,12 @@ class Visualizer2D(Node):
 
         # --- Parameters ---
         self.debug_fps = 10.0  # configurable frame rate (Hz)
-        self.base_width = 1600
-        self.base_height = 1200
-        self.screen_width = 800
-        self.screen_height = 600
-        self.scale_x = self.screen_width / self.base_width
-        self.scale_y = self.screen_height / self.base_height
+        self.base_width = 1600 * 0.5
+        self.base_height = 1200 * 0.5
+        self.out_screen_width = 800
+        self.out_screen_height = 600
+        self.scale_x = self.out_screen_width / self.base_width
+        self.scale_y = self.out_screen_height / self.base_height
 
         # -------- ARUCO --------
         self._aruco_lock = threading.Lock()
@@ -103,7 +103,7 @@ class Visualizer2D(Node):
         self.cv_bridge = CvBridge()
 
         # Preallocate image buffer (reused every frame)
-        self.img = np.zeros((self.screen_height, self.screen_width, 3), dtype=np.uint8)
+        self.img = np.zeros((self.out_screen_height, self.out_screen_width, 3), dtype=np.uint8)
 
         self.get_logger().info("Visualizer2D Node started")
 
@@ -240,8 +240,8 @@ class Visualizer2D(Node):
                 px, py = img_pt.ravel()
 
                 # Scale to debug image
-                px = int(px * self.screen_width / self.cam_width)
-                py = int(py * self.screen_height / self.cam_height)
+                px = int(px * self.out_screen_width / self.cam_width)
+                py = int(py * self.out_screen_height / self.cam_height)
 
                 color = self.aruco_colors.get(marker.id, (255, 0, 255))
 
@@ -286,7 +286,7 @@ class Visualizer2D(Node):
                 return
 
             # Resize to visualization resolution
-            img = cv2.resize(img, (self.screen_width, self.screen_height))
+            img = cv2.resize(img, (self.out_screen_width, self.out_screen_height))
 
             with self._image_lock:
                 self.latest_camera_img = img

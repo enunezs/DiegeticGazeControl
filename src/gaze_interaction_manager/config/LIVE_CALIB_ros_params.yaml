@@ -28,12 +28,10 @@
     publish_freq: 50
     draw_circle: true
     camera_depth: 1.0
-    video_resolution:
-      - 1600
-      - 1200
     ip: "10.0.0.2"
     port: "8080"
     print_performance: False
+    
 /aruco_detector:
   ros__parameters:
         aruco_dict : "DICT_4X4_250"
@@ -92,8 +90,6 @@
 
 /calibration_learner_node:
   ros__parameters:
-
-
     # Selection and switching logic
     selection_strategy: "RMSE"  # "BIC" or "RMSE"
     cv_strategy:      "kfolds_spatial_block"       # "stratified", "spatial_block", "kfolds_spatial_block"
@@ -113,7 +109,7 @@
     trigger_y: 5  # Bins along Y axis before Y-features unlock
     error_log_filename: "gaze_error_log.csv"
 
-    joy_button_index: 10  # For recording, default to 'A' or 'X' button
+    joy_userstop_button_index: 10  # For recording, default to 'A' or 'X' button
     joy_resume_button_index: 0  # Xbox 'A' button is typically index 0
 
     publish_data_quiver : True

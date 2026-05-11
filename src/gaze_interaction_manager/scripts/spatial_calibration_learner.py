@@ -68,21 +68,44 @@ class SpatialReservoir:
         gx_t, gy_t, ex_t, ey_t = gx[::stride], gy[::stride], ex[::stride], ey[::stride]
         max_error = self.cfg.get("max_error_cap", 150.0)
 
-        for i in range(len(gx_t)):
-            # Basic outlier rejection
-            if abs(ex_t[i]) > max_error or abs(ey_t[i]) > max_error:
-                continue
+        # for i in range(len(gx_t)):
+        #     # Basic outlier rejection
+        #     if abs(ex_t[i]) > max_error or abs(ey_t[i]) > max_error:
+        #         continue
 
-            # Binning
-            bx, by = int(gx_t[i] // self.bin_size), int(gy_t[i] // self.bin_size)
-            bid = (bx, by)
+        #     # Binning
+        #     bx, by = int(gx_t[i] // self.bin_size), int(gy_t[i] // self.bin_size)
+        #     bid = (bx, by)
+        #     if bid not in self.bins:
+        #         self.bins[bid] = deque(maxlen=self.max_samples)
+
+        #     self.bins[bid].append((gx_t[i], gy_t[i], ex_t[i], ey_t[i]))
+        #     # Update projection tracking
+        #     self.unique_bx.add(bx)
+        #     self.unique_by.add(by)
+
+        # 1. Vectorized Outlier Rejection
+        mask = (np.abs(ex_t) <= max_error) & (np.abs(ey_t) <= max_error)
+        if not np.any(mask):
+            return
+
+        gx_f, gy_f, ex_f, ey_f = gx_t[mask], gy_t[mask], ex_t[mask], ey_t[mask]
+
+        # 2. Vectorized Bin ID Calculation
+        bxs = (gx_f // self.bin_size).astype(int)
+        bys = (gy_f // self.bin_size).astype(int)
+
+        # 3. Grouping into Deques
+        # We still loop here, but only once per point in the segment, 
+        # and the logic inside is stripped to the bare minimum.
+        for i in range(len(gx_f)):
+            bid = (bxs[i], bys[i])
             if bid not in self.bins:
                 self.bins[bid] = deque(maxlen=self.max_samples)
-
-            self.bins[bid].append((gx_t[i], gy_t[i], ex_t[i], ey_t[i]))
-            # Update projection tracking
-            self.unique_bx.add(bx)
-            self.unique_by.add(by)
+            
+            self.bins[bid].append((gx_f[i], gy_f[i], ex_f[i], ey_f[i]))
+            self.unique_bx.add(bxs[i])
+            self.unique_by.add(bys[i])
 
     @property
     def coverage(self):
@@ -604,7 +627,7 @@ class CalibrationLearner(Node):
                 ("solver_alpha", 10.0),  # TODO: Regularization strength for Ridge
                 ("bic_hysteresis", 3.0),  # Threshold to switch models
                 ("rmse_hysteresis", 2.0),
-                ("joy_button_index", 10),  # For recording, default to 'A' or 'X' button
+                ("joy_userstop_button_index", 10),  # For recording, default to 'A' or 'X' button
                 ("joy_resume_button_index", 0),  # Xbox 'A' button is typically index 0
                 ("error_log_filename", "gaze_error_log.csv"),
                 # Unlocking policy for feature graduation
@@ -741,10 +764,12 @@ class CalibrationLearner(Node):
 
         # 5. Prepare error log
         self.create_subscription(Joy, "joy", self.joy_cb, 10)
-        self.joy_btn_idx = self.get_parameter("joy_button_index").value
+
+        self.joy_userstop_button_index = self.get_parameter("joy_userstop_button_index").value
         self.resume_btn_idx = self.get_parameter("joy_resume_button_index").value
         self.last_stop_button_state = 0  # For debouncing (rising edge detection)
         self.last_resume_button_state = 0
+        
         self.log_path = self.get_parameter("error_log_filename").value
 
         # Prepare CSV File
@@ -779,7 +804,7 @@ class CalibrationLearner(Node):
         )
         self.get_logger().info(f"--- Error Logging ---")
         self.get_logger().info(
-            f"Joy Button Index for Error Logging: {self.joy_btn_idx}"
+            f"Joy Button Index for Error Logging: {self.joy_userstop_button_index}"
         )
         self.get_logger().info(f"Error Log Path: {self.log_path}")
 
@@ -809,7 +834,7 @@ class CalibrationLearner(Node):
         gy = np.array([p.y for p in msg.gaze_samples])
         tx = np.array([p.x for p in msg.target_samples])
         ty = np.array([p.y for p in msg.target_samples])
-        ts = np.array([p.timestamp_unix_seconds for p in msg.gaze_samples])
+        # ts = np.array([p.timestamp_unix_seconds for p in msg.gaze_samples])
 
         # Error relative to target (Ground Truth)
         # ex, ey = gx - tx, gy - ty
@@ -1080,17 +1105,17 @@ class CalibrationLearner(Node):
             if not is_locked_y:
                 cy[8] = get_p(py, 2) / (H**2)
 
-        elif winner.name == "Radial Complete":
-            msg.model_type = getattr(CalibrationModel, 'TYPE_RADIAL_UNIVERSAL', getattr(CalibrationModel, 'TYPE_QUADRATIC', 2))
-            cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
-            if not is_locked_x:
-                # px[1] is dx*r, px[3] is dx, px[5] is the extra ones offset
-                cx[8], cx[3] = get_p(px, 1) / (W**2), get_p(px, 3) / W
-                cx[5] += get_p(px, 5) 
-            if not is_locked_y:
-                # py[2] is dy*r, py[4] is dy
-                cy[8], cy[4] = get_p(py, 2) / (H**2), get_p(py, 4) / H
-                cy[5] += get_p(py, 5)
+        # elif winner.name == "Radial Complete":
+        #     msg.model_type = getattr(CalibrationModel, 'TYPE_RADIAL_UNIVERSAL', getattr(CalibrationModel, 'TYPE_QUADRATIC', 2))
+        #     cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
+        #     if not is_locked_x:
+        #         # px[1] is dx*r, px[3] is dx, px[5] is the extra ones offset
+        #         cx[8], cx[3] = get_p(px, 1) / (W**2), get_p(px, 3) / W
+        #         cx[5] += get_p(px, 5) 
+        #     if not is_locked_y:
+        #         # py[2] is dy*r, py[4] is dy
+        #         cy[8], cy[4] = get_p(py, 2) / (H**2), get_p(py, 4) / H
+        #         cy[5] += get_p(py, 5)
 
         elif winner.name == "Conic":
             msg.model_type = getattr(CalibrationModel, 'TYPE_QUADRATIC', 2)
@@ -1281,19 +1306,20 @@ class CalibrationLearner(Node):
         plt.close(fig)
 
     def joy_cb(self, msg: Joy):
+
         # 1. Report Error / User Stop (Xbox Button B or Menu)
-        current_stop = msg.buttons[self.joy_btn_idx]
-        if current_stop == 1 and self.last_button_state == 0:
+        current_stop = msg.buttons[self.joy_userstop_button_index]
+        if current_stop == 1 and self.last_stop_button_state == 0:
             self.get_logger().warn("USER REPORTED ERROR")
             self.log_user_error()
-        self.last_button_state = current_stop
+
+        self.last_stop_button_state = current_stop
 
         # 2. Reset and Resume (Xbox Button A)
         # Assuming index 0 for 'A' button. Add self.resume_btn_idx to __init__
         current_resume = msg.buttons[self.resume_btn_idx]
         if current_resume == 1 and self.last_resume_button_state == 0:
-            self.dump_all_plots(label="user_request")
-
+            self.dump_all_plots(label="experimenter_test_resumed")
             self.reset_calibration()
 
         self.last_resume_button_state = current_resume

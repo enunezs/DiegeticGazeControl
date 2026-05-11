@@ -91,8 +91,8 @@ class DiegeticAndArucoVisualizer(Node):
             current_ids.add(bid)
 
             m = Marker()
-            m.header = msg.header
-            m.header.frame_id = "world"
+            m.header.frame_id = "camera_optical_frame"
+            m.header.stamp = self.get_clock().now().to_msg()
             m.ns = "diegetic_buttons"
             m.id = hash(bid) & 0x7FFFFFFF
             m.type = Marker.CUBE
@@ -158,7 +158,8 @@ class DiegeticAndArucoVisualizer(Node):
         # Delete markers that disappeared
         for old in self.previous_button_ids - current_ids:
             dm = Marker()
-            dm.header.frame_id = "world"
+            dm.header.frame_id = "camera_optical_frame"
+            dm.header.stamp = self.get_clock().now().to_msg()
             dm.ns = "diegetic_buttons"
             dm.id = hash(old) & 0x7FFFFFFF
             dm.action = Marker.DELETE
@@ -170,7 +171,6 @@ class DiegeticAndArucoVisualizer(Node):
     # ---------------- ArUco Markers callback ----------------
     def _aruco_cb(self, msg: FiducialMarkerArray):
         marker_array_viz = MarkerArray()
-        header = msg.header
 
         for fid_marker in msg.markers:
             mid = fid_marker.id
@@ -183,7 +183,10 @@ class DiegeticAndArucoVisualizer(Node):
             color = self.aruco_colors[mid]
 
             vis_marker = Marker()
-            vis_marker.header = header
+            # Make new header with ros2 time to ensure RViz updates properly
+            vis_marker.header.frame_id = "camera_optical_frame"
+            vis_marker.header.stamp = self.get_clock().now().to_msg()
+
             vis_marker.ns = "aruco_markers"
             vis_marker.id = mid
             vis_marker.type = Marker.CUBE
@@ -210,7 +213,8 @@ class DiegeticAndArucoVisualizer(Node):
         cleanup = MarkerArray()
         for button_id in self.previous_button_ids:
             m = Marker()
-            m.header.frame_id = "world"
+            m.header.frame_id = "camera_optical_frame"
+            m.header.stamp = self.get_clock().now().to_msg()
             m.ns = "diegetic_buttons"
             m.id = hash(button_id) & 0x7FFFFFFF
             m.action = Marker.DELETE

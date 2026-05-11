@@ -243,7 +243,7 @@ class ArucoDetectorNode(Node):
             gray_image = cv2.imdecode(np_arr, cv2.IMREAD_GRAYSCALE)
             # cv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
             t1 = time.time() 
-            self.get_logger().info(f"Image conversion took {(t1-t0)*1000:.2f} ms", throttle_duration_sec=1.0)
+            # self.get_logger().info(f"Image conversion took {(t1-t0)*1000:.2f} ms", throttle_duration_sec=1.0)
             self.detect_markers(gray_image, msg.header)
         except Exception as e:
             self.get_logger().error(f"Error processing image: {e}")
@@ -308,14 +308,63 @@ class ArucoDetectorNode(Node):
         t_curr = header.stamp.sec + header.stamp.nanosec * 1e-9
 
         if ids is not None and len(ids) > 0:
-            rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-                corners, self.marker_size, self.camera_matrix, self.dist_coeffs
-            )
+            # rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
+            #     corners, self.marker_size, self.camera_matrix, self.dist_coeffs
+            # )
+
+            # --- SANITIZE CAMERA PARAMETERS FOR FISHEYE ---
+            # 1. Ensure K is float64 3x3
+            k_np = self.camera_matrix.astype(np.float64)
+            
+            # 2. Ensure D is float64 and exactly 4 elements
+            d_np = np.array(self.dist_coeffs, dtype=np.float64).flatten()
+            if len(d_np) > 4:
+                d_np = d_np[:4] # Take first 4
+            elif len(d_np) < 4:
+                d_np = np.append(d_np, [0.0] * (4 - len(d_np))) # Pad with zeros
+            # -----------------------------------------------
+
+            # Batch undistortion of corners for all detected markers
+            undistorted_corners = cv2.fisheye.undistortPoints(
+                np.concatenate(corners).reshape(-1, 1, 2),
+                k_np,
+                d_np,
+                P=k_np
+            ).reshape(-1, 4, 2) # Reshape back to (num_markers, 4 corners, 2 coords)
 
             for i, marker_id in enumerate(ids.flatten()):
-                # Raw detection (Camera -> Marker)
-                rvec_raw = rvecs[i][0]
-                tvec_raw = tvecs[i][0]
+
+
+                # 1. Undistort the corners using the FISHEYE model
+                # This removes the 'right side distortion' before calculating the pose
+                # undistorted_corners = cv2.fisheye.undistortPoints(
+                #     corners[i].reshape(-1, 1, 2), 
+                #     self.camera_matrix, 
+                #     self.dist_coeffs,
+                #     P=self.camera_matrix
+                # )
+               # 2. Estimate pose using the undistorted points 
+                # (Using solvePnP directly with distCoeffs=None because points are already undistorted)
+                object_points = np.array([
+                    [-self.marker_size/2,  self.marker_size/2, 0],
+                    [ self.marker_size/2,  self.marker_size/2, 0],
+                    [ self.marker_size/2, -self.marker_size/2, 0],
+                    [-self.marker_size/2, -self.marker_size/2, 0]
+                ], dtype=np.float32)
+
+                _, rvec, tvec = cv2.solvePnP(
+                    object_points, 
+                    undistorted_corners[i], 
+                    self.camera_matrix, 
+                    None # Important: None because we undistorted manually
+                )
+        
+                tvec_raw = tvec.flatten()
+                rvec_raw = rvec.flatten()
+  
+                # # Raw detection (Camera -> Marker)
+                # rvec_raw = rvecs[i][0]
+                # tvec_raw = tvecs[i][0]
 
                 rot_mat = cv2.Rodrigues(rvec_raw)[0]
                 T_raw = np.vstack([np.hstack([rot_mat, [[0], [0], [0]]]), [0, 0, 0, 1]])
@@ -403,7 +452,7 @@ class ArucoDetectorNode(Node):
         t4 = time.time()
         self.aruco_marker_array_pub.publish(marker_array)
         t5 = time.time()
-        self.get_logger().info(f"Detection times (ms): Grayscale: {(t1-t0)*1000:.2f}, Detection: {(t2-t1)*1000:.2f}, Processing: {(t3-t2)*1000:.2f}, Persistence: {(t4-t3)*1000:.2f}, Publishing: {(t5-t4)*1000:.2f}", throttle_duration_sec=1.0)
+        # self.get_logger().info(f"Detection times (ms): Grayscale: {(t1-t0)*1000:.2f}, Detection: {(t2-t1)*1000:.2f}, Processing: {(t3-t2)*1000:.2f}, Persistence: {(t4-t3)*1000:.2f}, Publishing: {(t5-t4)*1000:.2f}", throttle_duration_sec=1.0)
 
     def broadcast_anchor_transform(self, T_cam_marker, header, marker_id):
         """

@@ -193,10 +193,10 @@ class GazeController(Node):
         self.max_compensation = self.get_parameter("max_compensation_px").value
 
         self.start_trim_ms = int(
-            (self.get_parameter("start_trim_ms").value / 1000.0) * self.hz_gaze
+            (self.get_parameter("start_trim_ms").value / 1000.0) # * self.hz_gaze
         )
-        self.min_samples = int(
-            (self.get_parameter("min_event_duration_ms").value / 1000.0) * self.hz_gaze
+        self.min_event_duration_ms = int(
+            (self.get_parameter("min_event_duration_ms").value / 1000.0) # * self.hz_gaze
         )
 
 
@@ -238,7 +238,7 @@ class GazeController(Node):
             elif p.name == "start_trim_ms":
                 self.start_trim_ms = int((p.value / 1000.0) * self.hz_gaze)
             elif p.name == "min_event_duration_ms":
-                self.min_samples = int((p.value / 1000.0) * self.hz_gaze)
+                self.min_event_duration_ms = int((p.value / 1000.0) * self.hz_gaze)
             elif p.name == "history_length_s":
                 self._resize_gaze_buffer(p.value)
             elif p.name == "max_gap_ms":
@@ -285,12 +285,26 @@ class GazeController(Node):
         # --- A. SMOOTHING (Median + EMA) ---
         if self.gaze_buffer_filled or self.gaze_ptr >= self.median_window:
             # We need a min number of samples for smoothing
-            idx = (
-                np.arange(self.gaze_ptr - self.median_window, self.gaze_ptr)
-                % self.gaze_buffer_size
-            )
-            # TODO: Would prefer as a function
-            window = self.gaze_history[idx]
+            # idx = (
+            #     np.arange(self.gaze_ptr - self.median_window, self.gaze_ptr)
+            #     % self.gaze_buffer_size
+            # )
+            # # TODO: Would prefer as a function
+            # window = self.gaze_history[idx]
+
+            start_idx = self.gaze_ptr - self.median_window
+
+            if start_idx >= 0:
+                # COMMON CASE: No wrap-around. 
+                # Returns a VIEW (zero allocation).
+                window = self.gaze_history[start_idx : self.gaze_ptr]
+            else:
+                # WRAP CASE: Window crosses the buffer boundary.
+                # We must concatenate, which involves one allocation.
+                part1 = self.gaze_history[start_idx:]  # Slices from the end (e.g., -5 to end)
+                part2 = self.gaze_history[:self.gaze_ptr] # Slices from the beginning
+                window = np.concatenate([part1, part2])
+
             mx = np.median(window[:, 1])
             my = np.median(window[:, 2])
             self.smoothed_x = (self.ema_alpha * mx) + (
@@ -550,6 +564,7 @@ class GazeController(Node):
             else:
                 out_msg.button_status = ButtonStatus.BUTTON_INACTIVE
                 out_msg.button_id = "" # Clear ID so robot stops
+                out_msg.button.button_id = "" # Clear button ID
 
             self.teleop_pub.publish(out_msg)
 
@@ -583,17 +598,17 @@ class GazeController(Node):
         # gaze_data = gaze_data[gaze_data[:, 0] > 0]
         # gaze_data = gaze_data[np.argsort(gaze_data[:, 0])]
 
-
-
         # 2. Windowing
         # This is always zero...
         raw_idx = np.where((gaze_data[:, 0] >= self.rec_start_ts) & (gaze_data[:, 0] <= end_ts))[0]
 
         # Check minimum duration
-        segment_duration_ms = (raw_idx[-1] - raw_idx[0]) if len(raw_idx) > 0 else 0
+        # segment_duration_ms = (raw_idx[-1] - raw_idx[0]) if len(raw_idx) > 0 else 0
+        segment_duration_ms = (gaze_data[raw_idx[-1], 0] - gaze_data[raw_idx[0], 0])*1000 if len(raw_idx) > 0 else 0
 
-
-        if len(raw_idx) == 0 or segment_duration_ms < (self.start_trim_ms + self.min_samples):
+         
+        # if len(raw_idx) < (self.start_trim_ms + self.min_event_duration_ms):
+        if len(raw_idx) == 0 or segment_duration_ms < (self.start_trim_ms + self.min_event_duration_ms):
             # Segment discarded
             self.get_logger().info(
                 f"Segment too short ({segment_duration_ms} ms, {len(raw_idx)} samples). Discarding. Reason = {reason}"

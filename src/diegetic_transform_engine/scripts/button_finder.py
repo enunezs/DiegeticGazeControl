@@ -727,7 +727,10 @@ class DiegeticButtonPublisher(Node):
         for button in button_3d_array.buttons:
             transform_stamped = TransformStamped()
 
-            transform_stamped.header.stamp = button_3d_array.header.stamp
+
+            # transform_stamped.header.stamp = button_3d_array.header.stamp
+            transform_stamped.header.stamp = self.get_clock().now().to_msg()
+
             transform_stamped.header.frame_id = self.camera_frame_id
             transform_stamped.child_frame_id = f"bt_{button.button_id}"
 
