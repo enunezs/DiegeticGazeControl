@@ -607,11 +607,15 @@ class CalibrationLearner(Node):
         self.declare_parameters(
             namespace="",
             parameters=[
-                # Plotting Toggles
-                ("publish_data_quiver", True),
-                ("publish_status_profile", False),
-                ("publish_prediction_map", True),
-                ("publish_tournament", True),
+                # Base
+                ("screen_w", 1600),
+                ("screen_h", 1200),
+                ("bin_size", 150),
+                ("samples_per_bin", 100),
+                ("val_size", 10),
+                ("thinning_stride", 1),
+                ("min_samples_per_bin_threshold", 4),
+                ("max_error_cap", 150.0),  # Outlier rejection threshold (px
                 # Selection and switching logic
                 ("selection_strategy", "RMSE"),  # "BIC" or "RMSE"
                 (
@@ -638,19 +642,24 @@ class CalibrationLearner(Node):
                 ("trigger_x", 5),  # Bins along X axis before X-features unlock
                 ("trigger_y", 5),  # Bins along Y axis before Y-features unlock
                 ("error_log_filename", "gaze_error_log.csv"),
+                # Plotting Toggles
+                ("publish_data_quiver", True),
+                ("publish_status_profile", False),
+                ("publish_prediction_map", True),
+                ("publish_tournament", True),
             ],
         )
 
         # 2. Configuration
         self.cfg = {
-            "center_x": 800,
-            "center_y": 600,
-            "screen_w": 1600,
-            "screen_h": 1200,
-            "bin_size": 150,
-            "samples_per_bin": 100,
-            "val_size": 10,
-            "thinning_stride": 1,
+            "screen_w": self.get_parameter("screen_w").value,
+            "screen_h": self.get_parameter("screen_h").value,
+            "center_x": self.get_parameter("screen_w").value / 2,
+            "center_y": self.get_parameter("screen_h").value / 2,
+            "bin_size": self.get_parameter("bin_size").value,
+            "samples_per_bin": self.get_parameter("samples_per_bin").value,
+            "val_size": self.get_parameter("val_size").value,
+            "thinning_stride": self.get_parameter("thinning_stride").value,
             # "trigger_bins": self.get_parameter("trigger_bins").value, # TODO: Formalize or remove later
             "solver": self.get_parameter("solver").value,
             "solver_alpha": self.get_parameter("solver_alpha").value,
@@ -705,12 +714,13 @@ class CalibrationLearner(Node):
                 self.cfg
                 | {"trigger_x": 8, "trigger_y": 8, "policy": "decoupled_shared"},
             ),
-            # GazeCorrectionFramework(
-            #     "Conic",
-            #     ["bias", "full_conic"],
-            #     self.cfg
-            #     | {"trigger_x": 8, "trigger_y": 8, "policy": "decoupled_shared"},
-            # ),
+            GazeCorrectionFramework(
+                "Conic",
+                ["bias", "full_conic"],
+                self.cfg
+                | {"trigger_x": 100, "trigger_y": 100, "policy": "decoupled_shared"},
+                # | {"trigger_x": 8, "trigger_y": 8, "policy": "decoupled_shared"},
+            ),
         ]
 
         self.active_idx = 1
@@ -1082,18 +1092,18 @@ class CalibrationLearner(Node):
             
             if not is_locked_x:
                 # px[1] = dx*r, px[2] = dy*r, px[3] = dx, px[4] = dy, px[5] = bias offset
-                cx[8] = get_p(px, 1) / (W**2)   # Main radial
-                cx[9] = get_p(px, 2) / (H**2)   # Cross radial
-                cx[3] = get_p(px, 3) / W        # Main linear
-                cx[4] = get_p(px, 4) / H        # Cross linear
-                cx[5] += get_p(px, 5)           # Add to bias
+                cx[8] = get_p(px, 1) / (W**2)   # Main radial,  dx*r
+                cx[9] = get_p(px, 2) / (H**2)   # Cross radial, dy*r
+                cx[3] = get_p(px, 3) / W        # Main linear,  dx
+                cx[4] = get_p(px, 4) / H        # Cross linear, dy
+                cx[5] += get_p(px, 5)           # Add to bias,  bias
                 
             if not is_locked_y:
                 # py[1] = dx*r, py[2] = dy*r, py[3] = dx, py[4] = dy, py[5] = bias offset
-                cy[9] = get_p(py, 1) / (W**2)   # Cross radial
-                cy[8] = get_p(py, 2) / (H**2)   # Main radial
-                cy[3] = get_p(py, 3) / W        # Cross linear
-                cy[4] = get_p(py, 4) / H        # Main linear
+                cy[9] = get_p(py, 1) / (W**2)   # Cross radial, dx*r (cross)
+                cy[8] = get_p(py, 2) / (H**2)   # Main radial,  dy*r
+                cy[3] = get_p(py, 3) / W        # Cross linear, dx
+                cy[4] = get_p(py, 4) / H        # Main linear,  dy
                 cy[5] += get_p(py, 5)
 
         elif winner.name == "Simple Radial":

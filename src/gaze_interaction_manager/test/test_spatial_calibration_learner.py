@@ -252,8 +252,14 @@ def test_sigmoid_publication_mapping():
     node.active_idx = 5
     winner = node.competitors[5]
 
+    winner.current_features_x = winner.master_recipe_x 
+    winner.current_features_y = winner.master_recipe_y
+
     # Params for [tanh(dx/400), tanh(dy/300), bias]
-    winner.params = {"x": np.array([50.0, 0.0, 10.0]), "y": np.array([0.0, 30.0, 5.0])}
+    winner.params = {
+        "x": np.array([0.0, 50.0, 0.0, 10.0]), 
+        "y": np.array([0.0, 0.0, 30.0, 5.0])
+    }
 
     published = []
     node.model_pub.publish = lambda m: published.append(m)
@@ -350,10 +356,10 @@ def test_model_publication_coefficient_mapping():
     winner.current_features_x = winner.master_recipe_x
     winner.current_features_y = winner.master_recipe_y
 
-    # [dx*r/W2, dy*r/H2, dx/W, dy/H, bias]
+    # Correct Order: [bias, dx*r, dy*r, dx, dy, extra_ones]
     winner.params = {
-        "x": np.array([2.0, 0.0, 4.0, 0.0, 6.0]),
-        "y": np.array([0.0, 3.0, 0.0, 5.0, 6.0]),
+        "x": np.array([0.0, 2.0, 0.0, 4.0, 0.0, 6.0]),
+        "y": np.array([0.0, 0.0, 3.0, 0.0, 5.0, 6.0]),
     }
 
     # Intercept publication
@@ -362,10 +368,13 @@ def test_model_publication_coefficient_mapping():
     node.publish_model_update()
 
     msg = published[0]
-    W = 800.0
+    W_half = node.get_parameter("screen_w").value /2
+    H_half = node.get_parameter("screen_h").value /2
+
+    print(f"W={W_half}, H={H_half}, Coeffs: {msg.coeffs_x}")
     assert msg.model_type == CalibrationModel.TYPE_RADIAL_UNIVERSAL
-    assert msg.coeffs_x[8] == pytest.approx(2.0 / (W**2))
-    assert msg.coeffs_x[3] == pytest.approx(4.0 / W)
+    assert msg.coeffs_x[8] == pytest.approx(2.0 / (W_half**2),0.001)
+    assert msg.coeffs_x[3] == pytest.approx(4.0 / W_half,0.001)
     assert msg.coeffs_x[5] == pytest.approx(6.0)
 
 
