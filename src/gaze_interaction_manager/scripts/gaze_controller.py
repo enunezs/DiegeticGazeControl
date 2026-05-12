@@ -236,9 +236,9 @@ class GazeController(Node):
             elif p.name == "max_compensation_px":
                 self.max_compensation = p.value
             elif p.name == "start_trim_ms":
-                self.start_trim_ms = int((p.value / 1000.0) * self.hz_gaze)
+                self.start_trim_ms = int((p.value / 1000.0) ) # * self.hz_gaze
             elif p.name == "min_event_duration_ms":
-                self.min_event_duration_ms = int((p.value / 1000.0) * self.hz_gaze)
+                self.min_event_duration_ms = int((p.value / 1000.0) ) # * self.hz_gaze
             elif p.name == "history_length_s":
                 self._resize_gaze_buffer(p.value)
             elif p.name == "max_gap_ms":
