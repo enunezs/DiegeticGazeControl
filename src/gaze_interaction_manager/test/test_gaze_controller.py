@@ -29,6 +29,7 @@ import os
 import math
 import pytest
 import rclpy
+import numpy as np
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 scripts_dir = os.path.join(current_dir, '..', 'scripts')
@@ -337,17 +338,54 @@ def test_min_event_duration_accepts_long_enough_fixation():
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=200.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=1500.0),
+        rclpy.parameter.Parameter('max_error_px', value=300.0),
+        
     ])
 
-    node.button_cb(make_button("btn1", 10.0, 10.0, 1))
-    node.button_cb(make_button("btn1", 10.0, 10.0, 2))
+    # assert node.rec_start_ts == 0, "rec_start_ts should be initialized to 0."
+
+    # Name, px, py, sec, nanosec (optional)
+    node.button_cb(make_button("btn1", 10.0, 10.0, 1, 000000000))
+    node.button_cb(make_button("btn1", 10.0, 10.0, 1, 100000000))
+    node.button_cb(make_button("btn1", 10.0, 10.0, 1, 200000000))
+    node.button_cb(make_button("btn1", 10.0, 10.0, 1, 300000000))
 
     for i in range(50):
-        t = 1.0 + i * 0.005
-        node.gaze_cb(make_gaze(100.0, 100.0, int(t), int((t % 1) * 1e9)))
+        t = 1.0 + (i /200) # Hz
+        node.gaze_cb(make_gaze(100.0, 200.0, int(t), int((t % 1) * 1e9)))
+
+    # Check the gaze pointer
+    assert node.gaze_ptr == 50, "Gaze history should have 50 samples."
+
+    # Check start
+    gaze_data = node.gaze_history[: node.gaze_ptr] 
+    print(gaze_data[:, 0] >= node.rec_start_ts)
+    t = 1.0 + 50 * 0.005
+    end_ts = int(t) + int((t % 1) * 1e9)
+
+    # print(gaze_data[:, 0] <= end_ts)
+    raw_idx = np.where((gaze_data[:, 0] >= node.rec_start_ts) & (gaze_data[:, 0] <= end_ts))[0]
+    # print(f"raw_idx: {raw_idx}")
+
+    segment_duration_ms = (gaze_data[raw_idx[-1], 0] - gaze_data[raw_idx[0], 0])*1000 if len(raw_idx) > 0 else 0
+    print(f"segment_duration_ms: {segment_duration_ms}")
+    print(f"start_trim_ms: {node.start_trim_ms}")
+    assert node.start_trim_ms == 0.0, "start_trim_ms should be 0.0 ms."
+
+    # print(f"min_event_duration_ms: {node.min_event_duration_ms}")
+    assert node.min_event_duration_ms == 200.0, "min_event_duration_ms should be 200.0 ms."
 
     published = capture_segments(node)
     node.saccade_cb(make_saccade(1_250_000_000))
+
+    if len(raw_idx) == 0 or segment_duration_ms < (node.start_trim_ms + node.min_event_duration_ms):
+        pytest.fail(
+            f"Fixation should pass duration threshold but was discarded. "
+            f"raw_idx={raw_idx}, segment_duration_ms={segment_duration_ms}, "
+            f"start_trim_ms={node.start_trim_ms}, min_event_duration_ms={node.min_event_duration_ms}"
+        )
+
 
     assert len(published) == 1, (
         f"Fixation long enough to pass threshold but no segment was published."

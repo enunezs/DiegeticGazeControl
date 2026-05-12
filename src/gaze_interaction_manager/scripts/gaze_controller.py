@@ -193,14 +193,14 @@ class GazeController(Node):
         self.max_compensation = self.get_parameter("max_compensation_px").value
 
         self.start_trim_ms = int(
-            (self.get_parameter("start_trim_ms").value / 1000.0) # * self.hz_gaze
+            (self.get_parameter("start_trim_ms").value) # * self.hz_gaze
         )
         self.min_event_duration_ms = int(
-            (self.get_parameter("min_event_duration_ms").value / 1000.0) # * self.hz_gaze
+            (self.get_parameter("min_event_duration_ms").value) # * self.hz_gaze
         )
 
 
-        self.max_gap_s = self.get_parameter("max_gap_ms").value / 1000.0
+        self.max_gap_ms = self.get_parameter("max_gap_ms").value #/ 1000.0
         self.max_error_px = self.get_parameter("max_error_px").value
 
         self._resize_gaze_buffer(self.get_parameter("history_length_s").value)
@@ -236,13 +236,13 @@ class GazeController(Node):
             elif p.name == "max_compensation_px":
                 self.max_compensation = p.value
             elif p.name == "start_trim_ms":
-                self.start_trim_ms = int((p.value / 1000.0) ) # * self.hz_gaze
+                self.start_trim_ms = int(p.value ) # * self.hz_gaze
             elif p.name == "min_event_duration_ms":
-                self.min_event_duration_ms = int((p.value / 1000.0) ) # * self.hz_gaze
+                self.min_event_duration_ms = int(p.value ) # * self.hz_gaze
             elif p.name == "history_length_s":
                 self._resize_gaze_buffer(p.value)
             elif p.name == "max_gap_ms":
-                self.max_gap_s = p.value / 1000.0
+                self.max_gap_ms = p.value 
             elif p.name == "max_error_px":
                 self.max_error_px = p.value
 
@@ -338,18 +338,18 @@ class GazeController(Node):
         with self._lock:
             if self.is_recording:
                 # Use the exact start of the saccade provided by the glasses
-                # event_start_ts = msg.start_time_ns / 1e9
-                event_start_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
-                # self.get_logger().info(
-                #     f"Saccade detected! Terminating segment at {event_start_ts:.3f}"
-                # )
+                event_start_ts = msg.start_time_ns / 1e9
+                # event_start_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
+                self.get_logger().info(
+                    f"Saccade detected! Terminating segment at {event_start_ts:.3f}"
+                )
                 self._trigger_segment_end(event_start_ts, reason="SACCADE")
 
     def blink_cb(self, msg: GazeEvent):
         with self._lock:
             if self.is_recording:
-                # event_start_ts = msg.start_time_ns / 1e9
-                event_start_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
+                event_start_ts = msg.start_time_ns / 1e9
+                # event_start_ts = msg.header.stamp.sec + (msg.header.stamp.nanosec / 1e9)
 
                 # self.get_logger().info(
                 #     f"Blink detected! Terminating segment at {event_start_ts:.3f}"
@@ -582,17 +582,23 @@ class GazeController(Node):
         # 1. Slice and Sort Gaze
         # There is an issue with the raw_idx
         # Lets see first the data: (ts, x, y)
-        # self.get_logger().info(f"Raw index info: Min ts {np.min(self.gaze_history[:, 0])}, Max ts {np.max(self.gaze_history[:, 0])}")
-        # self.get_logger().info(f"Gaze data at ptr {self.gaze_ptr-1}: {self.gaze_history[self.gaze_ptr-1]}")
-        # self.get_logger().info(f"Gaze is full? {self.gaze_buffer_filled}")
+        self.get_logger().info(f"Raw index info: Min ts {np.min(self.gaze_history[:, 0])}, Max ts {np.max(self.gaze_history[:, 0])}")
+        self.get_logger().info(f"Gaze data at ptr {self.gaze_ptr-1}: {self.gaze_history[self.gaze_ptr-1]}")
+        self.get_logger().info(f"Gaze is full? {self.gaze_buffer_filled}")
+        # self.get_logger().info(f"Gaze data sample (ts, x, y): {self.gaze_history[self.gaze_ptr-1]}")
+
+        # Slice gaze data        
+        if self.gaze_buffer_filled:
+            gaze_data = np.roll(self.gaze_history, -self.gaze_ptr, axis=0)
+        else:
+            gaze_data = self.gaze_history[: self.gaze_ptr]
         
-        gaze_data = (
-            np.roll(self.gaze_history, -self.gaze_ptr, axis=0)
-            if self.gaze_buffer_filled
-            else self.gaze_history[: self.gaze_ptr]
-        )
+
         # Is it in order?
+        self.get_logger().info(f"Gaze data: {gaze_data}")
         # self.get_logger().info(f"Gaze data is in order: {np.all(gaze_data[:-1, 0] <= gaze_data[1:, 0])}")
+        self.get_logger().info(f"Gaze data timestamps: {self.rec_start_ts} to {end_ts}")
+
 
         # Prevent out of order timestamps
         # gaze_data = gaze_data[gaze_data[:, 0] > 0]
@@ -601,11 +607,16 @@ class GazeController(Node):
         # 2. Windowing
         # This is always zero...
         raw_idx = np.where((gaze_data[:, 0] >= self.rec_start_ts) & (gaze_data[:, 0] <= end_ts))[0]
+        
+        self.get_logger().info(f"Raw index found: {raw_idx}")
 
         # Check minimum duration
         # segment_duration_ms = (raw_idx[-1] - raw_idx[0]) if len(raw_idx) > 0 else 0
         segment_duration_ms = (gaze_data[raw_idx[-1], 0] - gaze_data[raw_idx[0], 0])*1000 if len(raw_idx) > 0 else 0
 
+        self.get_logger().info(
+            f"Segment window: {len(raw_idx)} samples, duration {segment_duration_ms:.3f} ms, reason: {reason}"
+        )
          
         # if len(raw_idx) < (self.start_trim_ms + self.min_event_duration_ms):
         if len(raw_idx) == 0 or segment_duration_ms < (self.start_trim_ms + self.min_event_duration_ms):
@@ -616,7 +627,7 @@ class GazeController(Node):
             
         else:
             # Post-hoc trimming: Remove the start padding (eye settling)
-            trimmed_idx = raw_idx[self.start_trim_ms :]
+            trimmed_idx = raw_idx[int(self.start_trim_ms* 0.001 * self.hz_gaze) :]
 
             trimmed_start_ts = gaze_data[trimmed_idx[0], 0]
 
@@ -647,7 +658,9 @@ class GazeController(Node):
 
     def float_to_stamp(self, t_float):
         t = Header().stamp
-        t.sec, t.nanosec = int(t_float), int((t_float - int(t_float)) * 1e9)
+        t.sec = int(t_float)
+        # Use round to handle floating point noise
+        t.nanosec = int(round((t_float - t.sec) * 1e9))
         return t
 
     def _publish_segment(self, gaze_slice, end_ts, start_ts, trimmed_start_ts):
@@ -696,11 +709,14 @@ class GazeController(Node):
 
         # A. Out of bounds (Extrapolation is dropped)
         gap_mask[G_times < B_times[0]] = False
-        gap_mask[G_times > B_times[-1]] = False
+        # Dont drop haze after last # gap_mask[G_times > B_times[-1]] = False 
+        # print(f"Gap mask after OOB check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
 
         # B. Internal Gaps
         diffs = np.diff(B_times)
-        bad_gap_indices = np.where(diffs > self.max_gap_s)[0]
+        bad_gap_indices = np.where(diffs > self.max_gap_ms*0.001)[0]
+        # print(f"Button time gaps (s): {diffs}")
+        # print(f"Bad gap indices: {bad_gap_indices}, corresponding to times {B_times[bad_gap_indices]} to {B_times[bad_gap_indices + 1]} with gaps of {diffs[bad_gap_indices]} seconds")
 
         # np.searchsorted maps G_times to the interval they fall into
         interval_idx = np.searchsorted(B_times, G_times)
@@ -708,18 +724,28 @@ class GazeController(Node):
             # Drop gaze samples falling into the interval (B_times[i], B_times[i+1])
             gap_mask[interval_idx == i + 1] = False
 
+        # print(f"Gap mask after internal gap check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
+
         # 5. Create Mask: Drop Huge Errors
         errors = np.hypot(tx - G_xs, ty - G_ys)
         error_mask = errors <= self.max_error_px
+        # print(f"Error mask: {error_mask}, {np.sum(error_mask)} valid samples remain after error check")
 
         # 6. Final Valid Mask
         valid_mask = gap_mask & error_mask
+        # print(f"Valid mask: {valid_mask}, {np.sum(valid_mask)} valid samples out of {len(G_times)} total")
+
 
         # 7. Build ROS Message (Iterate only over valid data)
         valid_indices = np.where(valid_mask)[0]
 
         if len(valid_indices) == 0:
             self.get_logger().warning("All gaze samples dropped (gaps or errors). Discarding segment.")
+            # Reason
+            # self.get_logger().info(
+            #     f"Segment discarded after alignment:  {len(gaze_slice)} gaze samples, {len(btn_data)} button samples."
+            # )
+
         else:
             segment = InteractionSegment()
             segment.header.stamp = self.get_clock().now().to_msg()
@@ -1073,8 +1099,8 @@ class GazeController(Node):
             # B. Gap Zones (Highlight gaps > max_gap_s)
             diffs = np.diff(b_times)
             for i, d in enumerate(diffs):
-                if d > self.max_gap_s:
-                    label = f'Gap > {self.max_gap_s*1000:.0f}ms' if i == 0 else ""
+                if d > self.max_gap_ms*0.001:
+                    label = f'Gap > {self.max_gap_ms:.0f}ms' if i == 0 else ""
                     ax.axvspan(b_times[i], b_times[i+1], color='red', alpha=0.15, hatch='//', label=label)
 
             # 2. Plot Button Target (Ground Truth)
