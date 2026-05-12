@@ -80,24 +80,40 @@ def capture_segments(node):
 def zero_params(node):
     """Turn off all filtering/trim so tests are purely about the logic under test."""
     node.set_parameters([
+
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
-        rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+
+
     ])
 
 def nonsticky_node():
     """Returns a GazeController with non-sticky mode and all trims zeroed."""
     node = GazeController()
     node.set_parameters([
-        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
-        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
         rclpy.parameter.Parameter('max_gap_ms', value=2000.0),
-        
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=200.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+
     ])
     return node
  
@@ -188,16 +204,18 @@ def test_pipeline_unadjusted_interpolation():
 
     node = GazeController()
     success = node.set_parameters([
-        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
         rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
         rclpy.parameter.Parameter('use_temporal_alignment', value=True),
         rclpy.parameter.Parameter('sticky_button_interaction', value=False),
-        rclpy.parameter.Parameter('max_error_px', value=500.0),
-
 
     ])
 
@@ -277,12 +295,16 @@ def test_pipeline_delay_shifts_interpolation():
 
     node = GazeController()
     node.set_parameters([
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=500.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
         rclpy.parameter.Parameter('edge_margin', value=50),
-
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
         rclpy.parameter.Parameter('use_temporal_alignment', value=True),
         rclpy.parameter.Parameter('sticky_button_interaction', value=False),
 
@@ -319,9 +341,19 @@ def test_min_event_duration_discards_short_fixation():
     """
     node = GazeController()
     node.set_parameters([
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
-        rclpy.parameter.Parameter('min_event_duration_ms', value=200.0),  # 40 samples
+        rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('min_event_duration_ms', value=200.0), # 40 samples
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+
     ])
 
     btn = make_button("btn1", 10.0, 10.0, 1)
@@ -349,11 +381,19 @@ def test_min_event_duration_accepts_long_enough_fixation():
     """
     node = GazeController()
     node.set_parameters([
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=200.0),
         rclpy.parameter.Parameter('max_gap_ms', value=1500.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
         rclpy.parameter.Parameter('max_error_px', value=300.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+
         
     ])
 
@@ -423,10 +463,17 @@ def test_non_sticky_release_triggers_segment():
     """
     node = GazeController()
     node.set_parameters([
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
-        rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
         rclpy.parameter.Parameter('sticky_button_interaction', value=False),
     ])
 
@@ -457,14 +504,21 @@ def test_sticky_release_does_not_trigger_segment():
 
     node = GazeController()
     node.set_parameters([
-        rclpy.parameter.Parameter('sticky_button_interaction', value=True),
-        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+       
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
-        rclpy.parameter.Parameter('edge_margin', value=0.0),
-        
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=0),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=True), #TRUE
+
+
     ])
     published = capture_segments(node)
 
@@ -508,10 +562,19 @@ def test_button_id_swap_glitch_sticky():
     """
     node = GazeController()
     node.set_parameters([
-        rclpy.parameter.Parameter('sticky_button_interaction', value=True),
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=True), # TRUE
+
     ])
 
     # Normal A frame → starts recording
@@ -544,11 +607,18 @@ def test_button_id_swap_glitch_non_sticky():
     """
     node = GazeController()
     node.set_parameters([
-        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
-        rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
     ])
 
     node.button_cb(make_button("btn_A", 100.0, 100.0, 1))
@@ -753,10 +823,19 @@ def test_concurrent_button_ids_same_timestamp():
     """
     node = GazeController()
     node.set_parameters([
-        rclpy.parameter.Parameter('sticky_button_interaction', value=True),
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=True), # TRUE
+
     ])
 
     # Both arrive with identical timestamps
@@ -800,10 +879,19 @@ def test_trigger_segment_end_length_check_uses_wrong_floor():
     """
     node = GazeController()
     success = node.set_parameters([
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=50.0),     # 10 samples at 200Hz
-        rclpy.parameter.Parameter('min_event_duration_ms', value=50.0),  # 10 samples
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('min_event_duration_ms', value=50.0),  # 10 samples
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+
     ])
     # Required window: 10 + 10 = 20 samples minimum
 
@@ -823,10 +911,19 @@ def test_trigger_segment_end_length_check_uses_wrong_floor():
     # Reset and try with 21 samples — should publish
     node2 = GazeController()
     node2.set_parameters([
+        # Timing
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=50.0),
-        rclpy.parameter.Parameter('min_event_duration_ms', value=50.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('min_event_duration_ms', value=50.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+
     ])
     node2.button_cb(make_button("btn1", 10.0, 10.0, 1))
     node2.button_cb(make_button("btn1", 10.0, 10.0, 3))
