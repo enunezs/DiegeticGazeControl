@@ -604,10 +604,13 @@ class GazeController(Node):
         # self.get_logger().info(f"Gaze data is in order: {np.all(gaze_data[:-1, 0] <= gaze_data[1:, 0])}")
         self.get_logger().info(f"Gaze data timestamps: {self.rec_start_ts} to {end_ts}")
 
-
-        # Prevent out of order timestamps
-        # gaze_data = gaze_data[gaze_data[:, 0] > 0]
-        # gaze_data = gaze_data[np.argsort(gaze_data[:, 0])]
+        # If timestamps out of order
+        if np.all(gaze_data[:-1, 0] <= gaze_data[1:, 0]):
+            # self.get_logger().info("Gaze data is already in chronological order.")
+            pass
+        else:
+            gaze_data = gaze_data[gaze_data[:, 0] > 0]
+            gaze_data = gaze_data[np.argsort(gaze_data[:, 0])]
 
         # 2. Windowing
         # This is always zero...
@@ -632,7 +635,10 @@ class GazeController(Node):
             
         else:
             # Post-hoc trimming: Remove the start padding (eye settling)
-            trimmed_idx = raw_idx[int(self.start_trim_ms* 0.001 * self.hz_gaze) :]
+            # trimmed_idx = raw_idx[int(self.start_trim_ms* 0.001 * self.hz_gaze) :]
+            
+            cutoff_ts = self.rec_start_ts + (self.start_trim_ms * 0.001)
+            trimmed_idx = raw_idx[gaze_data[raw_idx, 0] >= cutoff_ts]
 
             trimmed_start_ts = gaze_data[trimmed_idx[0], 0]
 
