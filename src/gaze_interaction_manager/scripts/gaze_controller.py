@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+from typing import Optional
+
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import MultiThreadedExecutor
 from rcl_interfaces.msg import SetParametersResult
 import numpy as np
 from threading import Lock  # Add RLock to imports
@@ -23,6 +26,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
+import copy
 
 
 class GazeController(Node):
@@ -38,8 +42,8 @@ class GazeController(Node):
 
         # --- 1. Parameters ---
         # Screen
-        self.declare_parameter("screen_width", 1600.0)
-        self.declare_parameter("screen_height", 1200.0)
+        self.declare_parameter("screen_w", 1600.0/2)
+        self.declare_parameter("screen_h", 1200.0/2)
         
         # Filtering
         self.declare_parameter("history_length_s", 30.0)
@@ -57,6 +61,8 @@ class GazeController(Node):
         )  # Padding for trimming the END of event
         self.declare_parameter("min_event_duration_ms", 200.0)
         self.declare_parameter("max_gap_ms", 300.0)
+
+        self.declare_parameter("inactive_grace_ms", 200.0)
 
         # --- Synchronization Parameters ---
         self.declare_parameter("compensation_active", True)
@@ -109,7 +115,9 @@ class GazeController(Node):
         self.latest_gaze_time = 0.0
         self.in_saccade, self.in_blink = False, False
 
+        # Sticky mode
         self.button_engaged = False # New: tracks if the button is physically held
+        self._inactive_grace_deadline: Optional[float] = None
 
 
         # Latency/RMS Tracking
@@ -182,8 +190,8 @@ class GazeController(Node):
 
     def update_internal_params(self):
 
-        self.screen_w = self.get_parameter("screen_width").value
-        self.screen_h = self.get_parameter("screen_height").value
+        self.screen_w = self.get_parameter("screen_w").value
+        self.screen_h = self.get_parameter("screen_h").value
         self.center_x = self.screen_w / 2.0
         self.center_y = self.screen_h / 2.0
 
@@ -224,10 +232,10 @@ class GazeController(Node):
         print("Received parameter update:")
         for p in params:
             print(f" - {p.name}: {p.value}")
-            if p.name == "screen_width":
+            if p.name == "screen_w":
                 self.screen_w = p.value
                 self.center_x = self.screen_w / 2.0
-            if p.name == "screen_height":
+            if p.name == "screen_h":
                 self.screen_h = p.value
                 self.center_y = self.screen_h / 2.0
             if p.name == "median_window":
@@ -269,18 +277,18 @@ class GazeController(Node):
             self._process_and_publish_corrected_gaze(msg)
 
             # --- D. BOUNDARY MONITORING ---
-            in_fov = (
-                self.edge_margin < msg.x < self.screen_w - self.edge_margin
-                and self.edge_margin < msg.y < self.screen_h - self.edge_margin
-            )
+            # in_fov = (
+            #     self.edge_margin < msg.x < self.screen_w - self.edge_margin
+            #     and self.edge_margin < msg.y < self.screen_h - self.edge_margin
+            # )
 
-            # If gaze becomes "dirty", terminate segment immediately
-            if self.is_recording and not in_fov:
-                if not self.get_parameter("sticky_button_interaction").value:
-                    self._trigger_segment_end(ts, reason="OUT_OF_FOV")
-                    # self.get_logger().info(
-                    #     f"Gaze out of bounds at {ts:.3f}. Ending segment."
-                    # )
+            # # If gaze becomes "dirty", terminate segment immediately
+            # if self.is_recording and not in_fov:
+            #     if not self.get_parameter("sticky_button_interaction").value:
+            #         self._trigger_segment_end(ts, reason="OUT_OF_FOV")
+            #         # self.get_logger().info(
+            #         #     f"Gaze out of bounds at {ts:.3f}. Ending segment."
+            #         # )
 
             # Debug signals
             # self.publish_debug_signals(in_fov, is_clean)
@@ -420,7 +428,8 @@ class GazeController(Node):
                     is_active,
                 ))
                 self.last_valid_btn_ts = adjusted_ts
-                self.latest_raw_button_msg = msg  # Keep geometry fresh for teleop
+
+            self.latest_raw_button_msg = msg  # Keep geometry fresh for teleop
 
             # ----------------------------------------------------------------
             # 4. State machine — delegated based on mode
@@ -436,46 +445,98 @@ class GazeController(Node):
             if self.get_parameter("viz_enabled").value:
                 self.publish_live_debug_plot(msg)
 
-    # -------------------------------------------------------------------------
+    # # -------------------------------------------------------------------------
 
     def _handle_button_standard(self, msg, adjusted_ts, incoming_id, is_active):
         """
         Simple non-sticky state machine.
 
         Rising edge  → start recording, lock onto this button ID.
-        Falling edge → if we were recording, end the segment immediately.
+        Falling edge → start grace period; only end segment if INACTIVE persists.
         Different ID while recording → switch lock (non-sticky allows this).
-
-        This is the baseline.  All tests should pass against this path.
         """
+        grace_s = self.get_parameter("inactive_grace_ms").value * 0.001
+
         # Rising edge: a new ACTIVE signal while we are not yet recording
         if is_active and not self.is_recording:
             self.is_recording = True
-            # self.button_engaged = True
             self.current_button_id = incoming_id
             self.rec_start_ts = adjusted_ts
+            self._inactive_grace_deadline = None  # Clear any pending grace
             self.get_logger().debug(f"[Standard] Recording started: {incoming_id}")
             return
 
-        # While recording: allow lock switch to a different button
-        if self.is_recording and is_active and incoming_id != self.current_button_id:
-            self.get_logger().warning(
-                f"[Standard] Switching lock: {self.current_button_id} → {incoming_id}"
-            )
-            self.current_button_id = incoming_id
+        # ACTIVE signal while recording: cancel any grace period
+        if is_active and self.is_recording:
+            self._inactive_grace_deadline = None
 
-        # Falling edge: button released while we were recording
-        if not is_active :
-            # and self.button_engaged and incoming_id == self.current_button_id
-            # self.button_engaged = False
-            if self.is_recording:
+            # Allow lock switch to a different button
+            if incoming_id != self.current_button_id:
+                self.get_logger().warning(
+                    f"[Standard] Switching lock: {self.current_button_id} → {incoming_id}"
+                )
+                self.current_button_id = incoming_id
+            return
+
+        # Falling edge: start grace period instead of ending immediately
+        if not is_active and self.is_recording:
+            if self._inactive_grace_deadline is None:
+                self._inactive_grace_deadline = adjusted_ts + grace_s
+                self.get_logger().debug(
+                    f"[Standard] INACTIVE received, grace period started "
+                    f"({grace_s*1000:.0f}ms), deadline={self._inactive_grace_deadline:.3f}"
+                )
+
+            # Only end the segment if grace period has expired
+            if adjusted_ts >= self._inactive_grace_deadline:
+                self._inactive_grace_deadline = None
                 terminal_trim_s = self.get_parameter("terminal_trim_ms").value * 0.001
                 end_point = self.last_valid_btn_ts - terminal_trim_s
                 self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
                 self.get_logger().debug(
-                    f"[Standard] Button released. Segment ended at {end_point:.3f}"
+                    f"[Standard] Grace expired. Segment ended at {end_point:.3f}"
                 )
 
+    # def _handle_button_standard(self, msg, adjusted_ts, incoming_id, is_active):
+    #     """
+    #     Simple non-sticky state machine.
+
+    #     Rising edge  → start recording, lock onto this button ID.
+    #     Falling edge → if we were recording, end the segment immediately.
+    #     Different ID while recording → switch lock (non-sticky allows this).
+
+    #     This is the baseline.  All tests should pass against this path.
+    #     """
+    #     # Rising edge: a new ACTIVE signal while we are not yet recording
+    #     if is_active and not self.is_recording:
+    #         self.is_recording = True
+    #         # self.button_engaged = True
+    #         self.current_button_id = incoming_id
+    #         self.rec_start_ts = adjusted_ts
+    #         self.get_logger().debug(f"[Standard] Recording started: {incoming_id}")
+    #         return
+
+    #     # While recording: allow lock switch to a different button
+    #     if self.is_recording and is_active and incoming_id != self.current_button_id:
+    #         self.get_logger().warning(
+    #             f"[Standard] Switching lock: {self.current_button_id} → {incoming_id}"
+    #         )
+    #         self.current_button_id = incoming_id
+
+    #     # Falling edge: button released while we were recording
+    #     if not is_active :
+    #         # and self.button_engaged and incoming_id == self.current_button_id
+    #         # self.button_engaged = False
+    #         if self.is_recording:
+    #             terminal_trim_s = self.get_parameter("terminal_trim_ms").value * 0.001
+    #             end_point = self.last_valid_btn_ts - terminal_trim_s
+    #             self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
+    #             self.get_logger().debug(
+    #                 f"[Standard] Button released. Segment ended at {end_point:.3f}"
+    #             )
+    #             self.is_recording = False
+
+        # self.get_logger().info(f"is_active: {is_active}, is_recording: {self.is_recording}")
     # -------------------------------------------------------------------------
 
     def _handle_button_sticky(self, msg, adjusted_ts, incoming_id, is_active):
@@ -553,23 +614,34 @@ class GazeController(Node):
         """Safety-critical heartbeat loop for teleoperation."""
         with self._lock:
             # If we've never received a button message, we can't publish anything valid yet
-            if self.latest_raw_button_msg is None:
-                return
+            out_msg = (self.latest_raw_button_msg)
+
+            if out_msg is None:
+                out_msg = ButtonStatus()
+                out_msg.button_status = ButtonStatus.BUTTON_INACTIVE
+                out_msg.button.button_id = ""
+
 
             # Create a new message based on the last known geometry
-            out_msg = self.latest_raw_button_msg
-            out_msg.header.stamp = self.get_clock().now().to_msg()
+            # out_msg = copy.deepcopy(self.latest_raw_button_msg)
+            # out_msg.header.stamp = self.get_clock().now().to_msg()
             
             # THE FILTER:
+            # TODO? Only change in sticky?
+            # Only override if we are holding a segment open that upstream doesn't know about
+            if self.is_recording and out_msg.button_status != ButtonStatus.BUTTON_ACTIVE:
+                out_msg.button_status = ButtonStatus.BUTTON_ACTIVE
+                out_msg.button.button_id = self.current_button_id
+
             # Even if the Dwell Node says "INACTIVE", if we are still 'recording' 
             # (because of Sticky Mode or a Blink), we force the status to ACTIVE.
-            if self.is_recording:
-                out_msg.button_status = ButtonStatus.BUTTON_ACTIVE
-                out_msg.button.button_id = self.current_button_id # Ensure ID is consistent
-            else:
-                out_msg.button_status = ButtonStatus.BUTTON_INACTIVE
-                out_msg.button_id = "" # Clear ID so robot stops
-                out_msg.button.button_id = "" # Clear button ID
+            # if self.is_recording:
+            #     out_msg.button_status = ButtonStatus.BUTTON_ACTIVE
+            #     out_msg.button.button_id = self.current_button_id # Ensure ID is consistent
+            # else:
+            #     out_msg.button_status = ButtonStatus.BUTTON_INACTIVE
+            #     out_msg.button_id = "" # Clear ID so robot stops
+            #     out_msg.button.button_id = "" # Clear button ID
 
             self.teleop_pub.publish(out_msg)
 
@@ -587,9 +659,9 @@ class GazeController(Node):
         # 1. Slice and Sort Gaze
         # There is an issue with the raw_idx
         # Lets see first the data: (ts, x, y)
-        self.get_logger().info(f"Raw index info: Min ts {np.min(self.gaze_history[:, 0])}, Max ts {np.max(self.gaze_history[:, 0])}")
-        self.get_logger().info(f"Gaze data at ptr {self.gaze_ptr-1}: {self.gaze_history[self.gaze_ptr-1]}")
-        self.get_logger().info(f"Gaze is full? {self.gaze_buffer_filled}")
+        # self.get_logger().info(f"Raw index info: Min ts {np.min(self.gaze_history[:, 0])}, Max ts {np.max(self.gaze_history[:, 0])}")
+        # self.get_logger().info(f"Gaze data at ptr {self.gaze_ptr-1}: {self.gaze_history[self.gaze_ptr-1]}")
+        # self.get_logger().info(f"Gaze is full? {self.gaze_buffer_filled}")
         # self.get_logger().info(f"Gaze data sample (ts, x, y): {self.gaze_history[self.gaze_ptr-1]}")
 
         # Slice gaze data        
@@ -600,9 +672,9 @@ class GazeController(Node):
         
 
         # Is it in order?
-        self.get_logger().info(f"Gaze data: {gaze_data}")
+        # self.get_logger().info(f"Gaze data: {gaze_data}")
         # self.get_logger().info(f"Gaze data is in order: {np.all(gaze_data[:-1, 0] <= gaze_data[1:, 0])}")
-        self.get_logger().info(f"Gaze data timestamps: {self.rec_start_ts} to {end_ts}")
+        # self.get_logger().info(f"Gaze data timestamps: {self.rec_start_ts} to {end_ts}")
 
         # If timestamps out of order
         if np.all(gaze_data[:-1, 0] <= gaze_data[1:, 0]):
@@ -616,15 +688,15 @@ class GazeController(Node):
         # This is always zero...
         raw_idx = np.where((gaze_data[:, 0] >= self.rec_start_ts) & (gaze_data[:, 0] <= end_ts))[0]
         
-        self.get_logger().info(f"Raw index found: {raw_idx}")
+        # self.get_logger().info(f"Raw index found: {raw_idx}")
 
         # Check minimum duration
         # segment_duration_ms = (raw_idx[-1] - raw_idx[0]) if len(raw_idx) > 0 else 0
         segment_duration_ms = (gaze_data[raw_idx[-1], 0] - gaze_data[raw_idx[0], 0])*1000 if len(raw_idx) > 0 else 0
 
-        self.get_logger().info(
-            f"Segment window: {len(raw_idx)} samples, duration {segment_duration_ms:.3f} ms, reason: {reason}"
-        )
+        # self.get_logger().info(
+        #     f"Segment window: {len(raw_idx)} samples, duration {segment_duration_ms:.3f} ms, reason: {reason}"
+        # )
          
         # if len(raw_idx) < (self.start_trim_ms + self.min_event_duration_ms):
         if len(raw_idx) == 0 or segment_duration_ms < (self.start_trim_ms + self.min_event_duration_ms):
@@ -632,6 +704,7 @@ class GazeController(Node):
             self.get_logger().info(
                 f"Segment too short ({segment_duration_ms} ms, {len(raw_idx)} samples). Discarding. Reason = {reason}"
             )
+            self.is_recording = False
             
         else:
             # Post-hoc trimming: Remove the start padding (eye settling)
@@ -649,7 +722,7 @@ class GazeController(Node):
                 trimmed_start_ts=trimmed_start_ts
                 )
             self.get_logger().info(
-                f"Segment finalized: {reason} with {len(trimmed_idx)} samples, {(end_ts - trimmed_start_ts)*1000:.3f} ms)"
+                f"Segment finalized Correctly: {reason} with {len(trimmed_idx)} samples, {(end_ts - trimmed_start_ts)*1000:.3f} ms)"
             )
             # else:
             #     self.get_logger().error(
@@ -666,6 +739,7 @@ class GazeController(Node):
         self.rec_start_ts = None
         self.button_engaged = False
         self.last_valid_btn_ts = 0.0
+        self._inactive_grace_deadline = None  
 
     def float_to_stamp(self, t_float):
         t = Header().stamp
@@ -713,7 +787,6 @@ class GazeController(Node):
             tx = B_xs[idxs]
             ty = B_ys[idxs]
 
-
         # 4. Create Mask: Drop Gaps 
         # (Drop samples that fall in a gap > max_gap_s, or out of bounds)
         gap_mask = np.ones(len(G_times), dtype=bool)
@@ -723,12 +796,12 @@ class GazeController(Node):
         # A. Out of bounds (Extrapolation is dropped)
         gap_mask[G_times < B_times[0]] = False
         # Dont drop haze after last # gap_mask[G_times > B_times[-1]] = False 
-        print(f"Gap mask after OOB check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
+        # print(f"Gap mask after OOB check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
 
         # B. Internal Gaps
         diffs = np.diff(B_times)
         bad_gap_indices = np.where(diffs > self.max_gap_ms*0.001)[0]
-        print(f"Max gap (ms): {self.max_gap_ms}")
+        # print(f"Max gap (ms): {self.max_gap_ms}")
         # print(f"Button time gaps (s): {diffs}")
         # print(f"Bad gap indices: {bad_gap_indices}, corresponding to times {B_times[bad_gap_indices]} to {B_times[bad_gap_indices + 1]} with gaps of {diffs[bad_gap_indices]} seconds")
 
@@ -738,16 +811,16 @@ class GazeController(Node):
             # Drop gaze samples falling into the interval (B_times[i], B_times[i+1])
             gap_mask[interval_idx == i + 1] = False
 
-        print(f"Gap mask after internal gap check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
+        # print(f"Gap mask after internal gap check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
 
         # 5. Create Mask: Drop Huge Errors
         errors = np.hypot(tx - G_xs, ty - G_ys)
         error_mask = errors <= self.max_error_px
-        print(f"Error mask: {error_mask}, {np.sum(error_mask)} valid samples remain after error check")
+        # print(f"Error mask: {error_mask}, {np.sum(error_mask)} valid samples remain after error check")
 
         # 6. Final Valid Mask
         valid_mask = gap_mask & error_mask
-        print(f"Valid mask: {valid_mask}, {np.sum(valid_mask)} valid samples out of {len(G_times)} total")
+        # print(f"Valid mask: {valid_mask}, {np.sum(valid_mask)} valid samples out of {len(G_times)} total")
 
 
         # 7. Build ROS Message (Iterate only over valid data)
@@ -1219,6 +1292,8 @@ class GazeController(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = GazeController()
+    # executor = MultiThreadedExecutor(num_threads=4)  
+    # executor.add_node(node)
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

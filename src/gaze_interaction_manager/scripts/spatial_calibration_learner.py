@@ -608,14 +608,14 @@ class CalibrationLearner(Node):
             namespace="",
             parameters=[
                 # Base
-                ("screen_w", 1600),
-                ("screen_h", 1200),
-                ("bin_size", 150),
+                ("screen_w", 1600/2),
+                ("screen_h", 1200/2),
+                ("bin_size", 75),
                 ("samples_per_bin", 100),
                 ("val_size", 10),
                 ("thinning_stride", 1),
                 ("min_samples_per_bin_threshold", 4),
-                ("max_error_cap", 150.0),  # Outlier rejection threshold (px
+                ("max_error_cap", 75.0),  # Outlier rejection threshold (px
                 # Selection and switching logic
                 ("selection_strategy", "RMSE"),  # "BIC" or "RMSE"
                 (
@@ -1034,7 +1034,7 @@ class CalibrationLearner(Node):
         cx, cy = [0.0] * 10, [0.0] * 10
 
         px, py = winner.params["x"], winner.params["y"]
-        W, H = 800.0, 600.0  # Normalization constants used in training
+        W, H = self.cfg["screen_w"], self.cfg["screen_h"]  # Normalization constants used in training
 
         # Guard against None (Not trained yet)
         if px is None or py is None:
@@ -1209,8 +1209,8 @@ class CalibrationLearner(Node):
         ax.set_title(
             f"Reservoir ({len(self.reservoir.bins)} Bins) - {self.cfg['cv_strategy']} Pointing from gaze to target"
         )
-        ax.set_xlim(0, 1600)
-        ax.set_ylim(1200, 0)
+        ax.set_xlim(0, self.cfg["screen_w"])
+        ax.set_ylim(self.cfg["screen_h"], 0)
         self._pub_plt(fig, "quiver", save_name=save_name)
 
     def _plot_tournament(self, save_name=None):

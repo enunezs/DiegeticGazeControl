@@ -71,9 +71,9 @@
 
 /gaze_controller_node:
   ros__parameters:
-    screen_width: 800.0
-    screen_height: 600.0
-    compensation_active : True 
+    screen_w: 800.0
+    screen_h: 600.0
+    compensation_active : False 
     use_temporal_alignment : True
     sticky_button_interaction : False
     history_length_s : 10.0
@@ -85,7 +85,7 @@
     terminal_trim_ms : 150.0  # End padding 
     min_event_duration_ms : 40.0 #  
     max_gap_ms: 300.0
-    max_compensation_px : 200.0
+    max_compensation_px : 100.0
     viz_enabled : True
 
 
