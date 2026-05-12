@@ -1,5 +1,8 @@
 
 '''
+NEEDS on a separate terminal:
+ros2 launch gaze_interaction_manager excalib_diegetic_gaze_control.launch.py 
+
 python3 -m pytest src/gaze_interaction_manager/test/test_hardware_propagation.py -v -s
 '''
 
