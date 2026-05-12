@@ -724,16 +724,16 @@ class GazeController(Node):
             # Drop gaze samples falling into the interval (B_times[i], B_times[i+1])
             gap_mask[interval_idx == i + 1] = False
 
-        # print(f"Gap mask after internal gap check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
+        print(f"Gap mask after internal gap check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
 
         # 5. Create Mask: Drop Huge Errors
         errors = np.hypot(tx - G_xs, ty - G_ys)
         error_mask = errors <= self.max_error_px
-        # print(f"Error mask: {error_mask}, {np.sum(error_mask)} valid samples remain after error check")
+        print(f"Error mask: {error_mask}, {np.sum(error_mask)} valid samples remain after error check")
 
         # 6. Final Valid Mask
         valid_mask = gap_mask & error_mask
-        # print(f"Valid mask: {valid_mask}, {np.sum(valid_mask)} valid samples out of {len(G_times)} total")
+        print(f"Valid mask: {valid_mask}, {np.sum(valid_mask)} valid samples out of {len(G_times)} total")
 
 
         # 7. Build ROS Message (Iterate only over valid data)

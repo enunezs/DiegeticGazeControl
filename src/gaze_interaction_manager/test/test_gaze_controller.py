@@ -96,6 +96,8 @@ def nonsticky_node():
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
         rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('max_gap_ms', value=2000.0),
+        
     ])
     return node
  
@@ -1333,8 +1335,8 @@ def test_blink_event_terminates_interaction():
     node = nonsticky_node()
     
     node.button_cb(make_button("btn1", 10.0, 10.0, 1, 0))
-    node.button_cb(make_button("btn1", 10.0, 10.0, 2, 0))
     node.gaze_cb(make_gaze(100.0, 100.0, 1, 500_000_000))
+    node.button_cb(make_button("btn1", 10.0, 10.0, 2, 0))
     
     published = capture_segments(node)
     
