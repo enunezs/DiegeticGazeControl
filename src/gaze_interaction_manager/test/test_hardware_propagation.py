@@ -4,6 +4,9 @@ NEEDS on a separate terminal:
 ros2 launch gaze_interaction_manager excalib_diegetic_gaze_control.launch.py 
 
 python3 -m pytest src/gaze_interaction_manager/test/test_hardware_propagation.py -v -s
+
+Some test not clearing memory properly
+test_blinking_marker_timeout works only if run alone
 '''
 
 import sys
@@ -291,8 +294,6 @@ def test_blinking_marker_timeout():
     # TODO in the GazeInteractionNode to ensure the old button was purged and a "new" one was created.
     # TODO: Add the top of interpolationt test to explore
     
-
-
    
 
 def test_filter_identical_timestamps():
