@@ -1459,11 +1459,13 @@ def test_gap_masking_drops_samples_during_loss():
     node.button_cb(make_button("btn1", 100.0, 100.0, 1, 0))
     # 2. Button signal lost, returns at T=1.5 (Gap = 500ms > 200ms)
     node.button_cb(make_button("btn1", 100.0, 100.0, 1, 500_000_000))
+    # 3. Button returns 100ms after, inside the limit
+    node.button_cb(make_button("btn1", 100.0, 100.0, 1, 600_000_000))
     
     # 3. Gaze at T=1.1 (inside the 0.5s gap)
     node.gaze_cb(make_gaze(100.0, 100.0, 1, 100_000_000))
     # 4. Gaze at T=1.5 (at the end of the gap)
-    node.gaze_cb(make_gaze(100.0, 100.0, 1, 500_000_000))
+    node.gaze_cb(make_gaze(100.0, 100.0, 1, 550_000_000))
 
     published = capture_segments(node)
     node.saccade_cb(make_saccade(2_000_000_000))
@@ -1473,7 +1475,7 @@ def test_gap_masking_drops_samples_during_loss():
     # Gaze at T=1.1 should have been masked out
     gaze_times = [s.header.stamp.sec + s.header.stamp.nanosec/1e9 for s in published[0].gaze_samples]
     assert 1.1 not in gaze_times, "Gaze sample during button gap was not masked!"
-    assert 1.5 in gaze_times, "Valid gaze sample at end of gap was incorrectly masked."
+    assert 1.55 in gaze_times, "Valid gaze sample at end of gap was incorrectly masked."
 
 
 def test_max_error_masking():
@@ -1483,7 +1485,20 @@ def test_max_error_masking():
     """
     node = GazeController()
     node.set_parameters([
-        rclpy.parameter.Parameter('max_error_px', value=50.0)
+        # Timing
+        rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
+        rclpy.parameter.Parameter('start_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
+        # Px
+        rclpy.parameter.Parameter('edge_margin', value=50),
+        rclpy.parameter.Parameter('max_error_px', value=50.0), # <-- the key parameter for this test
+        # Properties
+        rclpy.parameter.Parameter('use_temporal_alignment', value=True),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+
+
     ])
     
     node.button_cb(make_button("btn1", 100.0, 100.0, 1, 0))
