@@ -56,14 +56,14 @@ class GazeController(Node):
             "terminal_trim_ms", 100.0
         )  # Padding for trimming the END of event
         self.declare_parameter("min_event_duration_ms", 200.0)
+        self.declare_parameter("max_gap_ms", 300.0)
 
+        # --- Synchronization Parameters ---
         self.declare_parameter("compensation_active", True)
         self.declare_parameter("max_compensation_px", 200.0)
         self.declare_parameter("use_temporal_alignment", True)
         self.declare_parameter("sticky_button_interaction", False)
 
-        # --- Synchronization Parameters ---
-        self.declare_parameter("max_gap_ms", 300.0)
         self.declare_parameter("max_error_px", 200.0)
 
         # --- Visualization Parameters ---
@@ -193,14 +193,15 @@ class GazeController(Node):
         self.max_compensation = self.get_parameter("max_compensation_px").value
 
         self.start_trim_ms = int(
-            (self.get_parameter("start_trim_ms").value) # * self.hz_gaze
+            (self.get_parameter("start_trim_ms").value) 
         )
+        
         self.min_event_duration_ms = int(
-            (self.get_parameter("min_event_duration_ms").value) # * self.hz_gaze
+            (self.get_parameter("min_event_duration_ms").value) 
         )
 
+        self.max_gap_ms = int(self.get_parameter("max_gap_ms").value)
 
-        self.max_gap_ms = self.get_parameter("max_gap_ms").value #/ 1000.0
         self.max_error_px = self.get_parameter("max_error_px").value
 
         self._resize_gaze_buffer(self.get_parameter("history_length_s").value)
@@ -220,30 +221,34 @@ class GazeController(Node):
         MUST extract from `params` directly because self.get_parameter() 
         still holds old values during this callback.
         """
+        print("Received parameter update:")
         for p in params:
+            print(f" - {p.name}: {p.value}")
             if p.name == "screen_width":
                 self.screen_w = p.value
                 self.center_x = self.screen_w / 2.0
-            elif p.name == "screen_height":
+            if p.name == "screen_height":
                 self.screen_h = p.value
                 self.center_y = self.screen_h / 2.0
             if p.name == "median_window":
                 self.median_window = p.value
-            elif p.name == "ema_alpha":
+            if p.name == "ema_alpha":
                 self.ema_alpha = p.value
-            elif p.name == "edge_margin":
+            if p.name == "edge_margin":
                 self.edge_margin = p.value
-            elif p.name == "max_compensation_px":
+            if p.name == "max_compensation_px":
                 self.max_compensation = p.value
-            elif p.name == "start_trim_ms":
+            if p.name == "start_trim_ms":
                 self.start_trim_ms = int(p.value ) # * self.hz_gaze
-            elif p.name == "min_event_duration_ms":
+                print(f"Updated start_trim_ms to {self.start_trim_ms} ms")
+            if p.name == "min_event_duration_ms":
                 self.min_event_duration_ms = int(p.value ) # * self.hz_gaze
-            elif p.name == "history_length_s":
+            if p.name == "history_length_s":
                 self._resize_gaze_buffer(p.value)
-            elif p.name == "max_gap_ms":
+            if p.name == "max_gap_ms":
                 self.max_gap_ms = p.value 
-            elif p.name == "max_error_px":
+                print(f"Updated max_gap_ms to {self.max_gap_ms} ms")
+            if p.name == "max_error_px":
                 self.max_error_px = p.value
 
         return SetParametersResult(successful=True)
@@ -464,7 +469,7 @@ class GazeController(Node):
             # and self.button_engaged and incoming_id == self.current_button_id
             # self.button_engaged = False
             if self.is_recording:
-                terminal_trim_s = self.get_parameter("terminal_trim_ms").value / 1000.0
+                terminal_trim_s = self.get_parameter("terminal_trim_ms").value * 0.001
                 end_point = self.last_valid_btn_ts - terminal_trim_s
                 self._trigger_segment_end(end_point, reason="BUTTON_RELEASE")
                 self.get_logger().debug(
@@ -707,14 +712,17 @@ class GazeController(Node):
         # (Drop samples that fall in a gap > max_gap_s, or out of bounds)
         gap_mask = np.ones(len(G_times), dtype=bool)
 
+        ### --- Validity Checks --- #
+
         # A. Out of bounds (Extrapolation is dropped)
         gap_mask[G_times < B_times[0]] = False
         # Dont drop haze after last # gap_mask[G_times > B_times[-1]] = False 
-        # print(f"Gap mask after OOB check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
+        print(f"Gap mask after OOB check: {gap_mask}, {np.sum(gap_mask)} valid samples remain")
 
         # B. Internal Gaps
         diffs = np.diff(B_times)
         bad_gap_indices = np.where(diffs > self.max_gap_ms*0.001)[0]
+        print(f"Max gap (ms): {self.max_gap_ms}")
         # print(f"Button time gaps (s): {diffs}")
         # print(f"Bad gap indices: {bad_gap_indices}, corresponding to times {B_times[bad_gap_indices]} to {B_times[bad_gap_indices + 1]} with gaps of {diffs[bad_gap_indices]} seconds")
 

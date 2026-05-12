@@ -187,17 +187,26 @@ def test_pipeline_unadjusted_interpolation():
     """
 
     node = GazeController()
-    node.set_parameters([
+    success = node.set_parameters([
+        rclpy.parameter.Parameter('max_gap_ms', value=5000.0),
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
         rclpy.parameter.Parameter('edge_margin', value=50),
-
         rclpy.parameter.Parameter('use_temporal_alignment', value=True),
         rclpy.parameter.Parameter('sticky_button_interaction', value=False),
+        rclpy.parameter.Parameter('max_error_px', value=500.0),
+
 
     ])
+
+    # Process the parameter callback
+    rclpy.spin_once(node, timeout_sec=0.1) 
+
+    assert node.start_trim_ms == 0.0, "start_trim_ms parameter not set correctly."
+    assert node.max_gap_ms == 5000.0, "max_gap_ms parameter not set correctly." 
+
     # Gaze at T=1.5 (adjusted btn midpoint)
     node.gaze_cb(make_gaze(100.0, 100.0, 1, 0))
     node.gaze_cb(make_gaze(200.0, 200.0, 2, 0))
@@ -214,9 +223,12 @@ def test_pipeline_unadjusted_interpolation():
 
     # Should publish one segment
     assert len(published) == 1, "No segment published"
+    print(published)
 
     # Unpack into 3 vectors
     targets = [[s.x, s.y] for s in published[0].target_samples]
+
+    assert len(targets) == 3, f"Expected 3 target samples, got {len(targets)}. " 
 
     assert targets[0] == [10.0, 100.0], (
         f"Interpolation ! FAIL: expected [10.0, 100.0], got {targets[0]}. "
@@ -411,11 +423,11 @@ def test_non_sticky_release_triggers_segment():
     """
     node = GazeController()
     node.set_parameters([
-        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=0.0),
         rclpy.parameter.Parameter('min_event_duration_ms', value=0.0),
         rclpy.parameter.Parameter('terminal_trim_ms', value=0.0),
+        rclpy.parameter.Parameter('sticky_button_interaction', value=False),
     ])
 
     # Rising edge
@@ -787,7 +799,7 @@ def test_trigger_segment_end_length_check_uses_wrong_floor():
     exactly (trim + min) samples → discard; (trim + min + 1) → publish.
     """
     node = GazeController()
-    node.set_parameters([
+    success = node.set_parameters([
         rclpy.parameter.Parameter('internal_pipeline_delay_ms', value=0.0),
         rclpy.parameter.Parameter('start_trim_ms', value=50.0),     # 10 samples at 200Hz
         rclpy.parameter.Parameter('min_event_duration_ms', value=50.0),  # 10 samples
