@@ -73,7 +73,7 @@
   ros__parameters:
     screen_w: 800.0
     screen_h: 600.0
-    compensation_active : False 
+    compensation_active : true 
     use_temporal_alignment : True
     sticky_button_interaction : False
     history_length_s : 10.0
@@ -91,6 +91,10 @@
 
 /calibration_learner_node:
   ros__parameters:
+    
+    screen_w: 800.0
+    screen_h: 600.0
+
     # Selection and switching logic
     selection_strategy: "RMSE"  # "BIC" or "RMSE"
     cv_strategy:      "kfolds_spatial_block"       # "stratified", "spatial_block", "kfolds_spatial_block"

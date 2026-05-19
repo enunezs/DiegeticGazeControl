@@ -66,7 +66,7 @@ class SpatialReservoir:
         """Processes a new segment into the shared spatial bins."""
         stride = self.stride
         gx_t, gy_t, ex_t, ey_t = gx[::stride], gy[::stride], ex[::stride], ey[::stride]
-        max_error = self.cfg.get("max_error_cap", 150.0)
+        max_error = self.cfg.get("max_error_cap", 75.0)
 
         # for i in range(len(gx_t)):
         #     # Basic outlier rejection
@@ -267,7 +267,7 @@ class GazeCorrectionFramework:
     def __init__(self, name, recipe, config):
         self.name = name
         self.cfg = config
-        self.cx, self.cy = self.cfg.get("center_x", 800), self.cfg.get("center_y", 600)
+        self.cx, self.cy = self.cfg.get("center_x", 800/2), self.cfg.get("center_y", 600/2)
         # Internal State (Models and Coefficients)
         self.params = {"x": None, "y": None}
         self.models = {"x": None, "y": None}
@@ -641,7 +641,6 @@ class CalibrationLearner(Node):
                 ),  # "original_coupled", "decoupled_shared", "fully_decoupled"
                 ("trigger_x", 5),  # Bins along X axis before X-features unlock
                 ("trigger_y", 5),  # Bins along Y axis before Y-features unlock
-                ("error_log_filename", "gaze_error_log.csv"),
                 # Plotting Toggles
                 ("publish_data_quiver", True),
                 ("publish_status_profile", False),
@@ -660,6 +659,7 @@ class CalibrationLearner(Node):
             "samples_per_bin": self.get_parameter("samples_per_bin").value,
             "val_size": self.get_parameter("val_size").value,
             "thinning_stride": self.get_parameter("thinning_stride").value,
+            "max_error_cap": self.get_parameter("max_error_cap").value,
             # "trigger_bins": self.get_parameter("trigger_bins").value, # TODO: Formalize or remove later
             "solver": self.get_parameter("solver").value,
             "solver_alpha": self.get_parameter("solver_alpha").value,
@@ -1171,7 +1171,7 @@ class CalibrationLearner(Node):
             self._plot_prediction_field()
 
     def _plot_reservoir(self, train_pool, val_pool, save_name=None):
-        fig, ax = plt.subplots(figsize=(6, 5))
+        fig, ax = plt.subplots(figsize=(6, 5), dpi=100)
 
         # --- ADD BIN MARKS (GRID) ---
         bin_size = self.cfg["bin_size"]
@@ -1211,7 +1211,11 @@ class CalibrationLearner(Node):
         )
         ax.set_xlim(0, self.cfg["screen_w"])
         ax.set_ylim(self.cfg["screen_h"], 0)
-        self._pub_plt(fig, "quiver", save_name=save_name)
+        if save_name:
+            fig.savefig(save_name, dpi=300, bbox_inches='tight')
+        else:
+            self._pub_plt(fig, "quiver", save_name=save_name)
+            self.get_logger().info(f"Published reservoir visualization with {len(train_pool)} training samples and {len(val_pool)} validation samples.")
 
     def _plot_tournament(self, save_name=None):
         """Refactored Evolution Dashboard with Model Shading and Unlocks."""
@@ -1261,8 +1265,11 @@ class CalibrationLearner(Node):
         ax1.set_ylabel("Mean Error (AULC) [px]")
         ax1.legend(loc='upper right', fontsize='small')
         ax1.grid(True, alpha=0.15)
-
-        self._pub_plt(fig, "tourney", save_name=save_name)
+        if save_name:
+            fig.savefig(save_name, dpi=300, bbox_inches='tight')
+            self.get_logger().info(f"Saved tournament visualization to {save_name}")
+        else:
+            self._pub_plt(fig, "tourney", save_name=save_name)
 
     def _plot_profile(self, save_name=None):
         fig, ax = plt.subplots(figsize=(6, 4))
@@ -1279,7 +1286,11 @@ class CalibrationLearner(Node):
         ax.set_ylim(0, 150)
         ax.legend()
         ax.grid(alpha=0.2)
-        self._pub_plt(fig, "profile", save_name=save_name)
+        if save_name:
+            fig.savefig(save_name, dpi=300, bbox_inches='tight')
+            self.get_logger().info(f"Saved profile visualization to {save_name}")
+        else:
+            self._pub_plt(fig, "profile", save_name=save_name)
 
     def _plot_prediction_field(self, save_name=None):
         winner = self.competitors[self.active_idx]
@@ -1301,7 +1312,12 @@ class CalibrationLearner(Node):
         ax.set_xlim(0, gw)
         ax.set_ylim(gh,0)
         ax.set_title(f"Correction Field: {winner.name}")
-        self._pub_plt(fig, "map", save_name=save_name)
+
+        if save_name:
+            fig.savefig(save_name, dpi=300, bbox_inches='tight')
+            self.get_logger().info(f"Saved correction field visualization to {save_name}")
+        else:
+            self._pub_plt(fig, "map", save_name=save_name)
 
     def _pub_plt(self, fig, key, save_name=None):
         # If a save_name is provided, write it to the log directory
@@ -1312,7 +1328,12 @@ class CalibrationLearner(Node):
         canvas = FigureCanvasAgg(fig)
         canvas.draw()
         img = cv2.cvtColor(np.asarray(canvas.buffer_rgba()), cv2.COLOR_RGBA2BGR)
-        self.pubs[key].publish(self.bridge.cv2_to_imgmsg(img, "bgr8"))
+
+        msg = self.bridge.cv2_to_imgmsg(img, "bgr8")
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = key + "_debug_map"  # or "base_link" or any valid frame in your TF tree
+        
+        self.pubs[key].publish(msg)
         plt.close(fig)
 
     def joy_cb(self, msg: Joy):
@@ -1409,8 +1430,11 @@ class CalibrationLearner(Node):
 
     def dump_all_plots(self, label="manual"):
         """Generates and saves all current visualization plots to the session folder."""
+
         timestamp = datetime.now().strftime("%H%M%S")
         prefix = f"plot_{label}_ev{self.event_count}_{timestamp}"
+
+        base_path = os.path.join(self.log_dir, prefix)
 
         self.get_logger().info(f"Dumping plots with prefix: {prefix}")
 
@@ -1418,10 +1442,10 @@ class CalibrationLearner(Node):
         train_flat, val_flat = self.reservoir._get_stratified_split()
 
         # We call our existing plot functions but tell them to save to disk
-        self._plot_reservoir(train_flat, val_flat, save_name=f"{prefix}_reservoir.png")
-        self._plot_tournament(save_name=f"{prefix}_tournament.png")
-        self._plot_profile(save_name=f"{prefix}_profile.png")
-        self._plot_prediction_field(save_name=f"{prefix}_map.png")
+        self._plot_reservoir(train_flat, val_flat, save_name=f"{base_path}_reservoir.png")
+        self._plot_tournament(save_name=f"{base_path}_tournament.png")
+        self._plot_profile(save_name=f"{base_path}_profile.png")
+        self._plot_prediction_field(save_name=f"{base_path}_map.png")
 
 
 def main():
