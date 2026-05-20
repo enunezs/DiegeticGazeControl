@@ -64,6 +64,9 @@ class GazeController(Node):
 
         self.declare_parameter("inactive_grace_ms", 200.0)
 
+        self.declare_parameter("interaction_publish_div", 4) # 200Hz / 4 = 50Hz
+        self.gaze_count = 0
+
         # --- Synchronization Parameters ---
         self.declare_parameter("compensation_active", True)
         self.declare_parameter("max_compensation_px", 200.0)
@@ -271,10 +274,16 @@ class GazeController(Node):
             # --- A. HIGH SPEED STORAGE (NumPy Circular Buffer) ---
             self.gaze_history[self.gaze_ptr] = [ts, msg.x, msg.y]
             self.gaze_ptr = (self.gaze_ptr + 1) % self.gaze_buffer_size
+
             if self.gaze_ptr == 0:
                 self.gaze_buffer_filled = True
 
-            self._process_and_publish_corrected_gaze(msg)
+            # 2. Process and Publish for Interaction ONLY at a lower rate
+            self.gaze_count += 1
+            if self.gaze_count % self.get_parameter("interaction_publish_div").value == 0:
+                self._process_and_publish_corrected_gaze(msg)
+                self.gaze_count = 0
+
 
             # --- D. BOUNDARY MONITORING ---
             # in_fov = (

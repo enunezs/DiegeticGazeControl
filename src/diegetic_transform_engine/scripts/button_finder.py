@@ -382,7 +382,7 @@ class DiegeticButtonPublisher(Node):
         self.button_2d_publisher.publish(button_2d_array)
 
         # 7. Broadcast TF transforms
-        self._broadcast_transforms(button_3d_array)
+        # self._broadcast_transforms(button_3d_array)
 
         # self.get_logger().info(
         #     f"Found {len(button_3d_array.buttons)} buttons", throttle_duration_sec=10

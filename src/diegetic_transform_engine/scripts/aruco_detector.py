@@ -100,6 +100,15 @@ class ArucoDetectorNode(Node):
 
         self.camera_matrix = None
         self.dist_coeffs = None
+        self.camera_matrix_np = None
+        self.dist_coeffs_np = None
+
+        self.obj_pts = np.array([
+                    [-self.marker_size/2,  self.marker_size/2, 0],
+                    [ self.marker_size/2,  self.marker_size/2, 0],
+                    [ self.marker_size/2, -self.marker_size/2, 0],
+                    [-self.marker_size/2, -self.marker_size/2, 0]
+                ], dtype=np.float32)
 
         sensor_qos = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
@@ -213,7 +222,8 @@ class ArucoDetectorNode(Node):
         # 1. Allow for "curved" edges (Critical for fisheye). Default is 0.03. 
         self.detector_params.polygonalApproxAccuracyRate = 0.08 
         # 2. Corner Subpixel Refinement
-        self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
+        # self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
+        self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
         # 3. Handle small markers at distance
         self.detector_params.minMarkerPerimeterRate = 0.01 
 
@@ -223,7 +233,9 @@ class ArucoDetectorNode(Node):
         # Increasing the step size and range helps find the tiny black/white transitions.
         self.detector_params.adaptiveThreshWinSizeMin = 3
         self.detector_params.adaptiveThreshWinSizeMax = 23
-        self.detector_params.adaptiveThreshWinSizeStep = 5
+        # self.detector_params.adaptiveThreshWinSizeStep = 5
+        self.detector_params.adaptiveThreshWinSizeStep = 10 
+
         # 3. Increase the "Corner Refinement" window
         # For distant markers, the corner is blurry. A slightly larger window helps find it.
         self.detector_params.cornerRefinementWinSize = 5
@@ -232,7 +244,9 @@ class ArucoDetectorNode(Node):
     def camera_info_callback(self, msg):
         self.get_logger().info("Camera calibration received", once=True)
         self.camera_matrix = np.array(msg.k).reshape(3, 3)
+        self.camera_matrix_np = self.camera_matrix.astype(np.float64)
         self.dist_coeffs = np.array(msg.d)
+        self.dist_coeffs_np = np.array(self.dist_coeffs, dtype=np.float64).flatten()
 
     def image_callback(self, msg):
         if self.camera_matrix is None:
@@ -277,117 +291,95 @@ class ArucoDetectorNode(Node):
 
         return f_pos, f_quat
 
+    def rvec_to_quat(self, rvec):
+        """Fast conversion without building 4x4 matrices"""
+        angle = np.linalg.norm(rvec)
+        if angle < 1e-6:
+            return [0.0, 0.0, 0.0, 1.0]
+        axis = rvec / angle
+        s = np.sin(angle / 2.0)
+        return [axis[0]*s, axis[1]*s, axis[2]*s, np.cos(angle / 2.0)]
+
     def detect_markers(self, image, header):
+        
+        # Greyscale conversion
         t0 = time.time()
-        gray = image
         # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        t1 = time.time()
+        gray = image
+        
+        
         # Apply CLAHE to improve local contrast
+        t1 = time.time()
         # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         # gray = clahe.apply(gray)
+        
+        # ArUco Detection
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray, self.aruco_dict, parameters=self.detector_params
         )
+
+
         t2 = time.time()
 
-        current_header = header
         # Calculate current message time in seconds
+        current_header = header
         t_curr = header.stamp.sec + header.stamp.nanosec * 1e-9
-
         # current_header.stamp = self.get_clock().now().to_msg() # Use glasses time!
-        # Only TFs should use current time
 
+        # Only TFs should use current time
         marker_array = MarkerArray()
         marker_array.header = current_header
-
         marker_array.header.frame_id = self.config["camera_frame"]
         marker_array.markers = []
 
         detected_ids = set()
 
+        anchor_id = self.config["anchor_id"]
+        pub_poses = self.config.get("publish_poses", False)
+        pub_tf = self.config.get("publish_tf", True)
 
         if ids is not None and len(ids) > 0:
-            # rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-            #     corners, self.marker_size, self.camera_matrix, self.dist_coeffs
-            # )
-
-            # --- SANITIZE CAMERA PARAMETERS FOR FISHEYE ---
-            # 1. Ensure K is float64 3x3
-            k_np = self.camera_matrix.astype(np.float64)
-            
-            # 2. Ensure D is float64 and exactly 4 elements
-            d_np = np.array(self.dist_coeffs, dtype=np.float64).flatten()
-            if len(d_np) > 4:
-                d_np = d_np[:4] # Take first 4
-            elif len(d_np) < 4:
-                d_np = np.append(d_np, [0.0] * (4 - len(d_np))) # Pad with zeros
-            # -----------------------------------------------
-
-            # Batch undistortion of corners for all detected markers
-            undistorted_corners = cv2.fisheye.undistortPoints(
-                np.concatenate(corners).reshape(-1, 1, 2),
-                k_np,
-                d_np,
-                P=k_np
-            ).reshape(-1, 4, 2) # Reshape back to (num_markers, 4 corners, 2 coords)
 
             for i, marker_id in enumerate(ids.flatten()):
-
-
-                # 1. Undistort the corners using the FISHEYE model
-                # This removes the 'right side distortion' before calculating the pose
-                # undistorted_corners = cv2.fisheye.undistortPoints(
-                #     corners[i].reshape(-1, 1, 2), 
-                #     self.camera_matrix, 
-                #     self.dist_coeffs,
-                #     P=self.camera_matrix
-                # )
-               # 2. Estimate pose using the undistorted points 
+                
+                # 1. Estimate pose using the undistorted points 
                 # (Using solvePnP directly with distCoeffs=None because points are already undistorted)
-                object_points = np.array([
-                    [-self.marker_size/2,  self.marker_size/2, 0],
-                    [ self.marker_size/2,  self.marker_size/2, 0],
-                    [ self.marker_size/2, -self.marker_size/2, 0],
-                    [-self.marker_size/2, -self.marker_size/2, 0]
-                ], dtype=np.float32)
-
-                _, rvec, tvec = cv2.solvePnP(
-                    object_points, 
-                    undistorted_corners[i], 
-                    self.camera_matrix, 
-                    None # Important: None because we undistorted manually
+                success, rvec, tvec = cv2.solvePnP(
+                    self.obj_pts, 
+                    corners[i].reshape(-1, 1, 2),
+                    self.camera_matrix_np,
+                    self.dist_coeffs_np,
+                    flags=cv2.SOLVEPNP_IPPE_SQUARE
                 )
+                # rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
+                #     corners, self.marker_size, self.camera_matrix, self.dist_coeffs
+                # )
+
+                if not success:
+                    continue
         
                 tvec_raw = tvec.flatten()
                 rvec_raw = rvec.flatten()
   
-                # # Raw detection (Camera -> Marker)
-                # rvec_raw = rvecs[i][0]
-                # tvec_raw = tvecs[i][0]
+                # 2. Quaternion conversion
+                quat = self.rvec_to_quat(rvec_raw)
 
-                rot_mat = cv2.Rodrigues(rvec_raw)[0]
-                T_raw = np.vstack([np.hstack([rot_mat, [[0], [0], [0]]]), [0, 0, 0, 1]])
-                quat_raw = tf_transformations.quaternion_from_matrix(T_raw)
-
-                # Filter
+                # 3. Filter
                 # tvec_filtered, quat_filtered = self.get_filtered_pose(
                 #     int(marker_id), t_curr, tvec_raw, quat_raw
                 # )
-                tvec_filtered , quat_filtered = tvec_raw , quat_raw
-                # Reconstruct T_cam_marker from filtered data
-                T_cam_marker = tf_transformations.quaternion_matrix(quat_filtered)
-                T_cam_marker[0:3, 3] = tvec_filtered
-
-                # 1. Populate Marker Msg
+                tvec_filtered , quat_filtered = tvec_raw , quat
+                
+                # 4. Populate Marker Msg
                 marker = Marker()
                 marker.id = int(marker_id)
                 marker.pose.position.x = float(tvec_filtered[0])
                 marker.pose.position.y = float(tvec_filtered[1])
                 marker.pose.position.z = float(tvec_filtered[2])
-                marker.pose.orientation.x = quat_filtered[0]
-                marker.pose.orientation.y = quat_filtered[1]
-                marker.pose.orientation.z = quat_filtered[2]
-                marker.pose.orientation.w = quat_filtered[3]
+                marker.pose.orientation.x = float(quat_filtered[0])
+                marker.pose.orientation.y = float(quat_filtered[1])
+                marker.pose.orientation.z = float(quat_filtered[2])
+                marker.pose.orientation.w = float(quat_filtered[3])
 
                 self.last_marker_poses[marker_id] = {
                     "pose": marker.pose,
@@ -397,13 +389,14 @@ class ArucoDetectorNode(Node):
                 marker_array.markers.append(marker)
                 detected_ids.add(marker_id)
 
-                # 2. Dynamic Broadcasting
-                if self.config.get("publish_tf", True):
-                    anchor_id = self.config["anchor_id"]
+                # TF Broadcasting
+                if pub_tf:
 
                     if int(marker_id) == anchor_id:
-                        # ANCHOR FOUND: Update Camera Position based on Anchor
                         # Robot (Static) -> Aruco (Detection) -> Camera
+                        # ANCHOR FOUND: Update Camera Position based on Anchor
+                        T_cam_marker = tf_transformations.quaternion_matrix(quat_filtered)
+                        T_cam_marker[0:3, 3] = tvec_filtered
                         self.broadcast_anchor_transform(T_cam_marker, header, marker_id)
                     else:
                         # STANDARD MARKER: Update Marker Position based on Camera
@@ -413,11 +406,12 @@ class ArucoDetectorNode(Node):
                         )
 
                 # Publish PoseStamped
-                if self.config.get("publish_poses", True):
+                if pub_poses:
                     self.pose_msg = PoseStamped()
                     self.pose_msg.header = header
                     self.pose_msg.pose = marker.pose
                     self.marker_pose_pub.publish(self.pose_msg)
+
                     self.last_marker_poses[marker_id] = {
                         "pose": marker.pose,
                         "stamp": t_curr
@@ -437,7 +431,7 @@ class ArucoDetectorNode(Node):
                     persistent_marker.pose = data["pose"]
                     marker_array.markers.append(persistent_marker)
 
-                    if self.config.get("publish_poses", True):
+                    if pub_poses:
                         ps = PoseStamped()
                         ps.header = header
                         ps.pose = data["pose"]
