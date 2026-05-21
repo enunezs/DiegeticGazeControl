@@ -28,7 +28,7 @@ def generate_launch_description():
         package="pupil_neon_ros",
         executable="async_pupil_publisher.py",
         name="pupil_glasses_node",
-        arguments=["__log_level:=debug"],
+        arguments=["__log_level:=info"],
         output="screen",
         parameters=[config],
     )
@@ -39,7 +39,7 @@ def generate_launch_description():
         package="diegetic_transform_engine",
         executable="aruco_detector.py",
         name="aruco_detector",
-        arguments=["__log_level:=debug"],
+        arguments=["__log_level:=info"],
         output="screen",
         parameters=[config],
     )
@@ -49,7 +49,7 @@ def generate_launch_description():
         package="diegetic_transform_engine",
         executable="button_finder.py",
         name="button_finder",
-        arguments=["__log_level:=debug"],
+        arguments=["__log_level:=info"],
         output="screen",
         parameters=[config],
     )
@@ -61,7 +61,7 @@ def generate_launch_description():
         package="gaze_interaction_manager",
         executable="dwell_time.py",
         name="dwell_time_node",
-        arguments=["__log_level:=debug"],
+        arguments=["__log_level:=info"],
         output="screen",
         parameters=[config],
     )
@@ -89,7 +89,7 @@ def generate_launch_description():
         package="gaze_interaction_manager",
         executable="robot_command_mapper.py",
         name="command_mapper_node",
-        arguments=["__log_level:=debug"],
+        arguments=["__log_level:=info"],
         output="screen",
         parameters=[config],
     )
@@ -101,7 +101,7 @@ def generate_launch_description():
     #     package="feedback_tools",
     #     executable="audio_feedback.py",
     #     name="audio_feedback_node",
-    #     arguments=["__log_level:=debug"],
+    #     arguments=["__log_level:=info"],
     #     output="screen",
     #     parameters=[config],
     # )
@@ -111,7 +111,7 @@ def generate_launch_description():
     #     package="feedback_tools",
     #     executable="2D_visuals.py",
     #     name="visualizer_2d_node",
-    #     arguments=["__log_level:=debug"],
+    #     arguments=["__log_level:=info"],
     #     output="screen",
     #     parameters=[{"use_camera_background": True}],
     # )
@@ -121,7 +121,7 @@ def generate_launch_description():
     #     package="feedback_tools",
     #     executable="3D_visuals.py",
     #     name="visualizer_3d_node",
-    #     arguments=["__log_level:=debug"],
+    #     arguments=["__log_level:=info"],
     #     output="screen",
     #     parameters=[config],
     # )
@@ -131,7 +131,7 @@ def generate_launch_description():
     #     package="pupil_neon_ros",
     #     executable="rviz_visualizer.py",
     #     name="pupil_glasses_visuals_node",
-    #     arguments=["__log_level:=debug"],
+    #     arguments=["__log_level:=info"],
     #     output="screen",
     #     parameters=[config],
     # )

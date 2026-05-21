@@ -209,7 +209,8 @@ class CommandMapper(Node):
 
         self.button_sub = self.create_subscription(
             ButtonStatusMsg, 
-            'gaze_controller/teleop_filtered', 
+            # 'gaze_controller/teleop_filtered', 
+            'dwell_time/active_button',
             self.button_callback, 
             10
         )

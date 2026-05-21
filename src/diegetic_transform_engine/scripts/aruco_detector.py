@@ -113,7 +113,7 @@ class ArucoDetectorNode(Node):
         sensor_qos = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
             durability=DurabilityPolicy.VOLATILE,
-            depth=5,
+            depth=1,
         )
 
         self.image_sub = self.create_subscription(
@@ -220,7 +220,7 @@ class ArucoDetectorNode(Node):
 
         ### TUNING FOR DISTANT MARKERS ON FISHEYE LENSES ###
         # 1. Allow for "curved" edges (Critical for fisheye). Default is 0.03. 
-        self.detector_params.polygonalApproxAccuracyRate = 0.08 
+        self.detector_params.polygonalApproxAccuracyRate = 0.05
         # 2. Corner Subpixel Refinement
         # self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
         self.detector_params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_CONTOUR
@@ -231,15 +231,18 @@ class ArucoDetectorNode(Node):
         # 2. Increase Adaptive Thresholding resolution
         # Small markers get "washed out" in the thresholding step. 
         # Increasing the step size and range helps find the tiny black/white transitions.
-        self.detector_params.adaptiveThreshWinSizeMin = 3
-        self.detector_params.adaptiveThreshWinSizeMax = 23
+        self.detector_params.adaptiveThreshWinSizeMin = 5
+        self.detector_params.adaptiveThreshWinSizeMax = 21
+        self.detector_params.adaptiveThreshWinSizeStep = 4 
         # self.detector_params.adaptiveThreshWinSizeStep = 5
-        self.detector_params.adaptiveThreshWinSizeStep = 10 
 
         # 3. Increase the "Corner Refinement" window
         # For distant markers, the corner is blurry. A slightly larger window helps find it.
         self.detector_params.cornerRefinementWinSize = 5
         self.marker_size = self.config.get("marker_size", 0.05)
+
+        cv2.setNumThreads(2)  # or even 1 if latency matters more than throughput
+
 
     def camera_info_callback(self, msg):
         self.get_logger().info("Camera calibration received", once=True)
@@ -255,6 +258,9 @@ class ArucoDetectorNode(Node):
             t0 = time.time()
             np_arr = np.frombuffer(msg.data, np.uint8)
             gray_image = cv2.imdecode(np_arr, cv2.IMREAD_GRAYSCALE)
+            if gray_image is None or gray_image.size == 0:
+                self.get_logger().error("Failed to convert image to grayscale")
+                return
             # cv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
             t1 = time.time() 
             # self.get_logger().info(f"Image conversion took {(t1-t0)*1000:.2f} ms", throttle_duration_sec=1.0)
@@ -410,12 +416,9 @@ class ArucoDetectorNode(Node):
                     self.pose_msg = PoseStamped()
                     self.pose_msg.header = header
                     self.pose_msg.pose = marker.pose
+                    
                     self.marker_pose_pub.publish(self.pose_msg)
 
-                    self.last_marker_poses[marker_id] = {
-                        "pose": marker.pose,
-                        "stamp": t_curr
-                    }
         t3 = time.time()
 
         # Persistence for lost markers
@@ -445,7 +448,10 @@ class ArucoDetectorNode(Node):
         t4 = time.time()
         self.aruco_marker_array_pub.publish(marker_array)
         t5 = time.time()
-        # self.get_logger().info(f"Detection times (ms): Grayscale: {(t1-t0)*1000:.2f}, Detection: {(t2-t1)*1000:.2f}, Processing: {(t3-t2)*1000:.2f}, Persistence: {(t4-t3)*1000:.2f}, Publishing: {(t5-t4)*1000:.2f}", throttle_duration_sec=1.0)
+        # self.get_logger().info(
+        #     f"Detection: {(t2-t1)*1000:.1f} ms | Total callback: {(t5-t0)*1000:.1f} ms | Markers detected: {len(marker_array.markers)}",
+        #     throttle_duration_sec=1.0,
+        # )
 
     def broadcast_anchor_transform(self, T_cam_marker, header, marker_id):
         """
@@ -454,7 +460,12 @@ class ArucoDetectorNode(Node):
         """
         # self.get_logger().info(f"Broadcasting Anchor Transform for Marker ID: {marker_id}")
         # Invert: T_marker_cam = (T_cam_marker)^-1
-        T_marker_cam = np.linalg.inv(T_cam_marker)
+        # T_marker_cam = np.linalg.inv(T_cam_marker)
+        R = T_cam_marker[:3, :3]
+        t = T_cam_marker[:3, 3]
+        T_marker_cam = np.eye(4)
+        T_marker_cam[:3, :3] = R.T
+        T_marker_cam[:3, 3] = -R.T @ t
 
         trans = tf_transformations.translation_from_matrix(T_marker_cam)
         quat = tf_transformations.quaternion_from_matrix(T_marker_cam)

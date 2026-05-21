@@ -652,7 +652,8 @@ class GazeController(Node):
             #     out_msg.button_id = "" # Clear ID so robot stops
             #     out_msg.button.button_id = "" # Clear button ID
 
-            self.teleop_pub.publish(out_msg)
+            # Disable for now
+            # self.teleop_pub.publish(out_msg)
 
     def _trigger_segment_end(self, end_ts, reason="UNKNOWN"):
         """Unified finalization logic"""
