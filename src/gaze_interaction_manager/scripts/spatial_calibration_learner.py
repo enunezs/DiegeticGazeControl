@@ -615,7 +615,7 @@ class CalibrationLearner(Node):
                 ("val_size", 10),
                 ("thinning_stride", 4),
                 ("min_samples_per_bin_threshold", 4),
-                ("max_error_cap", 50.0),  # Outlier rejection threshold (px
+                ("max_error_cap", 70.0),  # Outlier rejection threshold (px
                 # Selection and switching logic
                 ("selection_strategy", "RMSE"),  # "BIC" or "RMSE"
                 (
@@ -699,12 +699,12 @@ class CalibrationLearner(Node):
                 self.cfg
                 | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
             ),
-            GazeCorrectionFramework(
-                "Sigmoid X+Y",
-                ["bias", "sigmoid"],
-                self.cfg
-                | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
-            ),
+            # GazeCorrectionFramework(
+            #     "Sigmoid X+Y",
+            #     ["bias", "sigmoid"],
+            #     self.cfg
+            #     | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
+            # ),
             GazeCorrectionFramework(
                 "Raw 2", ["identity"], self.cfg | {"trigger_bins": 0}
             ),
