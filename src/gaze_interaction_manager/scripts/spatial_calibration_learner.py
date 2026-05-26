@@ -610,12 +610,12 @@ class CalibrationLearner(Node):
                 # Base
                 ("screen_w", 1600/2),
                 ("screen_h", 1200/2),
-                ("bin_size", 75),
-                ("samples_per_bin", 100),
+                ("bin_size", 50),
+                ("samples_per_bin", 50),
                 ("val_size", 10),
-                ("thinning_stride", 1),
+                ("thinning_stride", 4),
                 ("min_samples_per_bin_threshold", 4),
-                ("max_error_cap", 75.0),  # Outlier rejection threshold (px
+                ("max_error_cap", 50.0),  # Outlier rejection threshold (px
                 # Selection and switching logic
                 ("selection_strategy", "RMSE"),  # "BIC" or "RMSE"
                 (
@@ -705,9 +705,9 @@ class CalibrationLearner(Node):
                 self.cfg
                 | {"trigger_x": 5, "trigger_y": 5, "policy": "decoupled_shared"},
             ),
-            # GazeCorrectionFramework(
-            #     "Raw 2", ["identity"], self.cfg | {"trigger_bins": 0}
-            # ),
+            GazeCorrectionFramework(
+                "Raw 2", ["identity"], self.cfg | {"trigger_bins": 0}
+            ),
             GazeCorrectionFramework(
                 "Radial Complete",
                 ["bias", "radial_universal"],
@@ -1066,25 +1066,33 @@ class CalibrationLearner(Node):
             # Dynamic mapping: decoupled_shared policy shifts indices!
             if "lin_x" in winner.current_features_x:
                 idx = winner.current_features_x.index("lin_x")
-                cx[3] = get_p(px, idx) / W
+                cx[3] = get_p(px, idx) /  (W / 2) 
             if "lin_y" in winner.current_features_x:
                 idx = winner.current_features_x.index("lin_y")
-                cx[4] = get_p(px, idx) / H
+                cx[4] = get_p(px, idx) /  (H / 2) 
                 
             if "lin_x" in winner.current_features_y:
                 idx = winner.current_features_y.index("lin_x")
-                cy[3] = get_p(py, idx) / W
+                cy[3] = get_p(py, idx) / (W / 2)
             if "lin_y" in winner.current_features_y:
                 idx = winner.current_features_y.index("lin_y")
-                cy[4] = get_p(py, idx) / H
+                cy[4] = get_p(py, idx) / (H / 2)
+
+        # elif winner.name == "Radial Concentric":
+        #     msg.model_type = getattr(CalibrationModel, 'TYPE_LINEAR', 1)
+        #     cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
+        #     if not is_locked_x:
+        #         cx[3] = get_p(px, 1) / W
+        #     if not is_locked_y:
+        #         cy[4] = get_p(py, 1) / H
 
         elif winner.name == "Radial Concentric":
             msg.model_type = getattr(CalibrationModel, 'TYPE_LINEAR', 1)
             cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
             if not is_locked_x:
-                cx[3] = get_p(px, 1) / W
+                cx[3] = get_p(px, 1) / (W / 2)   # trained with dx/cx, cx = W/2
             if not is_locked_y:
-                cy[4] = get_p(py, 1) / H
+                cy[4] = get_p(py, 1) / (H / 2)   # trained with dy/cy, cy = H/2
 
         elif winner.name == "Radial Complete":
             msg.model_type = getattr(CalibrationModel, 'TYPE_RADIAL_UNIVERSAL', 2)
@@ -1092,53 +1100,48 @@ class CalibrationLearner(Node):
             
             if not is_locked_x:
                 # px[1] = dx*r, px[2] = dy*r, px[3] = dx, px[4] = dy, px[5] = bias offset
-                cx[8] = get_p(px, 1) / (W**2)   # Main radial,  dx*r
-                cx[9] = get_p(px, 2) / (H**2)   # Cross radial, dy*r
-                cx[3] = get_p(px, 3) / W        # Main linear,  dx
-                cx[4] = get_p(px, 4) / H        # Cross linear, dy
+                cx[8] = get_p(px, 1) / (W/2)**2
+                cx[9] = get_p(px, 2) / (H/2)**2
+                cx[3] = get_p(px, 3) / (W/2)
+                cx[4] = get_p(px, 4) / (H/2)
                 cx[5] += get_p(px, 5)           # Add to bias,  bias
                 
             if not is_locked_y:
                 # py[1] = dx*r, py[2] = dy*r, py[3] = dx, py[4] = dy, py[5] = bias offset
-                cy[9] = get_p(py, 1) / (W**2)   # Cross radial, dx*r (cross)
-                cy[8] = get_p(py, 2) / (H**2)   # Main radial,  dy*r
-                cy[3] = get_p(py, 3) / W        # Cross linear, dx
-                cy[4] = get_p(py, 4) / H        # Main linear,  dy
+                cy[9] = get_p(py, 1) / (W/2)**2
+                cy[8] = get_p(py, 2) / (H/2)**2
+                cy[3] = get_p(py, 3) / (W/2)
+                cy[4] = get_p(py, 4) / (H/2)
                 cy[5] += get_p(py, 5)
+
+
+                # and symmetrically for cy
 
         elif winner.name == "Simple Radial":
             # Fallback to Quadratic if TYPE_RADIAL doesn't exist
             msg.model_type = getattr(CalibrationModel, 'TYPE_RADIAL', getattr(CalibrationModel, 'TYPE_QUADRATIC', 2))
             cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
             if not is_locked_x:
-                cx[8] = get_p(px, 1) / (W**2)
+                cx[8] = get_p(px, 1) / (W/2)**2
             if not is_locked_y:
-                cy[8] = get_p(py, 2) / (H**2)
-
-        # elif winner.name == "Radial Complete":
-        #     msg.model_type = getattr(CalibrationModel, 'TYPE_RADIAL_UNIVERSAL', getattr(CalibrationModel, 'TYPE_QUADRATIC', 2))
-        #     cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
-        #     if not is_locked_x:
-        #         # px[1] is dx*r, px[3] is dx, px[5] is the extra ones offset
-        #         cx[8], cx[3] = get_p(px, 1) / (W**2), get_p(px, 3) / W
-        #         cx[5] += get_p(px, 5) 
-        #     if not is_locked_y:
-        #         # py[2] is dy*r, py[4] is dy
-        #         cy[8], cy[4] = get_p(py, 2) / (H**2), get_p(py, 4) / H
-        #         cy[5] += get_p(py, 5)
+                cy[8] = get_p(py, 1) / (H/2)**2
 
         elif winner.name == "Conic":
             msg.model_type = getattr(CalibrationModel, 'TYPE_QUADRATIC', 2)
             cx[5], cy[5] = get_p(px, 0), get_p(py, 0)
             if not is_locked_x:
-                cx[0], cx[1], cx[2], cx[3], cx[4] = (
-                    get_p(px, 1)/(W**2), get_p(px, 2)/(H**2), get_p(px, 3)/(W*H), get_p(px, 4)/W, get_p(px, 5)/H
-                )
+                cx[0] = get_p(px, 1) / (W/2)**2   # dx²/cx²
+                cx[1] = get_p(px, 2) / (H/2)**2   # dy²/cy²
+                cx[2] = get_p(px, 3) / ((W/2)*(H/2))  # dx*dy/(cx*cy)
+                cx[3] = get_p(px, 4) / (W/2)      # dx/cx
+                cx[4] = get_p(px, 5) / (H/2)      # dy/cy
                 cx[5] += get_p(px, 6)
             if not is_locked_y:
-                cy[0], cy[1], cy[2], cy[3], cy[4] = (
-                    get_p(py, 1)/(W**2), get_p(py, 2)/(H**2), get_p(py, 3)/(W*H), get_p(py, 4)/W, get_p(py, 5)/H
-                )
+                cy[0] = get_p(py, 1) / (W/2)**2   # dx²/cx²
+                cy[1] = get_p(py, 2) / (H/2)**2   # dy²/cy²
+                cy[2] = get_p(py, 3) / ((W/2)*(H/2))  # dx*dy/(cx*cy)
+                cy[3] = get_p(py, 4) / (W/2)      # dx/cx
+                cy[4] = get_p(py, 5) / (H/2)      # dy/cy
                 cy[5] += get_p(py, 6)
 
         elif winner.name == "Sigmoid X+Y":
@@ -1147,11 +1150,11 @@ class CalibrationLearner(Node):
             if not is_locked_x:
                 cx[6] = get_p(px, 1)   # px[1] maps exactly to tanh_x
                 cx[7] = W / 2
-                cx[5] += get_p(px, 3)  # Extra bias offset generated by sigmoid array
+                cx[5] += get_p(px, 2)  # Extra bias offset generated by sigmoid array
             if not is_locked_y:
                 cy[6] = get_p(py, 2)   # py[2] maps exactly to tanh_y
                 cy[7] = H / 2
-                cy[5] += get_p(py, 3)
+                cy[5] += get_p(py, 2)
 
         msg.coeffs_x = [float(c) for c in cx]
         msg.coeffs_y =[float(c) for c in cy]
@@ -1222,8 +1225,8 @@ class CalibrationLearner(Node):
         if not self.system_prequential_errors:
             return
 
-        fig, ax1 = plt.subplots(figsize=(10, 6))
-        
+        fig, ax1 = plt.subplots(figsize=(10, 6), dpi=100)
+
         ev_range = np.arange(len(self.system_prequential_errors))
         sys_inst = np.array(self.system_prequential_errors)
         raw_inst = np.array(self.competitors[0].prequential_errors)
@@ -1272,23 +1275,53 @@ class CalibrationLearner(Node):
             self._pub_plt(fig, "tourney", save_name=save_name)
 
     def _plot_profile(self, save_name=None):
-        fig, ax = plt.subplots(figsize=(6, 4))
-        winner, raw = self.competitors[self.active_idx], self.competitors[0]
-        if winner.macro_rmse_history:
+        fig, ax = plt.subplots(figsize=(8, 5), dpi=150)  # Slightly wider for the legend
+        
+        # Use a colormap to give each model a distinct color
+        colors = plt.cm.get_cmap('tab10', len(self.competitors))
+
+        for i, model in enumerate(self.competitors):
+            if not model.macro_rmse_history:
+                continue
+            
+            # Formatting logic:
+            is_active = (i == self.active_idx)
+            is_raw = (model.name == "Raw")
+            
+            # Make the active model thick, and the raw model dashed
+            lw = 3.0 if is_active else 1.5
+            ls = '--' if is_raw else '-'
+            alpha = 1.0 if (is_active or is_raw) else 0.6
+            
+            label = model.name
+            if is_active:
+                label += " (Active)"
+
             ax.plot(
-                winner.macro_rmse_history,
-                lw=2,
-                color="blue",
-                label=f"Active: {winner.name}",
+                model.macro_rmse_history,
+                lw=lw,
+                ls=ls,
+                alpha=alpha,
+                color=colors(i),
+                label=label
             )
-            ax.plot(raw.macro_rmse_history, "r--", label="Raw Hardware")
-        ax.set_title("Global Macro RMSE Profile")
+
+        ax.set_title("Global Macro RMSE Profile (Comparison)")
+        ax.set_xlabel("Calibration Event Index")
+        ax.set_ylabel("RMSE [px]")
+        
+        # Keep your original scale or adjust if needed
         ax.set_ylim(0, 150)
-        ax.legend()
+        
+        # Place legend to the right so it doesn't cover the data
+        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='small')
         ax.grid(alpha=0.2)
+        
+        plt.tight_layout()
+
         if save_name:
             fig.savefig(save_name, dpi=300, bbox_inches='tight')
-            self.get_logger().info(f"Saved profile visualization to {save_name}")
+            self.get_logger().info(f"Saved detailed profile visualization to {save_name}")
         else:
             self._pub_plt(fig, "profile", save_name=save_name)
 
@@ -1331,8 +1364,9 @@ class CalibrationLearner(Node):
 
         msg = self.bridge.cv2_to_imgmsg(img, "bgr8")
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = key + "_debug_map"  # or "base_link" or any valid frame in your TF tree
-        
+        # msg.header.frame_id = key + "_debug_map"  # or "base_link" or any valid frame in your TF tree
+        msg.header.frame_id = "world" 
+
         self.pubs[key].publish(msg)
         plt.close(fig)
 

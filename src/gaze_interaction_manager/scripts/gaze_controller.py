@@ -163,7 +163,7 @@ class GazeController(Node):
 
         self.debug_pub_viz = self.create_publisher(
             Image, "gaze_controller/interaction_plot", 10
-        )  # New Viz Pub
+        )  
 
         # New Publisher for the Live Debug Image
         self.live_viz_pub = self.create_publisher(
@@ -452,6 +452,7 @@ class GazeController(Node):
             # 5. Visualization
             # ----------------------------------------------------------------
             if self.get_parameter("viz_enabled").value:
+                # if self. % 2 == 0:  # Only update every other button message to reduce overhead
                 self.publish_live_debug_plot(msg)
 
     # # -------------------------------------------------------------------------
@@ -860,14 +861,14 @@ class GazeController(Node):
             self.segment_pub.publish(segment)
 
         # 8. Trigger Matplotlib Visualization
-        # if self.get_parameter("viz_enabled").value:
-        #     self.plot_ts_alignment_viz(
-        #         G_times, G_xs, G_ys, 
-        #         B_times, B_xs, B_ys, 
-        #         tx, ty, 
-        #         gap_mask, error_mask, valid_mask, 
-        #         start_ts, trimmed_start_ts, end_ts
-        #     )
+        if self.get_parameter("viz_enabled").value:
+            self.plot_ts_alignment_viz(
+                G_times, G_xs, G_ys, 
+                B_times, B_xs, B_ys, 
+                tx, ty, 
+                gap_mask, error_mask, valid_mask, 
+                start_ts, trimmed_start_ts, end_ts
+            )
 
 ### === Calibration Model Handling === ###
     def model_cb(self, msg: CalibrationModel):

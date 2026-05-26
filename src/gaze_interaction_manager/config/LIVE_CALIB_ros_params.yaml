@@ -81,13 +81,20 @@
     median_window : 10
     ema_alpha : 1.0
     edge_margin : 25 # px
-    start_trim_ms : 100.0   # Start Padding 
-    terminal_trim_ms : 150.0  # End padding 
+    start_trim_ms : 150.0   # Start Padding 
+    terminal_trim_ms : 200.0  # End padding 
     min_event_duration_ms : 40.0 #  
     max_gap_ms: 300.0
-    max_compensation_px : 100.0
-    viz_enabled : False
 
+    max_compensation_px : 100.0
+    viz_enabled : True # Only change this one
+    viz_show_raw : True
+    viz_show_corrected : True
+    viz_show_history : True
+    viz_show_buttons : True
+    viz_show_all_buttons : True
+    viz_show_vectors : True
+    viz_show_field : True
 
 /calibration_learner_node:
   ros__parameters:
@@ -107,17 +114,15 @@
     solver: "ridge"  # "huber", "ridge", "linear"
     solver_alpha: 10.0 
     bic_hysteresis: 3.0  # Threshold to switch models
-    rmse_hysteresis: 2.0
+    rmse_hysteresis: 1.0
 
     policy: "original_coupled"     # "original_coupled", "decoupled_shared", "fully_decoupled"
-    trigger_x: 5  # Bins along X axis before X-features unlock
-    trigger_y: 5  # Bins along Y axis before Y-features unlock
     error_log_filename: "gaze_error_log.csv"
 
     joy_userstop_button_index: 10  # For recording, default to 'A' or 'X' button
     joy_resume_button_index: 0  # Xbox 'A' button is typically index 0
 
-    publish_data_quiver : False
+    publish_data_quiver : True
     publish_status_profile: False
     publish_prediction_map: False
     publish_tournament: True
