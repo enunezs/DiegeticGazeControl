@@ -101,7 +101,7 @@ class GazeController(Node):
             maxlen=int(self.get_parameter("history_length_s").value * 40)
         )
 
-        self.get_logger().info(f"Compensation Active: {self.get_parameter('compensation_active').value}") 
+        # self.get_logger().info(f"Compensation Active: {self.get_parameter('compensation_active').value}") 
 
         self.latest_all_buttons = []  # <--- Stores the snapshot for background drawing
 

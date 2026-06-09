@@ -1,0 +1,133 @@
+/glasses_emulator_node:
+  ros__parameters:
+    camera_id: 0
+    publish_freq: 50
+    draw_circle: false
+    camera_depth: 1.0
+    video_resolution:
+      - 1600
+      - 1200
+    print_performance: False
+    camera_matrix:
+      [
+        883.10398037,
+        0.0,
+        796.76508223,
+        0.0,
+        889.42718313,
+        646.25149238,
+        0.0,
+        0.0,
+        1.0,
+      ]
+    dist_coeff: [-0.28984511, 0.08497217, -0.00134947, -0.00125141, -0.01016795]
+
+/pupil_glasses_node:
+  ros__parameters:
+    image_scale: 0.5
+    publish_freq: 50
+    draw_circle: true
+    camera_depth: 1.0
+    ip: "10.0.0.2"
+    port: "8080"
+    print_performance: False
+    
+/aruco_detector:
+  ros__parameters:
+        aruco_dict : "DICT_4X4_250"
+        marker_size : 0.0437
+        camera_frame : "camera_optical_frame" 
+        publish_tf : True
+        publish_poses : False
+        marker_persistence : 0.9
+        filter_min_cutoff : 0.5 
+        filter_beta : 0.00005  
+
+/button_finder:
+  ros__parameters:
+        button_center_strategy : "inverse_square"
+        button_map_path : "src/diegetic_transform_engine/button_maps/ButtonMap - O-Joy V3.csv"
+        # camera_frame_id : "camera_optical_frame"
+        # button_frame_id : "button_frame"
+
+/command_mapper_node:
+  ros__parameters:
+    axis_threshold: 0.6
+    parser_mappings_file: "EMANUEL_mode_config.inputs.yaml"
+
+/dwell_time:
+  ros__parameters:
+    interaction_mode: "dwell_time" #  "immediate"  # Activate immediately on hover
+    dwell_duration_seconds: 0.7
+    activation_threshold : 0.2
+    hover_threshold : 0.1
+    deactivation_threshold : 0.2
+    processing_mode: 'gaze_driven'
+    processing_frequency : 30 
+    button_timeout_seconds: 0.9
+    publish_debug_image: False
+    verbose_logging: False
+
+
+/gaze_controller_node:
+  ros__parameters:
+    screen_w: 800.0
+    screen_h: 600.0
+    compensation_active : True
+    use_temporal_alignment : True
+    sticky_button_interaction : False
+    history_length_s : 10.0
+    internal_pipeline_delay_ms : 0.0
+    median_window : 10
+    ema_alpha : 1.0
+    edge_margin : 15 # px
+    start_trim_ms : 190.0   # Start Padding 
+    terminal_trim_ms : 260.0  # End padding 
+    min_event_duration_ms : 40.0 #  
+    max_gap_ms: 300.0
+
+    max_compensation_px : 100.0
+    viz_enabled : False # Only change this one
+    viz_show_raw : False
+    viz_show_corrected : False
+    viz_show_history : False
+    viz_show_buttons : False
+    viz_show_all_buttons : False
+    viz_show_vectors : False
+    viz_show_field : False
+
+/calibration_learner_node:
+  ros__parameters:
+    
+    screen_w: 800.0
+    screen_h: 600.0
+
+    # Selection and switching logic
+    selection_strategy: "RMSE"  # "BIC" or "RMSE"
+    cv_strategy:      "kfolds_spatial_block"       # "stratified", "spatial_block", "kfolds_spatial_block"
+    n_folds: 5
+    spatial_val_ratio: 0.2
+    cv_include_diagonals: True
+    retrain_on_full_data: True
+
+    # Regressor settings
+    solver: "ridge"  # "huber", "ridge", "linear"
+    solver_alpha: 10.0 
+    bic_hysteresis: 3.0  # Threshold to switch models
+    rmse_hysteresis: 1.0
+
+    policy: "original_coupled"     # "original_coupled", "decoupled_shared", "fully_decoupled"
+    error_log_filename: "gaze_error_log.csv"
+
+    joy_userstop_button_index: 10  # For recording, default to 'A' or 'X' button
+    joy_resume_button_index: 0  # Xbox 'A' button is typically index 0
+
+    publish_data_quiver : True
+    publish_status_profile: False
+    publish_prediction_map: True
+    publish_tournament: True
+
+    # show_binned_truth: True
+    # show_prediction : True
+    # show_raw_samples : True
+    publish_debug_image : False
