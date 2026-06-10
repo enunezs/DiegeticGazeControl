@@ -743,7 +743,24 @@ class GazeController(Node):
         self.is_recording = False
         self.rec_start_ts = None
         self.button_engaged = False
+        # self.current_button_id = None
+        # self._inactive_grace_deadline = None
+
+        last_id = self.current_button_id
         self.current_button_id = None
+        self._inactive_grace_deadline = None
+
+        # Re-arm: if the button is still physically active, start a new segment immediately
+        if (self.latest_raw_button_msg is not None
+                and self.latest_raw_button_msg.button_status == ButtonStatus.BUTTON_ACTIVE
+                and self.latest_raw_button_msg.button.button_id == last_id):
+            
+            self.is_recording = True
+            self.current_button_id = last_id
+            self.rec_start_ts = end_ts  # Start from where the last one ended
+            self.get_logger().info(
+                f"Re-armed immediately on {last_id} — button still active after segment end"
+            )
 
     def reset_recording_state(self):
         self.is_recording = False

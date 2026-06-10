@@ -479,7 +479,7 @@ class GazeInteractionNode(Node):
             status.activation_level = min(1.0, status.activation_level + increment)
         else:
             # Decrease activation
-            decrement = dt / self.dwell_duration
+            decrement = (dt / self.dwell_duration) *0.99
             status.activation_level = max(0.0, status.activation_level - decrement)
 
     def _determine_button_state(self, status: ButtonStatus) -> ButtonState:
