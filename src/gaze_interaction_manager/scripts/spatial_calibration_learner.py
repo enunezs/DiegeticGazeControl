@@ -24,6 +24,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.gridspec as gridspec
 
 # import matplotlib.cm as cm
+import matplotlib # Ensure this is at the top of your file
 
 # Machine Learning Imports
 from sklearn.linear_model import (
@@ -253,7 +254,6 @@ class SpatialReservoir:
 
     def __len__(self):
         return len(self.bins)
-
 
 # ==========================================
 # 2. THE MATHEMATICAL MODELS
@@ -598,7 +598,9 @@ class GazeCorrectionFramework:
         self.models["x"], self.models["y"] = mx, my
         return mx.coef_, my.coef_
 
-
+# ==========================================
+# 3. MAIN CALIBRATION LEARNER NODE
+# ==========================================
 class CalibrationLearner(Node):
     def __init__(self):
         super().__init__("calibration_learner_reservoir")
@@ -646,6 +648,7 @@ class CalibrationLearner(Node):
                 ("publish_status_profile", False),
                 ("publish_prediction_map", True),
                 ("publish_tournament", True),
+                ("log_data", False),
             ],
         )
 
@@ -672,6 +675,8 @@ class CalibrationLearner(Node):
             # "trigger_x": self.get_parameter("trigger_x").value,
             # "trigger_y": self.get_parameter("trigger_y").value,
         }
+
+        self.log_data = self.get_parameter("log_data").value
 
         # 3. State
         self.reservoir = SpatialReservoir(self.cfg)
@@ -756,33 +761,35 @@ class CalibrationLearner(Node):
 
         # Extra. Filesystem Setup (New for Experiment)
 
+
         # 1. Session Folder Setup
-        self.session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.log_dir = os.path.join(
-            os.getcwd(), "user_recordings", f"session_{self.session_name}"
-        )
-        os.makedirs(self.log_dir, exist_ok=True)
+        if self.log_data:
+            self.session_name = datetime.now().strftime("%Y%m%d_%H%M%S")
+            self.log_dir = os.path.join(
+                os.getcwd(), "user_recordings", f"session_{self.session_name}"
+            )
+            os.makedirs(self.log_dir, exist_ok=True)
 
-        # 2. File Paths
-        self.file_aulc = os.path.join(self.log_dir, "history_aulc.csv")
-        self.file_preq = os.path.join(self.log_dir, "history_prequential.csv")
-        self.file_rmse = os.path.join(self.log_dir, "history_rmse.csv")
-        self.file_user = os.path.join(self.log_dir, "user_report_errors.csv")
+            # 2. File Paths
+            self.file_aulc = os.path.join(self.log_dir, "history_aulc.csv")
+            self.file_preq = os.path.join(self.log_dir, "history_prequential.csv")
+            self.file_rmse = os.path.join(self.log_dir, "history_rmse.csv")
+            self.file_user = os.path.join(self.log_dir, "user_report_errors.csv")
 
-        self._init_csv_headers()
-        self.last_hardware_ts = "0.0"  # This will store the Pupil Clock time
+            self._init_csv_headers()
+            self.last_hardware_ts = "0.0"  # This will store the Pupil Clock time
 
-        # 5. Prepare error log
-        self.create_subscription(Joy, "joy", self.joy_cb, 10)
+            # 5. Prepare error log
+            self.create_subscription(Joy, "joy", self.joy_cb, 10)
 
-        self.joy_userstop_button_index = self.get_parameter("joy_userstop_button_index").value
-        self.resume_btn_idx = self.get_parameter("joy_resume_button_index").value
-        self.last_stop_button_state = 0  # For debouncing (rising edge detection)
-        self.last_resume_button_state = 0
-        
-        self.log_path = self.get_parameter("error_log_filename").value
+            self.joy_userstop_button_index = self.get_parameter("joy_userstop_button_index").value
+            self.resume_btn_idx = self.get_parameter("joy_resume_button_index").value
+            self.last_stop_button_state = 0  # For debouncing (rising edge detection)
+            self.last_resume_button_state = 0
+            
+            self.log_path = self.get_parameter("error_log_filename").value
 
-        # Prepare CSV File
+
         self.get_logger().info(
             f"Tournament Initialized. CV Strategy: {self.cfg['cv_strategy']}"
         )
@@ -812,11 +819,13 @@ class CalibrationLearner(Node):
         self.get_logger().info(
             f"Spatial Reservoir Config: Bin Size={self.cfg['bin_size']}, Max Samples/Bin={self.cfg['samples_per_bin']}, Validation Size/Bin={self.cfg['val_size']}, Thinning Stride={self.cfg['thinning_stride']}"
         )
-        self.get_logger().info(f"--- Error Logging ---")
-        self.get_logger().info(
-            f"Joy Button Index for Error Logging: {self.joy_userstop_button_index}"
-        )
-        self.get_logger().info(f"Error Log Path: {self.log_path}")
+
+        if self.log_data:
+            self.get_logger().info(f"--- Error Logging ---")
+            self.get_logger().info(
+                f"Joy Button Index for Error Logging: {self.joy_userstop_button_index}"
+            )
+            self.get_logger().info(f"Error Log Path: {self.log_path}")
 
         # --- Plotting ---
         # self.fig_main, self.ax_main = plt.subplots(figsize=(8, 6), dpi=100)
@@ -900,17 +909,18 @@ class CalibrationLearner(Node):
         # Phase 4: Model selection
         self.run_selection_tournament()
 
-        meta = [
-            system_ts,
-            self.last_hardware_ts,
-            self.event_count,
-            self.reservoir.__len__(),
-            msg.button_id,
-            self.competitors[self.active_idx].name,
-        ]
-        self._append_to_csv(self.file_preq, meta + preq_row)
-        self._append_to_csv(self.file_aulc, meta + aulc_row)
-        self._append_to_csv(self.file_rmse, meta + rmse_row)
+        if self.log_data:
+            meta = [
+                system_ts,
+                self.last_hardware_ts,
+                self.event_count,
+                self.reservoir.__len__(),
+                msg.button_id,
+                self.competitors[self.active_idx].name,
+            ]
+            self._append_to_csv(self.file_preq, meta + preq_row)
+            self._append_to_csv(self.file_aulc, meta + aulc_row)
+            self._append_to_csv(self.file_rmse, meta + rmse_row)
 
         self.event_count += 1
 
@@ -1005,10 +1015,12 @@ class CalibrationLearner(Node):
         # 4. Reset tournament state
         self.active_idx = 1  # Default back to 'Bias' model
         # Note: We keep self.event_count increasing to maintain a continuous timeline in logs
-        self.log_reset_event()
+        if self.log_data:
+            self.log_reset_event()
 
         self.get_logger().info("Memory cleared. Models reset. Ready for new data.")
         self.publish_model_update()
+        self.generate_visuals([], [])  # Clear visuals
 
     def log_reset_event(self):
         """Adds a special marker to the user report log to indicate a reset occurred."""
@@ -1161,7 +1173,7 @@ class CalibrationLearner(Node):
         self.model_pub.publish(msg)
 
     # ==========================================
-    # VISUALIZATION REFACTOR
+    # VISUALIZATION TOOLS
     # ==========================================
     def generate_visuals(self, train_pool, val_pool):
         if self.get_parameter("publish_data_quiver").value:
@@ -1174,6 +1186,40 @@ class CalibrationLearner(Node):
             self._plot_prediction_field()
 
     def _plot_reservoir(self, train_pool, val_pool, save_name=None):
+        if len(train_pool) == 0 and len(val_pool) == 0:
+            return
+
+        fig, ax = plt.subplots(figsize=(6, 5), dpi=100)
+        
+        def safe_quiver(data, color, width=None):
+            if len(data) == 0: return
+            # CLIP errors to 100px for viz so arrows don't explode the plot
+            coords = data[:, 0:2]
+            errs = np.clip(data[:, 2:4], -100, 100)
+            
+            angles = np.arctan2(errs[:, 1], errs[:, 0])
+            ax.quiver(coords[:, 0], coords[:, 1], errs[:, 0], -errs[:, 1],
+                    color=color if isinstance(color, str) else plt.cm.hsv((angles + np.pi) / (2 * np.pi)),
+                    alpha=0.5, scale=1, scale_units="xy", width=width)
+
+        safe_quiver(train_pool, None)
+        safe_quiver(val_pool, "black", width=0.0015)
+
+        ax.set_xlim(0, self.cfg["screen_w"])
+        ax.set_ylim(self.cfg["screen_h"], 0)
+        ax.grid(True, alpha=0.3)
+        # fig.tight_layout()
+
+        if save_name:
+            fig.savefig(save_name, dpi=300, bbox_inches='tight')
+        else:
+            self._pub_plt(fig, "quiver", save_name=save_name)
+            self.get_logger().info(f"Published reservoir visualization with {len(train_pool)} training samples and {len(val_pool)} validation samples.")
+
+    def old_plot_reservoir(self, train_pool, val_pool, save_name=None):
+        if len(train_pool) == 0 and len(val_pool) == 0:
+            return
+        
         fig, ax = plt.subplots(figsize=(6, 5), dpi=100)
 
         # --- ADD BIN MARKS (GRID) ---
@@ -1222,47 +1268,55 @@ class CalibrationLearner(Node):
 
     def _plot_tournament(self, save_name=None):
         """Refactored Evolution Dashboard with Model Shading and Unlocks."""
-        if not self.system_prequential_errors:
+        # Todo
+        if not self.system_prequential_errors or len(self.system_prequential_errors) < 2:
             return
 
         fig, ax1 = plt.subplots(figsize=(10, 6), dpi=100)
-
         ev_range = np.arange(len(self.system_prequential_errors))
         sys_inst = np.array(self.system_prequential_errors)
         raw_inst = np.array(self.competitors[0].prequential_errors)
         
         # 1. Background Model Shading
         unique_models = [m.name for m in self.competitors]
-        cmap = plt.get_cmap('Pastel1')
+        # cmap = plt.get_cmap('Pastel1')
+        cmap = matplotlib.colormaps['Pastel1']
         
         if len(self.winner_idx_history) > 0:
             curr_start = 0
             curr_idx = self.winner_idx_history[0]
-            for i, val in enumerate(self.winner_idx_history):
-                # If model changed or we reached the end
-                if val != curr_idx or i == len(self.winner_idx_history) - 1:
-                    ax1.axvspan(curr_start, i, color=cmap(curr_idx % 9), alpha=0.3, zorder=0)
-                    # Add label at the top of the shaded region
-                    ax1.text((curr_start + i)/2, ax1.get_ylim()[1] * 0.9, 
-                            unique_models[curr_idx], ha='center', fontsize=8, 
-                            fontweight='bold', color='dimgrey', zorder=5)
-                    curr_start, curr_idx = i, val
 
+            # Match lengths to avoid index errors
+            hist_len = min(len(self.winner_idx_history), len(ev_range))
+
+            # for i, val in enumerate(self.winner_idx_history):
+            for i in range(hist_len):
+                val = self.winner_idx_history[i]
+                # If model changed or we reached the end
+                if val != curr_idx or i == hist_len - 1:
+                    ax1.axvspan(curr_start, i, color=cmap(curr_idx % 9), alpha=0.3, zorder=0)
+
+                    ax1.text((curr_start + i)/2, 0.95, unique_models[curr_idx], 
+                            transform=ax1.get_xaxis_transform(), # X is data, Y is axis (0-1)
+                            ha='center', fontsize=8, fontweight='bold', color='dimgrey')
+                    curr_start, curr_idx = i, val
+                    
         # 2. Cumulative RMSE (AULC) Lines
-        sys_cum = np.cumsum(sys_inst) / (ev_range + 1)
-        raw_cum = np.cumsum(raw_inst) / (ev_range + 1)
-        
-        ax1.plot(raw_cum, color='firebrick', ls='--', lw=2, label='Baseline (Raw) AULC')
-        ax1.plot(sys_cum, color='navy', lw=3, label='System (Winner) AULC')
+        sys_cumulative = np.cumsum(sys_inst) / (ev_range + 1)
+        raw_cumulative = np.cumsum(raw_inst) / (ev_range + 1)
+        ax1.plot(raw_cumulative, color='firebrick', ls='--', lw=2, label='Baseline (Raw) AULC')
+        ax1.plot(sys_cumulative, color='navy', lw=3, label='System (Winner) AULC')
 
         # 3. Feature Unlock Moments (Vertical Lines)
         # Check the active model for its graduation milestones
         winner = self.competitors[self.active_idx]
         for label, event_idx in winner.unlock_moments.items():
             ax1.axvline(x=event_idx, color='green', linestyle=':', alpha=0.6)
-            ax1.text(event_idx, ax1.get_ylim()[1] * 0.1, label, 
-                    rotation=90, verticalalignment='bottom', fontsize=7, color='green')
+            # FIXED: Use blended transform. Y=0.05 means 5% from bottom
+            ax1.text(event_idx, 0.05, label, transform=ax1.get_xaxis_transform(),
+                    rotation=90, fontsize=7, color='green', va='bottom')
 
+        ax1.set_ylim(0, max(100, np.max(sys_cumulative) * 1.2)) # Cap height to prevent blowouts
         ax1.set_title(f"Tournament Evolution: {winner.name} Active", loc='left', fontweight='bold')
         ax1.set_xlabel("Calibration Event Index")
         ax1.set_ylabel("Mean Error (AULC) [px]")
@@ -1275,33 +1329,32 @@ class CalibrationLearner(Node):
             self._pub_plt(fig, "tourney", save_name=save_name)
 
     def _plot_profile(self, save_name=None):
-        fig, ax = plt.subplots(figsize=(8, 5), dpi=150)  # Slightly wider for the legend
+        # Edge case: No data at all
+        if not any(len(m.macro_rmse_history) > 0 for m in self.competitors):
+            return
         
         # Use a colormap to give each model a distinct color
-        colors = plt.cm.get_cmap('tab10', len(self.competitors))
+        fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
+        colors = matplotlib.colormaps['tab10'].resampled(len(self.competitors))
 
         for i, model in enumerate(self.competitors):
             if not model.macro_rmse_history:
                 continue
             
             # Formatting logic:
+            # Make the active model thick, and the raw model dashed
             is_active = (i == self.active_idx)
             is_raw = (model.name == "Raw")
-            
-            # Make the active model thick, and the raw model dashed
-            lw = 3.0 if is_active else 1.5
-            ls = '--' if is_raw else '-'
-            alpha = 1.0 if (is_active or is_raw) else 0.6
-            
+                        
             label = model.name
             if is_active:
                 label += " (Active)"
 
             ax.plot(
                 model.macro_rmse_history,
-                lw=lw,
-                ls=ls,
-                alpha=alpha,
+                lw = 3.0 if is_active else 1.5, 
+                ls = '--' if is_raw else '-',
+                alpha = 1.0 if (is_active or is_raw) else 0.6,
                 color=colors(i),
                 label=label
             )
@@ -1311,13 +1364,15 @@ class CalibrationLearner(Node):
         ax.set_ylabel("RMSE [px]")
         
         # Keep your original scale or adjust if needed
-        ax.set_ylim(0, 150)
+        # ax.set_ylim(0, 150)
+        ax.set_ylim(0, 200)
         
         # Place legend to the right so it doesn't cover the data
-        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='small')
+        # ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize='small')
+        ax.legend(loc='upper right', fontsize='x-small', framealpha=0.8)
+
         ax.grid(alpha=0.2)
         
-        plt.tight_layout()
 
         if save_name:
             fig.savefig(save_name, dpi=300, bbox_inches='tight')
@@ -1327,10 +1382,21 @@ class CalibrationLearner(Node):
 
     def _plot_prediction_field(self, save_name=None):
         winner = self.competitors[self.active_idx]
+        if winner.params["x"] is None: # Edge case: Model not trained
+            return
+
         fig, ax = plt.subplots(figsize=(6, 5))
         gw, gh = self.cfg["screen_w"], self.cfg["screen_h"]
+
+        # Grid density - don't make it too dense
         grid_x, grid_y = np.meshgrid(np.linspace(0, gw, 15), np.linspace(0, gh, 12))
         px, py = winner.predict(grid_x.ravel(), grid_y.ravel())
+        
+        # Check for NaNs which can happen with 'linear' solver and colinear data
+        if px is None or np.isnan(px).any():
+            plt.close(fig)
+            return
+        
         mag = np.sqrt(px**2 + py**2)
         ax.quiver(
             grid_x,
@@ -1341,6 +1407,7 @@ class CalibrationLearner(Node):
             cmap="jet",
             scale=1,
             scale_units="xy",
+            pivot ="tail",
         )
         ax.set_xlim(0, gw)
         ax.set_ylim(gh,0)

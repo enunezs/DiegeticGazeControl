@@ -44,6 +44,8 @@ class AudioFeedbackNode(Node):
         # === pyttsx3 setup ===
         self.voice_engine = pyttsx3.init()
         self.voice_engine.setProperty('rate', 180)
+        self.voice_engine.setProperty('volume', 1.0) 
+
         voices = self.voice_engine.getProperty('voices')
         self.voice_engine.setProperty('voice', voices[0].id)
         self.voice_engine.setProperty('voice', 'english_rp+f3')

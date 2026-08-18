@@ -15,7 +15,8 @@ def generate_launch_description():
     config = os.path.join(
         get_package_share_directory("gaze_interaction_manager"), 
         "config", 
-        "ros_params.yaml"
+        "SPIN_ros_params.yaml"
+        # "ros_params.yaml"
     )
 
     ### Testing Joystick Controller with JoyCommandMapper ###

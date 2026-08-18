@@ -11,6 +11,10 @@ Usage:
 """
 
 # from build.diegetic_transform_engine.rosidl_generator_py import diegetic_transform_engine
+import csv
+from datetime import datetime
+import os
+
 import rclpy
 from rclpy.node import Node
 from rclpy.parameter import Parameter
@@ -74,6 +78,9 @@ class ButtonStatus:
     x_points: List[float] = None  # Array of 4 x coordinates
     y_points: List[float] = None  # Array of 4 y coordinates
 
+    surface_angle_deg: float = 0.0
+    in_frame: bool = True
+
     def __post_init__(self):
         if self.x_points is None:
             self.x_points = [0.0, 0.0, 0.0, 0.0]
@@ -129,6 +136,24 @@ class GazeInteractionNode(Node):
         self.get_logger().info(
             f"Gaze Interaction Node initialized with mode: {self.interaction_mode.value}"
         )
+
+        if self.log_data:
+            self.session_dir = os.path.join(
+                os.getcwd(), "user_recordings", f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
+            os.makedirs(self.session_dir, exist_ok=True)
+            self.file_button_geometry = os.path.join(self.session_dir, "button_geometry.csv")
+            
+            with open(self.file_button_geometry, "w", newline="") as f:
+                csv.writer(f).writerow([
+                    "timestamp", "button_id", "state",
+                    "in_frame", "surface_angle_deg",
+                    "center_x", "center_y",
+                    "apparent_area"
+                ])
+            self.geometry_log_timer = self.create_timer(
+                1.0 / self.geometry_log_hz, self._log_button_geometry
+            )
 
     def _declare_parameters(self):
         """Declare and retrieve ROS parameters"""
@@ -191,6 +216,12 @@ class GazeInteractionNode(Node):
             self.get_logger().info(
                 f"Processing frequency: {self.processing_frequency} Hz"
             )
+
+        # in _declare_parameters
+        self.declare_parameter("log_data", False)
+        self.log_data = self.get_parameter("log_data").value
+        self.declare_parameter("geometry_log_hz", 2.0)
+        self.geometry_log_hz = self.get_parameter("geometry_log_hz").value
 
         # TODO: Cleanup and test unused parameters
         # Input handling
@@ -299,6 +330,8 @@ class GazeInteractionNode(Node):
                     status.center_y = button_2d.center_y
                     status.x_points = list(button_2d.x_points)
                     status.y_points = list(button_2d.y_points)
+                    status.surface_angle_deg = button_2d.surface_angle_deg
+                    status.in_frame = button_2d.in_frame
                 else:
                     # Create new button status
                     self.button_statuses[button_id] = ButtonStatus(
@@ -308,6 +341,8 @@ class GazeInteractionNode(Node):
                         center_y=button_2d.center_y,
                         x_points=list(button_2d.x_points),
                         y_points=list(button_2d.y_points),
+                        surface_angle_deg=button_2d.surface_angle_deg,
+                        in_frame=button_2d.in_frame
                     )
 
                     self.get_logger().debug(f"Tracking new button: {button_id}")
@@ -687,6 +722,29 @@ class GazeInteractionNode(Node):
                 if self.verbose_logging:
                     self.get_logger().debug(f"Removed stale button: {button_id}")
 
+    def _log_button_geometry(self):
+        now = self.get_clock().now().nanoseconds / 1e9
+        
+        with self._button_lock:
+            rows = []
+            for button_id, status in self.button_statuses.items():
+                area = self._shoelace_area(status.x_points, status.y_points)
+                rows.append([
+                    now, button_id, status.state.value, status.in_frame,
+                    status.surface_angle_deg, status.center_x, status.center_y, area
+                ])
+        with open(self.file_button_geometry, "a", newline="") as f:
+            w = csv.writer(f)
+            w.writerows(rows)
+
+
+
+
+    @staticmethod
+    def _shoelace_area(xs, ys):
+        if len(xs) != 4 or len(ys) != 4:
+            return 0.0
+        return 0.5 * abs(sum(xs[i]*ys[(i+1) % 4] - xs[(i+1) % 4]*ys[i] for i in range(4)))
 
 def main(args=None):
     rclpy.init(args=args)

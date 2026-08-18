@@ -182,6 +182,7 @@ class ArucoDetectorNode(Node):
         Publishes a static transform connecting the Robot to the Marker.
         Tree: [robot_parent_frame] -> [aruco_78]
         """
+        
         t = TransformStamped()
         t.header.stamp = self.get_clock().now().to_msg()
         t.header.frame_id = self.config[

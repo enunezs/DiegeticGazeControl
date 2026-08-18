@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # command_mapper.py
+import csv
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String, Int32, Float64MultiArray
@@ -18,6 +20,7 @@ from scipy.spatial.transform import Rotation
 import yaml
 from ament_index_python.packages import get_package_share_directory
 import os
+from datetime import datetime
 
 from random import shuffle
 
@@ -149,7 +152,13 @@ class CommandMapper(Node):
         self.current_mode = "translation"
         
         # Button state management
-        self.button_state_mgr = ButtonStateManager(debounce_time=0.3)
+        self.declare_parameter("debounce_time", 0.3)
+        debounce_time = self.get_parameter("debounce_time").value
+        
+        self.declare_parameter("log_data", True)
+        self.log_data = self.get_parameter("log_data").value
+
+        self.button_state_mgr = ButtonStateManager(debounce_time=debounce_time)
         
         # Velocity tracking
         self.current_velocity_params: Dict = {}
@@ -179,6 +188,17 @@ class CommandMapper(Node):
         )
      
         self.get_logger().info("Controls are currently ENABLED")
+
+        self.session_dir = os.path.join(
+            os.getcwd(), "user_recordings", f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+        os.makedirs(self.session_dir, exist_ok=True)
+        self.file_button_events = os.path.join(self.session_dir, "button_events.csv")
+        with open(self.file_button_events, "w", newline="") as f:
+            csv.writer(f).writerow([
+                "timestamp", "event_count", "edge_type",
+                "button_id", "group", "redundant", "mode", 
+            ])
 
     def _init_publishers(self):
         """Initialize all ROS publishers:
@@ -254,8 +274,8 @@ class CommandMapper(Node):
         self.mode_mappings = cfg.get("mode_mappings", {})
 
         # Add calibration waypoint demo
-        calibration_route = self.calculate_calibration_route()
-        self.mode_mappings["Y"] = calibration_route
+        # calibration_route = self.calculate_calibration_route()
+        # self.mode_mappings["Y"] = calibration_route
 
         self.get_logger().info(f"Loaded {len(self.mode_mappings)} mode sets from {filename}")
         # self.get_logger().info(f"Mode mappings: {self.mode_mappings}")
@@ -410,7 +430,8 @@ class CommandMapper(Node):
         
         # Process edges for all buttons that changed
         for btn_id, edge in edges.items():
-            self._process_button_edge(btn_id, edge, now)
+            pupil_ts = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+            self._process_button_edge(btn_id, edge, pupil_ts)
         
         # Update continuous velocity commands based on currently held buttons
         self._update_velocity_commands()
@@ -426,6 +447,10 @@ class CommandMapper(Node):
         """
         action_type, params = self.get_action_for_button(button_id)
         
+        ### Logging
+        if self.log_data and edge in ("rising", "falling"):
+            self._log_button_event(button_id, edge, params, current_time)
+
         if not action_type:
             return
         
@@ -452,6 +477,8 @@ class CommandMapper(Node):
         elif edge == 'falling':
             # self.get_logger().debug(f"[FALLING_EDGE] Button {button_id} released")
             self.button_sound_pub.publish(Int32(data=2))
+
+
 
     def _update_velocity_commands(self):
         """
@@ -762,6 +789,18 @@ class CommandMapper(Node):
 
         # Store state for next comparison
         self.prev_joy_buttons = list(msg.buttons)
+
+    def _log_button_event(self, button_id, edge, params, current_time):
+        row = [
+            current_time,
+            edge,                    # 'rising' = press, 'falling' = release
+            button_id,
+            (params or {}).get("group", button_id),
+            (params or {}).get("redundant", False),
+            self.current_mode,
+        ]
+        with open(self.file_button_events, "a", newline="") as f:
+            csv.writer(f).writerow(row)
 
 def main(args=None):
     rclpy.init(args=args)

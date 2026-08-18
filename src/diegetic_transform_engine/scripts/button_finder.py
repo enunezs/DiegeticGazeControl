@@ -8,8 +8,15 @@ import cv2
 from enum import Enum
 from typing import Dict, List, Tuple, Optional
 import tf_transformations as tf
+
+
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped, Transform, Point, Quaternion
+from tf2_ros import Buffer, TransformListener
+from tf2_ros import StaticTransformBroadcaster
+import tf_transformations
+
+
 from sensor_msgs.msg import CameraInfo
 from cv_bridge import CvBridge
 
@@ -126,6 +133,11 @@ class DiegeticButtonPublisher(Node):
 
         # TF broadcaster
         self.tf_broadcaster = TransformBroadcaster(self)
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
+        self.static_broadcaster = StaticTransformBroadcaster(self)
+        self._publish_static_button_link()
 
         # CV Bridge for image operations
         self.cv_bridge = CvBridge()
@@ -250,6 +262,8 @@ class DiegeticButtonPublisher(Node):
         self.camera_matrix = np.array(msg.k).reshape(3, 3)
         self.dist_coeffs = np.array(msg.d)
         self.camera_info_received = True
+        self.image_width = msg.width
+        self.image_height = msg.height
 
         if not hasattr(self, "_camera_info_logged"):
             self.get_logger().info("Camera calibration received", once=True)
@@ -382,7 +396,7 @@ class DiegeticButtonPublisher(Node):
         self.button_2d_publisher.publish(button_2d_array)
 
         # 7. Broadcast TF transforms
-        # self._broadcast_transforms(button_3d_array)
+        self._broadcast_transforms(button_3d_array)
 
         # self.get_logger().info(
         #     f"Found {len(button_3d_array.buttons)} buttons", throttle_duration_sec=10
@@ -558,7 +572,9 @@ class DiegeticButtonPublisher(Node):
     def _project_to_2d(
         self, button_3d_array: DiegeticButtonArray
     ) -> DiegeticButton2DArray:
+        
         """Project 3D button positions to 2D screen coordinates"""
+
         button_2d_array = DiegeticButton2DArray()
         button_2d_array.header = button_3d_array.header
         button_2d_array.header.frame_id = (
@@ -566,13 +582,32 @@ class DiegeticButtonPublisher(Node):
         )  # Changed to camera frame
 
         for button_3d in button_3d_array.buttons:
+
+            # Get the 4 corners of the button in 3D world coordinates
+            corner_points_3d = self._get_button_corner_points_3d(button_3d)
+            
+            ### Load 3D
+            position = np.array([
+                button_3d.button_transform.translation.x,
+                button_3d.button_transform.translation.y,
+                button_3d.button_transform.translation.z,
+            ])
+            orientation = np.array([
+                button_3d.button_transform.rotation.x,
+                button_3d.button_transform.rotation.y,
+                button_3d.button_transform.rotation.z,
+                button_3d.button_transform.rotation.w,
+            ])
+
+
             # Create 2D button message
             button_2d = DiegeticButton2D()
             button_2d.button_id = button_3d.button_id
 
-            # Get the 4 corners of the button in 3D world coordinates
-            corner_points_3d = self._get_button_corner_points_3d(button_3d)
+            button_2d.surface_angle_deg = self._compute_viewing_angle(position, orientation)
+            behind_camera = position[2] <= 0.0
 
+            ### Project 3D corners to 2D
             if corner_points_3d is not None:
                 # Project all 4 corner points to 2D camera coordinates
                 projected_corners, _ = cv2.projectPoints(
@@ -620,6 +655,16 @@ class DiegeticButtonPublisher(Node):
                 button_2d.center_x = float(projected_center[0][0][0])
                 button_2d.center_y = float(projected_center[0][0][1])
 
+
+                in_bounds = (
+                    self.image_width is not None
+                    and 0 <= button_2d.center_x <= self.image_width
+                    and 0 <= button_2d.center_y <= self.image_height
+                )
+                button_2d.in_frame = bool(in_bounds and not behind_camera)
+
+                button_2d_array.buttons.append(button_2d)
+
             else:
                 # Fallback: just project the center point
                 center_3d = np.array(
@@ -642,6 +687,14 @@ class DiegeticButtonPublisher(Node):
 
                 button_2d.center_x = float(projected_center[0][0][0])
                 button_2d.center_y = float(projected_center[0][0][1])
+
+
+                in_bounds = (
+                    self.image_width is not None
+                    and 0 <= button_2d.center_x <= self.image_width
+                    and 0 <= button_2d.center_y <= self.image_height
+                )
+                button_2d.in_frame = bool(in_bounds and not behind_camera)
 
                 # Set default corner points around the center (as fallback)
                 default_size = 10.0
@@ -741,12 +794,72 @@ class DiegeticButtonPublisher(Node):
 
             self.tf_broadcaster.sendTransform(transform_stamped)
 
+            # For the alignment button, also broadcast its position relative to
+            # the end-effector so the TF tree holds even when ArUco 88 is lost.
+            # Tree: j2n6s300_end_effector -> bt_UpHybridRe_ee (static-ish, updated each frame)
+            if button.button_id == "UpHybridRe":
+                try:
+                    # Look up where the button sits in the end-effector frame
+                    t = self.tf_buffer.lookup_transform(
+                        "j2n6s300_end_effector",
+                        f"bt_{button.button_id}",
+                        rclpy.time.Time()
+                    )
+
+                    ee_stamped = TransformStamped()
+                    ee_stamped.header.stamp = self.get_clock().now().to_msg()
+                    ee_stamped.header.frame_id = "j2n6s300_end_effector"
+                    ee_stamped.child_frame_id = "bt_UpHybridRe_ee"
+                    ee_stamped.transform = t.transform
+
+                    self.tf_broadcaster.sendTransform(ee_stamped)
+
+                except Exception:
+                    pass  # Chain not yet available, skip silently
+
     def _trigger_haptic_feedback(self, active_buttons: Dict[str, List[Marker]]):
         """Trigger haptic feedback for newly detected buttons"""
         if active_buttons:
             haptic_msg = String()
             haptic_msg.data = "button_detected"
             self.haptic_publisher.publish(haptic_msg)
+
+    def _publish_static_button_link(self):
+        """
+        Publishes a static transform connecting the end-effector to the UpHybridRe button.
+        Tree: j2n6s300_end_effector -> bt_UpHybridRe
+        Offset should match the physical position of the button on the controller.
+        """
+        t = TransformStamped()
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = "j2n6s300_end_effector"
+        t.child_frame_id = "bt_UpHybridRe"
+
+        # TODO: measure and set the actual offset of the button relative to the end-effector
+        xyz = [0.0, 0.045, -0.09]
+        rpy = [-np.pi / 2, 0.0, 0.0]
+
+        t.transform.translation.x = float(xyz[0])
+        t.transform.translation.y = float(xyz[1])
+        t.transform.translation.z = float(xyz[2])
+
+        quat = tf_transformations.quaternion_from_euler(rpy[0], rpy[1], rpy[2])
+        t.transform.rotation.x = quat[0]
+        t.transform.rotation.y = quat[1]
+        t.transform.rotation.z = quat[2]
+        t.transform.rotation.w = quat[3]
+
+        self.static_broadcaster.sendTransform(t)
+
+    @staticmethod
+    def _compute_viewing_angle(position: np.ndarray, orientation: np.ndarray) -> float:
+        """Angle (deg) between the button's outward normal and the camera's line of sight.
+        0 = facing the camera directly, 90 = edge-on / invisible."""
+        R = tf_transformations.quaternion_matrix(orientation)[:3, :3]
+        normal = R @ np.array([0.0, 0.0, 1.0])          # button's local +Z, assumed outward
+        to_camera = -position / (np.linalg.norm(position) + 1e-9)
+        cos_angle = np.clip(np.dot(normal, to_camera), -1.0, 1.0)
+        return float(np.degrees(np.arccos(cos_angle)))
 
 
 def main(args=None):

@@ -1,36 +1,76 @@
 mode_mappings:
 
+  # Main Interface - On robot
   UpHybrid:
-    translation: {action_type: velocity, axis: z, speed: 1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: rx, speed: -1.0, reference_frame: j2n6s300_link_6}
+    translation: {action_type: velocity, axis: z, speed: 1.0, reference_frame: j2n6s300_link_6, redundant: False}
+    rotation:    {action_type: velocity, axis: rx, speed: -1.0, reference_frame: j2n6s300_link_6, redundant: False}
 
   DownHybrid:
-    translation: {action_type: velocity, axis: z, speed: -1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: rx, speed: 1.0,  reference_frame: j2n6s300_link_6}
+    translation: {action_type: velocity, axis: z, speed: -1.0, reference_frame: j2n6s300_link_6, redundant: False}
+    rotation:    {action_type: velocity, axis: rx, speed: 1.0,  reference_frame: j2n6s300_link_6, redundant: False}
 
   LeftHybrid:
-    translation: {action_type: velocity, axis: x, speed: 1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: rz, speed: 1.0, reference_frame: j2n6s300_link_6}
+    translation: {action_type: velocity, axis: y, speed: -1.0, reference_frame: j2n6s300_link_6, redundant: False}
+    rotation:    {action_type: velocity, axis: rz, speed: 1.0, reference_frame: j2n6s300_link_6, redundant: False}
 
   RightHybrid:
-    translation: {action_type: velocity, axis: x, speed: -1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: rz, speed: -1.0, reference_frame: j2n6s300_link_6}
+    translation: {action_type: velocity, axis: y, speed: 1.0, reference_frame: j2n6s300_link_6, redundant: False}
+    rotation:    {action_type: velocity, axis: rz, speed: -1.0, reference_frame: j2n6s300_link_6, redundant: False}
 
   CloserHybrid:
-    translation: {action_type: velocity, axis: y, speed: 1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: ry, speed: -1.0, reference_frame: j2n6s300_link_6}
+    translation: {action_type: velocity, axis: x, speed: 1.0, reference_frame: j2n6s300_link_6, redundant: False}
+    rotation:    {action_type: velocity, axis: ry, speed: -1.0, reference_frame: j2n6s300_link_6, redundant: False}
 
   FartherHybrid:
-    translation: {action_type: velocity, axis: y, speed: -1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: ry, speed: 1.0,  reference_frame: j2n6s300_link_6}
+    translation: {action_type: velocity, axis: x, speed: -1.0, reference_frame: j2n6s300_link_6, redundant: False}
+    rotation:    {action_type: velocity, axis: ry, speed: 1.0,  reference_frame: j2n6s300_link_6, redundant: False}
 
-  # SwitchRef1:
-  #   "*": {action_type: mode, mode_cmd: toggle_next}
+  # Redundant Interface - On base
+  UpHybridRe:
+    translation: {action_type: velocity, axis: z, speed: 1.0, reference_frame: j2n6s300_link_base, redundant: True}
+    rotation:    {action_type: velocity, axis: rx, speed: -1.0, reference_frame: j2n6s300_link_6, redundant: True}
 
-  # SwitchRef2:
-  #   translation: {action_type: mode, mode_cmd: rotation}
-  #   rotation:    {action_type: mode, mode_cmd: translation}
+  DownHybridRe:
+    translation: {action_type: velocity, axis: z, speed: -1.0, reference_frame: j2n6s300_link_base, redundant: True}
+    rotation:    {action_type: velocity, axis: rx, speed: 1.0, reference_frame: j2n6s300_link_6, redundant: True}
 
+  LeftHybridRe:
+    translation: {action_type: velocity, axis: x, speed: 1.0, reference_frame: j2n6s300_link_base, redundant: True}
+    rotation:    {action_type: velocity, axis: rz, speed: 1.0, reference_frame: j2n6s300_link_6, redundant: True}
+
+  RightHybridRe:
+    translation: {action_type: velocity, axis: x, speed: -1.0, reference_frame: j2n6s300_link_base, redundant: True}
+    rotation:    {action_type: velocity, axis: rz, speed: -1.0, reference_frame: j2n6s300_link_6, redundant: True}
+
+  CloserHybridRe:
+    translation: {action_type: velocity, axis: y, speed: 1.0, reference_frame: j2n6s300_link_base, redundant: True}
+    rotation:    {action_type: velocity, axis: ry, speed: -1.0, reference_frame: j2n6s300_link_6, redundant: True}
+
+  FartherHybridRe:
+    translation: {action_type: velocity, axis: y, speed: -1.0, reference_frame: j2n6s300_link_base, redundant: True}
+    rotation:    {action_type: velocity, axis: ry, speed: 1.0, reference_frame: j2n6s300_link_6, redundant: True}
+
+
+  SwitchRef1:
+    translation: {action_type: mode, mode_cmd: rotation, redundant: False}
+    rotation:    {action_type: mode, mode_cmd: translation, redundant: False}
+
+  SwitchRef2:
+    translation: {action_type: mode, mode_cmd: rotation, redundant: True}
+    rotation:    {action_type: mode, mode_cmd: translation, redundant: True}
+
+  # Close all
+  Close: { "*":{action_type: finger , fingers: [1, 2, 3], speed: 2000.0} }
+  CloseRe: { "*":{action_type: finger , fingers: [1, 2, 3], speed: 2000.0} }
+  # Open all
+  Open: { "*":{action_type: finger , fingers: [1, 2, 3], speed: -2000.0} }
+  OpenRe: { "*":{action_type: finger , fingers: [1, 2, 3], speed: -2000.0} }
+
+  X:
+    translation: {action_type: mode, mode_cmd: rotation}
+    rotation:    {action_type: mode, mode_cmd: translation}
+    
+    
   # S1X_+1: {"*": {action_type: velocity, axis: x, speed: 1.0,  reference_frame: j2n6s300_link_base}}
   # S1X_-1: {"*": {action_type: velocity, axis: x, speed: -1.0, reference_frame: j2n6s300_link_base}}
   # S1Y_+1: {"*": {action_type: velocity, axis: y, speed: 1.0,  reference_frame: j2n6s300_link_base}}
@@ -45,31 +85,3 @@ mode_mappings:
   # A:        {"*": {action_type: mode, mode_cmd: toggle_next}}
   # B:        {"*": {action_type: mode, mode_cmd: toggle_next}}
 
-  # Close all
-  A: { "*":{action_type: finger , fingers: [1, 2, 3], speed: 2000.0} }
-  # Open all
-  B: { "*":{action_type: finger , fingers: [1, 2, 3], speed: -2000.0} }
-
-  UpHybridRe:
-    translation: {action_type: velocity, axis: z, speed: 1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: rx, speed: -1.0, reference_frame: j2n6s300_link_6}
-
-  DownHybridRe:
-    translation: {action_type: velocity, axis: z, speed: -1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: rx, speed: 1.0, reference_frame: j2n6s300_link_6}
-
-  LeftHybridRe:
-    translation: {action_type: velocity, axis: x, speed: 1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: rz, speed: 1.0, reference_frame: j2n6s300_link_6}
-
-  RightHybridRe:
-    translation: {action_type: velocity, axis: x, speed: -1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: rz, speed: -1.0, reference_frame: j2n6s300_link_6}
-
-  CloserHybridRe:
-    translation: {action_type: velocity, axis: y, speed: 1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: ry, speed: -1.0, reference_frame: j2n6s300_link_6}
-
-  FartherHybridRe:
-    translation: {action_type: velocity, axis: y, speed: -1.0, reference_frame: j2n6s300_link_base}
-    rotation:    {action_type: velocity, axis: ry, speed: 1.0, reference_frame: j2n6s300_link_6}
